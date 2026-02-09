@@ -1,0 +1,251 @@
+/* Fuente Corra-Montserra */
+@font-face {
+    font-family: Corra-Montserra-Bold;
+    src: url(./fuentes/corra-montserra/TTF/Corra-Montserra-Bold.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Corra-Montserra-Regular;
+    src: url(./fuentes/corra-montserra/TTF/Corra-Montserra-Regular.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Corra-Montserra-SemiBold;
+    src: url(./fuentes/corra-montserra/TTF/Corra-Montserra-Semibold.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Corra-Montserra-SemiBold;
+    src: url(./fuentes/corra-montserra/TTF/Corra-Montserra-Semibold.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Corra-Montserra-Black;
+    src: url(./fuentes/corra-montserra/TTF/Corra-Montserra-Black.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Corra-Montserra-Light;
+    src: url(./fuentes/corra-montserra/TTF/Corra-Montserra-Light.ttf);
+    font-display: swap;
+}
+
+/* Fuente Gilroy */
+@font-face {
+    font-family: Gilroy-Black;
+    src: url(./fuentes/Gilroy/Gilroy-Black.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Gilroy-BlackItalic;
+    src: url(./fuentes/Gilroy/Gilroy-BlackItalic.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Gilroy-Bold;
+    src: url(./fuentes/Gilroy/Gilroy-Bold.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Gilroy-BoldItalic;
+    src: url(./fuentes/Gilroy/Gilroy-BoldItalic.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Gilroy-ExtraBold;
+    src: url(./fuentes/Gilroy/Gilroy-ExtraBold.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Gilroy-Light;
+    src: url(./fuentes/Gilroy/Gilroy-Light.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Gilroy-Medium;
+    src: url(./fuentes/Gilroy/Gilroy-Medium.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Gilroy-Regular;
+    src: url(./fuentes/Gilroy/Gilroy-Regular.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Gilroy-Thin;
+    src: url(./fuentes/Gilroy/Gilroy-Thin.ttf);
+    font-display: swap;
+}
+
+:root {
+    --fontFamily: "Gilroy-Regular", sans-serif;
+    --fontFamilyBold: "Gilroy-Bold", sans-serif;
+    --fontFamlyText: Corra-Montserra-Regular;
+    --colorBlanco: #ffffff;
+    --blackColor: #1f2428;
+    --colorGris: #999999;
+    --bg-header: rgba(231, 226, 218, 0.4);
+    --font-size-p: 1rem;
+    --transition: 0.5s;
+    --boxShadow: rgba(80, 79, 79, 0.1) 0px 0px 16px;
+    --bg-header: rgba(231, 226, 218, 0.4);
+    --bg-content: #f2f2f2;
+    --bg-hero: #f3f0f6;
+    --text-color: #333;
+    --max-width: 1200px;
+    --veda-principal: grey;
+    --arena: #f1f1f1;
+    --color1: #5f1b2d;
+    --color2: #861e34;
+    --color3: #af1731;
+    --color4: #c79b66;
+    --color5: #0c312d;
+    --color6: #246257;
+    --color7: #609b84;
+    --color8: #484747;
+    --colortitulos: #660033;
+    --colorPDF: red;
+    --brand-maroon: #691b31;
+    --brand-light-gray: #f8f9fa;
+    --brand-border-color: #dee2e6;
+    --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --card-border-radius: 0.75rem;
+    /* 12px */
+}
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    font-family: var(--fontFamily) !important;
+}
+
+/* Estilos de login */
+.login {
+    background-color: var(--color7);
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+
+    .contenedor {
+        display: flex;
+        width: 100%;
+        height: 100%;
+    }
+
+    .login-form {
+        background-color: #4a4a4a;
+        color: white;
+        padding: 40px;
+        width: 40%;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .login-form h2 {
+        margin-bottom: 10px;
+        font-family: 'Gilroy-Bold', sans-serif;
+        font-size: 2.5rem;
+    }
+
+    .login-form p {
+        margin-bottom: 30px;
+        text-align: center;
+        text-wrap: wrap;
+        font-family: 'Gilroy-Regular', sans-serif;
+        padding: 1rem 4rem;
+        font-size: 1.1rem;
+    }
+
+    .contenedor-formulario {
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        width: 100%;
+        padding-right: 2rem;
+        padding-left: 2rem;
+    }
+
+    .login-form input {
+        /* width: 100%; */
+        padding: 10px;
+        margin-bottom: 20px;
+        border: none;
+        border-radius: 5px;
+        box-sizing: border-box;
+    }
+
+    .login-form button {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #666;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .login-form button:hover {
+        background-color: #555;
+    }
+
+    .footer {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .footer img {
+        max-width: 500px;
+    }
+
+    .image-container {
+        width: 60%;
+    }
+
+    .image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    @media (max-width: 768px) {
+        .contenedor {
+            flex-direction: column;
+        }
+
+        .image-container {
+            display: none;
+        }
+
+        .login-form {
+            width: 100%;
+            height: 100vh;
+        }
+    }
+}

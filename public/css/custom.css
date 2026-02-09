@@ -1,0 +1,807 @@
+/* Fuente Corra-Montserra */
+@font-face {
+    font-family: Corra-Montserra-Bold;
+    src: url(./fuentes/corra-montserra/TTF/Corra-Montserra-Bold.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Corra-Montserra-Regular;
+    src: url(./fuentes/corra-montserra/TTF/Corra-Montserra-Regular.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Corra-Montserra-SemiBold;
+    src: url(./fuentes/corra-montserra/TTF/Corra-Montserra-Semibold.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Corra-Montserra-SemiBold;
+    src: url(./fuentes/corra-montserra/TTF/Corra-Montserra-Semibold.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Corra-Montserra-Black;
+    src: url(./fuentes/corra-montserra/TTF/Corra-Montserra-Black.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Corra-Montserra-Light;
+    src: url(./fuentes/corra-montserra/TTF/Corra-Montserra-Light.ttf);
+    font-display: swap;
+}
+
+/* Fuente Gilroy */
+@font-face {
+    font-family: Gilroy-Black;
+    src: url(./fuentes/Gilroy/Gilroy-Black.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Gilroy-BlackItalic;
+    src: url(./fuentes/Gilroy/Gilroy-BlackItalic.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Gilroy-Bold;
+    src: url(./fuentes/Gilroy/Gilroy-Bold.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Gilroy-BoldItalic;
+    src: url(./fuentes/Gilroy/Gilroy-BoldItalic.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Gilroy-ExtraBold;
+    src: url(./fuentes/Gilroy/Gilroy-ExtraBold.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Gilroy-Light;
+    src: url(./fuentes/Gilroy/Gilroy-Light.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Gilroy-Medium;
+    src: url(./fuentes/Gilroy/Gilroy-Medium.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Gilroy-Regular;
+    src: url(./fuentes/Gilroy/Gilroy-Regular.ttf);
+    font-display: swap;
+}
+
+@font-face {
+    font-family: Gilroy-Thin;
+    src: url(./fuentes/Gilroy/Gilroy-Thin.ttf);
+    font-display: swap;
+}
+
+:root {
+    --fontFamily: "Gilroy-Regular", sans-serif;
+    --fontFamilyBold: "Gilroy-Bold", sans-serif;
+    --color1: #5f1b2d;
+    --color2: #861e34;
+    --color3: #af1731;
+    --color4: #c79b66;
+    --color5: #0c312d;
+    --color6: #246257;
+    --color7: #609b84;
+    --color8: #484747;
+    --blanco: white;
+    --arena: #f8f9fa;
+}
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--fontFamily) !important;
+    color: var(--color8);
+    background-color: #f4f6f9;
+    overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--fontFamilyBold);
+    color: var(--color1);
+}
+
+/* Encabezado Sólido (El banner verde que te gusta) */
+.page-header-solid {
+    background-color: var(--color6);
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(36, 98, 87, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.page-header-solid h2 {
+    color: var(--blanco);
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+/* Tarjeta Principal (Estilo Unificado) */
+.card-panel {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+    background: white;
+    overflow: hidden;
+}
+
+.card-header-simple {
+    background: transparent;
+    border-bottom: 1px solid #eee;
+    padding: 1.5rem;
+}
+
+/* =========================================
+   3. BOTONES
+   ========================================= */
+
+/* Botón Principal (VINO - Por defecto) */
+.btn-custom-primary {
+    background-color: var(--color1);
+    border-color: var(--color1);
+    color: white;
+    padding: 0.5rem 1.2rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-custom-primary:hover {
+    background-color: var(--color2);
+    border-color: var(--color2);
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Botón Verde (Para Importaciones/Éxito)*/
+.btn-custom-verde {
+    background-color: var(--color6);
+    border-color: var(--color6);
+    color: white;
+    padding: 0.5rem 1.2rem;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.btn-custom-verde:hover {
+    background-color: var(--color5);
+    border-color: var(--color5);
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* Botón de Acción Cuadrado (Outline) */
+.btn-icon-square {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    color: var(--color8);
+    background: white;
+    transition: all 0.2s;
+}
+
+.btn-icon-square:hover {
+    background-color: var(--color1);
+    border-color: var(--color1);
+    color: white;
+}
+
+/* Variante roja específica para eliminar o alertas (como en tu imagen) */
+.btn-icon-square.danger {
+    color: var(--color3);
+    border-color: var(--color3);
+}
+
+.btn-icon-square.danger:hover {
+    background-color: var(--color3);
+    color: white;
+}
+
+.btn-icon-square.edit {
+    color: var(--color4);
+    border-color: var(--color4);
+}
+
+.btn-icon-square.edit:hover {
+    background-color: var(--color4);
+    color: white;
+}
+
+/* =========================================
+   4. PESTAÑAS (TABS)
+   ========================================= */
+.nav-tabs-clean {
+    border-bottom: 2px solid #f0f0f0;
+    margin-bottom: 1.5rem;
+}
+
+.nav-tabs-clean .nav-item {
+    margin-bottom: -2px;
+}
+
+.nav-tabs-clean .nav-link {
+    border: none;
+    color: var(--color8);
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    background: transparent;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s;
+}
+
+.nav-tabs-clean .nav-link:hover {
+    color: var(--color6);
+    /* Hover verde */
+}
+
+.nav-tabs-clean .nav-link.active {
+    color: var(--color1);
+    /* Activo Vino */
+    border-bottom: 3px solid var(--color4);
+    /* Línea dorada */
+    background: transparent;
+}
+
+/* =========================================
+   5. TABLAS
+   ========================================= */
+.table-custom thead th {
+    background-color: #fcfcfc;
+    color: var(--color1);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid var(--color4);
+    /* Línea dorada */
+    padding: 1rem;
+    font-weight: 700;
+}
+
+.table-custom tbody td {
+    padding: 0.5rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.95rem;
+}
+
+.table-custom tbody tr:hover {
+    background-color: #fafafa;
+}
+
+/* =========================================
+   6. UTILIDADES EXTRA
+   ========================================= */
+.text-vino {
+    color: var(--color1) !important;
+}
+
+.text-dorado {
+    color: var(--color4) !important;
+}
+
+.text-verde {
+    color: var(--color6) !important;
+}
+
+/* ============================================= */
+/* PERSONALIZACIÓN DE TOOLTIPS BOOTSTRAP 5       */
+/* ============================================= */
+
+/* 1. El fondo y texto del globo */
+.tooltip-inner {
+    background-color: var(--color1);
+    color: #ffffff;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* 2. La flechita (triángulo) */
+.tooltip.bs-tooltip-top .tooltip-arrow::before {
+    border-top-color: var(--color1);
+}
+
+.tooltip.bs-tooltip-bottom .tooltip-arrow::before {
+    border-bottom-color: var(--color1);
+}
+
+.tooltip.bs-tooltip-start .tooltip-arrow::before {
+    border-left-color: var(--color1);
+}
+
+.tooltip.bs-tooltip-end .tooltip-arrow::before {
+    border-right-color: var(--color1);
+}
+
+/* ============================================= */
+/* Personalización de la Paginación de DataTables (Bootstrap 5)       */
+/* ============================================= */
+/* --- Botón de la Página Activa --- */
+.dt-paging .pagination .page-item.active .page-link {
+    background-color: #264653;
+    border-color: #264653;
+    color: white;
+}
+
+/* --- Botones de las Otras Páginas (No activas) --- */
+.dt-paging .pagination .page-item .page-link {
+    color: #264653;
+}
+
+/* --- Efecto al Pasar el Mouse (Hover) --- */
+.dt-paging .pagination .page-item .page-link:hover {
+    background-color: #f0f0f0;
+    color: #212529;
+}
+
+/* --- Botones Deshabilitados (ej. "Anterior" en la primera página) --- */
+.dt-paging .pagination .page-item.disabled .page-link {
+    color: #adb5bd;
+}
+
+/* =========================================
+   7. ZONA DE CARGA DE ARCHIVOS (Import Center)
+   ========================================= */
+.file-drop-zone {
+    border: 2px dashed #e0e0e0;
+    border-radius: 12px;
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    background-color: #fafafa;
+    transition: all 0.3s ease;
+    position: relative;
+    color: var(--color8);
+}
+
+.file-drop-zone:hover,
+.file-drop-zone.dragover {
+    border-color: var(--color4);
+    /* Dorado al pasar el mouse */
+    background-color: #fffdf9;
+    /* Fondo muy tenue dorado */
+    transform: scale(1.01);
+}
+
+.file-drop-zone .file-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Instrucciones dentro de formularios */
+.import-instructions {
+    background-color: #f8f9fa;
+    border-left: 4px solid var(--color6);
+    padding: 1rem;
+    margin-top: 1.5rem;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.9rem;
+    color: var(--color8);
+}
+
+.import-instructions code {
+    background-color: rgba(0, 0, 0, 0.06);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--color1);
+    font-weight: 600;
+}
+
+/* =========================================
+   UNIFICACIÓN DE PAGINACIÓN (Laravel + DataTables)
+   ========================================= */
+
+/* 1. PAGINACIÓN DE LARAVEL (La que se ve azul actualmente) */
+.pagination {
+    --bs-pagination-active-bg: var(--color1);
+    --bs-pagination-active-border-color: var(--color1);
+    --bs-pagination-color: var(--color1);
+    --bs-pagination-hover-color: var(--color2);
+    --bs-pagination-focus-color: var(--color2);
+}
+
+.page-item.active .page-link {
+    background-color: var(--color1) !important;
+    /* Fondo Vino */
+    border-color: var(--color1) !important;
+    color: white !important;
+}
+
+.page-link {
+    color: var(--color1);
+    /* Texto Vino */
+    font-weight: 500;
+}
+
+.page-link:hover {
+    background-color: #f8f9fa;
+    color: var(--color4);
+    /* Dorado al pasar el mouse */
+    border-color: #dee2e6;
+}
+
+.page-link:focus {
+    box-shadow: 0 0 0 0.25rem rgba(95, 27, 45, 0.25);
+    /* Sombra Vino suave */
+}
+
+/* 2. PAGINACIÓN DE DATATABLES (La de Salud de Datos) */
+/* Forzamos a los botones de DataTables a parecerse a los de Bootstrap */
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    box-sizing: border-box;
+    display: inline-block;
+    min-width: 1.5em;
+    padding: 0.375rem 0.75rem;
+    /* Mismo padding que Bootstrap */
+    margin-left: 2px;
+    text-align: center;
+    text-decoration: none !important;
+    cursor: pointer;
+    color: var(--color1) !important;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    /* Bordes redondeados */
+    background: white;
+}
+
+/* Estado Normal (Hover) */
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.current) {
+    color: var(--color4) !important;
+    /* Dorado */
+    background: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+}
+
+/* Estado Activo (Página actual) */
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+    color: white !important;
+    background: var(--color1) !important;
+    /* Fondo Vino */
+    border-color: var(--color1) !important;
+}
+
+/* Estado Deshabilitado (Anterior/Siguiente cuando no hay más) */
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:active {
+    cursor: default;
+    color: #6c757d !important;
+    border: 1px solid #dee2e6 !important;
+    background: transparent !important;
+    opacity: 0.6;
+    box-shadow: none;
+}
+
+/* Alineación a la derecha */
+.dataTables_wrapper .dataTables_paginate {
+    padding-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Estilos para la Jerarquía de Catálogos */
+.theme-box {
+    background-color: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    transition: all 0.2s ease;
+}
+
+.theme-box:hover {
+    border-color: var(--color4);
+    /* Dorado suave al pasar mouse */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.theme-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 12px 12px 0 0;
+    padding: 1rem 1.5rem;
+}
+
+.indicator-row {
+    transition: background-color 0.2s;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.indicator-row:last-child {
+    border-bottom: none;
+}
+
+.indicator-row:hover {
+    background-color: #fffcf8;
+}
+
+/* Muy sutil dorado */
+
+.variables-container {
+    background-color: #fafafa;
+    border-top: 2px dashed #e0e0e0;
+    margin-top: -1px;
+    /* Pegarlo al borde */
+}
+
+/* Badge pequeño para IDs */
+.id-badge {
+    font-size: 0.75rem;
+    color: var(--color8);
+    opacity: 0.6;
+    margin-right: 0.5rem;
+    font-family: monospace;
+}
+
+/* =========================================
+   TOM SELECT x BOOTSTRAP 5 FIXES
+   ========================================= */
+
+/* 1. Ajustar altura y padding para igualar a .form-control */
+.ts-control {
+    min-height: calc(1.5em + 1rem + 2px) !important;
+    /* Altura estándar BS5 */
+    padding: 0.5rem 1rem !important;
+    font-size: 1rem;
+    border-color: #dee2e6 !important;
+    display: flex !important;
+    align-items: center;
+}
+
+/* 2. Quitar borde azul feo al enfocar (usar tu color dorado/vino) */
+.ts-wrapper.focus .ts-control {
+    border-color: var(--color4) !important;
+    /* Dorado */
+    box-shadow: 0 0 0 0.25rem rgba(199, 155, 102, 0.25) !important;
+}
+
+/* 3. Ajuste para Input Group (Icono a la izquierda) */
+.input-group>.ts-wrapper {
+    flex: 1 1 auto;
+    width: 1%;
+    /* Truco para que ocupe el resto del espacio */
+}
+
+/* Quitar bordes redondeados izquierdos porque ahí va el icono */
+.input-group>.ts-wrapper .ts-control {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+
+/* 4. Dropdown (Lista de opciones) */
+.ts-dropdown {
+    border-color: var(--color4) !important;
+    z-index: 1050 !important;
+    /* Asegurar que flote sobre todo */
+}
+
+.ts-dropdown .active {
+    background-color: var(--color1) !important;
+    /* Vino al seleccionar */
+    color: white !important;
+}
+
+/* =========================================
+   FIX VISUAL PARA TOM SELECT (MULTIPLE)
+   ========================================= */
+
+/* 1. El estilo de la "pastilla" o etiqueta seleccionada */
+.ts-wrapper.multi .ts-control>div {
+    background-color: var(--color1) !important;
+    /* Fondo Vino */
+    color: white !important;
+    /* Texto Blanco */
+    border: none !important;
+    border-radius: 4px;
+    /* Bordes redondeados */
+    padding: 3px 10px !important;
+    /* Espacio interno */
+    margin-right: 5px !important;
+    /* Separación horizontal */
+    margin-bottom: 5px !important;
+    /* Separación vertical (para que no se peguen) */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /* Sombra suave */
+}
+
+/* 2. El estado "activo" (cuando le das clic a una etiqueta ya seleccionada) */
+.ts-wrapper.multi .ts-control>div.active {
+    background-color: var(--color2) !important;
+    /* Un poco más claro/oscuro al seleccionar */
+    color: white !important;
+}
+
+/* 3. El botón de eliminar (la 'x') dentro de la etiqueta */
+.ts-wrapper.multi .ts-control>div .remove {
+    color: white !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.3) !important;
+    /* Línea divisoria sutil */
+    padding-left: 8px !important;
+    margin-left: 8px !important;
+}
+
+.ts-wrapper.multi .ts-control>div .remove:hover {
+    background: rgba(0, 0, 0, 0.1);
+    /* Efecto hover en la X */
+}
+
+/* =========================================
+   ESTILOS ESPECÍFICOS DEL DASHBOARD
+   ========================================= */
+
+/* Alerta de Bienvenida con degradado Vino */
+.alert-welcome {
+    background: linear-gradient(135deg, var(--color1) 0%, var(--color2) 100%);
+    color: white;
+    border: none;
+    border-left: 5px solid var(--color4);
+    /* Borde Dorado */
+    border-radius: 12px;
+}
+
+.alert-welcome h4 {
+    color: white !important;
+}
+
+.alert-welcome .text-white-50 {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Tarjetas KPI (Indicadores clave) */
+.card-kpi {
+    border: none;
+    border-left: 4px solid var(--color4);
+    /* Dorado por defecto */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-kpi:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Iconos circulares en KPIs */
+.icon-shape {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+/* Botones de Acción Rápida (Menú lateral) */
+.btn-custom-action {
+    border: 1px solid #e0e0e0;
+    color: var(--color8);
+    background: white;
+    transition: all 0.2s;
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.btn-custom-action:hover {
+    background-color: var(--color5);
+    /* Verde Oscuro al hover */
+    color: white;
+    border-color: var(--color5);
+    transform: translateX(5px);
+    /* Pequeño desplazamiento a la derecha */
+}
+
+.btn-custom-action i {
+    color: var(--color4);
+    transition: color 0.2s;
+}
+
+.btn-custom-action:hover i {
+    color: white;
+}
+
+/* Emojis de Feedback */
+.emoji-stat {
+    transition: transform 0.2s;
+    cursor: default;
+}
+
+.emoji-stat:hover {
+    transform: scale(1.15);
+}
+
+/* =========================================
+   FIX ESTRUCTURA DEL CATÁLOGO (Dashboard)
+   ========================================= */
+
+.stat-item {
+    position: relative;
+    padding: 1.5rem 1rem;
+    overflow: hidden;
+    /* Para que el icono grande no se salga */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* El número grande */
+.stat-item h3 {
+    font-size: 2.5rem;
+    margin-bottom: 0.2rem;
+    position: relative;
+    z-index: 2;
+    /* Asegura que esté por encima del icono */
+}
+
+/* La etiqueta (Dimensiones, Temáticas...) */
+.stat-item span {
+    position: relative;
+    z-index: 2;
+    letter-spacing: 1px;
+    font-size: 0.75rem;
+}
+
+/* El icono de fondo decorativo */
+.stat-icon-bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.08;
+    /* Muy sutil */
+    font-size: 4rem;
+    z-index: 1;
+    /* Detrás del texto */
+    color: var(--color1);
+    /* Color Vino */
+    pointer-events: none;
+}
+
+/* Separadores verticales en desktop */
+@media (min-width: 768px) {
+    .border-start-md {
+        border-left: 1px solid #e9ecef;
+    }
+}
