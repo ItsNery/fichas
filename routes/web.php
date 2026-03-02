@@ -64,11 +64,6 @@ Route::get('/api/indicador-complejo/{indicador}/anios-disponibles', [FichaContro
 Route::get('/datos-abiertos/exportar-datos-complejos/{indicador}/{anio}', [FichaController::class, 'exportDatosComplejos'])
     ->name('datos-abiertos.export-complejos');
 
-Route::get('/test-500', function () {
-    // La función abort() de Laravel está hecha para esto.
-    // Le decimos que genere un error 500 con un mensaje.
-    abort(500, "¡Esto es una prueba del error 500!");
-});
 /*
 |--------------------------------------------------------------------------
 | Rutas de Autenticación y Dashboard

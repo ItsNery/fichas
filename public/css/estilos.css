@@ -292,7 +292,7 @@ p {
 .site-header {
     position: relative;
     background-color: var(--colorBlanco);
-    z-index: 1000;
+    z-index: 99;
 }
 
 .header-logos-container {
@@ -1362,4 +1362,12 @@ footer {
 /* Opcional: Al pasar el mouse sobre una pestaña inactiva, que no se ponga azul */
 #dimensionTab .nav-link:not(.active):hover {
     color: rgba(84, 81, 81, 0.85);
+}
+
+/* Estilo para las opciones deshabilitadas en TomSelect */
+.ts-dropdown .option.disabled {
+    background-color: #f8f9fa !important;
+    color: #adb5bd !important;
+    cursor: not-allowed !important;
+    font-style: italic;
 }

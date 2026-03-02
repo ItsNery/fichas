@@ -1,6 +1,6 @@
 <x-admin-layout>
     @section('title', 'Gestión de Catálogos')
-
+    <!-- local -->
     {{-- HEADER --}}
     <x-page-header
         title="Gestión de Catálogos"
@@ -19,7 +19,7 @@
     </script>
     @endif
     @if ($errors->any())
-    <div class="alert alert-danger mb-4 shadow-sm border-0 border-start border-4 border-danger">
+    <div class="alert alert-danger mb-4 shadow-sm border-0 border-start border-danger">
         <i class="fa-solid fa-circle-exclamation me-2"></i>{{ $errors->first() }}
     </div>
     @endif
@@ -579,12 +579,20 @@
                         data
                     }) => {
                         if (ok) {
+                            // --- PRESERVAR ESTADO ANTES DE RECARGAR ---
+                            const activeTabId = document.querySelector('#dimensionTab .nav-link.active')?.id;
+                            const openAccordions = Array.from(document.querySelectorAll('.indicator-row .collapse.show'))
+                                .map(el => el.id);
+
+                            sessionStorage.setItem('catalog_active_tab', activeTabId);
+                            sessionStorage.setItem('catalog_open_accordions', JSON.stringify(openAccordions));
+
                             catalogModal.hide();
                             Swal.fire({
                                 icon: 'success',
                                 title: '¡Operación Exitosa!',
                                 confirmButtonColor: '#5f1b2d',
-                                timer: 1500,
+                                timer: 1000,
                                 showConfirmButton: false
                             }).then(() => window.location.reload());
                         } else {
@@ -628,12 +636,40 @@
                                 }
                             }).then(response => {
                                 if (response.ok) {
+                                    // ELIMINACIÓN SIN RECARGA (UI SMOOTH) - Excepto para Dimensiones
+                                    const isDimension = deleteButton.dataset.url.includes('dimensions');
+
+                                    if (isDimension) {
+                                        Swal.fire({
+                                            icon: 'success',
+                                            title: '¡Dimensión Eliminada!',
+                                            confirmButtonColor: '#5f1b2d',
+                                            timer: 1000,
+                                            showConfirmButton: false
+                                        }).then(() => window.location.reload());
+                                        return;
+                                    }
+
+                                    const row = deleteButton.closest('.indicator-row') ||
+                                        deleteButton.closest('.theme-box') ||
+                                        deleteButton.closest('.border-bottom.border-light') ||
+                                        deleteButton.closest('.tab-pane');
+
+                                    if (row) {
+                                        row.style.transition = 'all 0.5s ease';
+                                        row.style.opacity = '0';
+                                        row.style.transform = 'translateX(20px)';
+                                        setTimeout(() => row.remove(), 500);
+                                    }
+
                                     Swal.fire({
                                         icon: 'success',
                                         title: '¡Eliminado!',
                                         text: 'El elemento ha sido eliminado correctamente.',
-                                        confirmButtonColor: '#5f1b2d'
-                                    }).then(() => window.location.reload());
+                                        confirmButtonColor: '#5f1b2d',
+                                        timer: 1500,
+                                        showConfirmButton: false
+                                    });
                                 } else {
                                     Swal.fire('Error', 'No se pudo eliminar el elemento. Puede tener datos asociados.', 'error');
                                 }
@@ -642,6 +678,32 @@
                     });
                 }
             });
+
+            // 6. RESTAURAR ESTADO (Pestaña y Acordeones)
+            const savedTabId = sessionStorage.getItem('catalog_active_tab');
+            const savedAccordions = JSON.parse(sessionStorage.getItem('catalog_open_accordions') || '[]');
+
+            if (savedTabId) {
+                const tabEl = document.getElementById(savedTabId);
+                if (tabEl) {
+                    const tab = new bootstrap.Tab(tabEl);
+                    tab.show();
+                }
+                sessionStorage.removeItem('catalog_active_tab');
+            }
+
+            if (savedAccordions.length > 0) {
+                savedAccordions.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        const collapse = new bootstrap.Collapse(el, {
+                            toggle: false
+                        });
+                        collapse.show();
+                    }
+                });
+                sessionStorage.removeItem('catalog_open_accordions');
+            }
         });
     </script>
 </x-admin-layout>

@@ -6,7 +6,7 @@ $pageDescription =
 'Consulta el banco completo de indicadores estadísticos del Estado de Puebla. Datos demográficos, económicos, sociales y más.';
 $currentUrl = url()->current();
 @endphp
-
+<!-- local -->
 @section('title', $pageTitle)
 @section('meta-description', $pageDescription)
 @section('canonical-url', $currentUrl)
@@ -174,12 +174,12 @@ $currentUrl = url()->current();
                                                     </div>
                                                 </div>
                                                 {{-- Interruptor de Comparación Estatal --}}
-                                                <div class="mt-3 form-check form-switch">
+                                                <!-- <div class="mt-3 form-check form-switch">
                                                     <input class="form-check-input" type="checkbox" id="compare-state-switch">
                                                     <label class="form-check-label" for="compare-state-switch">
                                                         Comparar con <strong>Total Estatal</strong>
                                                     </label>
-                                                </div>
+                                                </div> -->
                                             </div>
 
                                             {{-- Columna para el Selector de Años --}}
@@ -486,7 +486,7 @@ $currentUrl = url()->current();
         <div class="container-fluid row">
             <div class="mx-auto px-4 col-lg-3 col-md-6 col-sm-12 col-12">
                 <div class="contenedor-tarjetadocs-compacta">
-                    <p class="titulo-documento-compacta">Proyecciones 1990-2040 para el estado de Puebla</p> <a
+                    <p class="titulo-documento-compacta">Proyecciones de población 1990-2040 para el estado de Puebla</p> <a
                         href="{{ asset('documentos/Proyecciones19902040Puebla.zip') }}"
                         class="boton-descargar-compacta" download="" rel="noopener"> <i
                             class="fas fa-file-zipper"></i>

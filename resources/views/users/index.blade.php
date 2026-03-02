@@ -27,6 +27,7 @@
                             <tr>
                                 <th class="ps-4">Usuario</th>
                                 <th>Credenciales</th>
+                                <th>Estado</th>
                                 <th class="text-center pe-4">Acciones</th>
                             </tr>
                         </thead>

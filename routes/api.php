@@ -21,3 +21,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 Route::post('/site-evaluation', [SiteEvaluationController::class, 'store']);
 Route::post('/v1/consulta', [PublicApiController::class, 'consultarDatos'])->name('api.public.consulta');
+Route::get('/v1/debug', function () {
+    return response()->json(['success' => true, 'message' => 'API is working']);
+});
+Route::get('/v1/debug-controller', [PublicApiController::class, 'debugController']);

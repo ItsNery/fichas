@@ -1,3 +1,4 @@
+// LOCAL
 // --- VARIABLES GLOBALES PARA EL MAPA ---
 // Las declaramos aquí para que sean accesibles por todas las funciones.
 let mapMunicipal = null;
@@ -8,6 +9,10 @@ let geojsonLayerRegional = null;
 let pueblaGeoJSON = null;
 let microGeoJSON = null;
 let macroGeoJSON = null;
+// Lista negra de microrregiones
+const IDS_BLOQUEADOS = ["9", "10", "24"];
+const MENSAJE_REGIONALIZACION =
+    "Como algunas microrregiones abarcan más de un municipio, no es posible separar sus datos con exactitud. Para estas zonas, puedes consultar la información de cada municipio por separado.";
 
 document.addEventListener("DOMContentLoaded", function () {
     // --- 0. SETUP INICIAL Y LECTURA DE VARIABLES ---
@@ -25,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const estatalBtn = document.getElementById("estatal-btn");
     const consultarBtn = document.getElementById("consultar-btn");
     const consultarBtnRegions = document.getElementById(
-        "consultar-btn-regions"
+        "consultar-btn-regions",
     );
 
     const shareBtn = document.getElementById("share-btn");
@@ -68,7 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
             ) {
                 // ...la selección final son TODOS LOS MUNICIPIOS MENOS 'estatal'.
                 finalSelection = finalSelection.filter(
-                    (id) => id !== "estatal"
+                    (id) => id !== "estatal",
                 );
                 needsUpdate = true;
             }
@@ -99,14 +104,40 @@ document.addEventListener("DOMContentLoaded", function () {
     const microrregionSelector = new TomSelect("#microrregion-selector", {
         placeholder: "Selecciona una microrregión",
         onChange: function (value) {
+            if (IDS_BLOQUEADOS.includes(value)) {
+                this.removeItem(value, true); // Quita la selección
+                this.blur(); // Quita el foco
+                Swal.fire({
+                    icon: "warning",
+                    title: "Región Unificada",
+                    text: MSJ_REGIONALIZACION,
+                    confirmButtonColor: "#246257",
+                });
+                return;
+            }
+
             appState.microrregionId = value;
             checkIfCanConsult();
             consultarBtnRegions.classList.replace(
                 "btn-secondary",
-                "btn-custom-primary"
+                "btn-custom-primary",
             );
         },
     });
+
+    // --- INHABILITAR OPCIONES EN EL DROPDOWN ---
+    setTimeout(() => {
+        IDS_BLOQUEADOS.forEach((id) => {
+            const dataExistente = microrregionSelector.options[id];
+            if (dataExistente) {
+                microrregionSelector.updateOption(id, {
+                    ...dataExistente,
+                    disabled: true,
+                });
+            }
+        });
+        microrregionSelector.refreshOptions(false);
+    }, 400);
 
     const macrorregionSelector = new TomSelect("#macrorregion-selector", {
         placeholder: "Selecciona una macrorregión",
@@ -115,7 +146,7 @@ document.addEventListener("DOMContentLoaded", function () {
             checkIfCanConsult();
             consultarBtnRegions.classList.replace(
                 "btn-secondary",
-                "btn-custom-primary"
+                "btn-custom-primary",
             );
         },
     });
@@ -156,15 +187,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const exportBtnRegions = document.getElementById("export-btn-regions");
 
     const microrregionContainer = document.getElementById(
-        "microrregion-selector-container"
+        "microrregion-selector-container",
     );
     const macrorregionContainer = document.getElementById(
-        "macrorregion-selector-container"
+        "macrorregion-selector-container",
     );
     const nivelTabs = document.querySelectorAll("#pills-tab-nivel .nav-link");
     const accordionMunicipal = document.getElementById("accordionDimensions");
     const accordionRegionsContainer = document.getElementById(
-        "accordionDimensionsRegions"
+        "accordionDimensionsRegions",
     );
 
     const chartContainer = document.getElementById("chart-container");
@@ -172,7 +203,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const resumenBtn = document.getElementById("resumen-btn");
     const resumenUrlPrototype = resumenBtn ? resumenBtn.href : "";
     const chartContainerRegions = document.getElementById(
-        "chart-container-regions"
+        "chart-container-regions",
     );
     const chartTitleRegions = document.getElementById("chart-title-regions");
 
@@ -184,46 +215,46 @@ document.addEventListener("DOMContentLoaded", function () {
     const sourceElement = document.getElementById("indicator-source");
     const methodElement = document.getElementById("indicator-method");
     const availableYearsElement = document.getElementById(
-        "indicator-available-years"
+        "indicator-available-years",
     );
     const yearSelectorContainer = document.getElementById(
-        "year-selector-container"
+        "year-selector-container",
     );
     const yearSelector = document.getElementById("year-selector");
     const chartNoteContainer = document.getElementById("chart-note-container");
     // Selectores de años en regiones
     const metadataContainerRegions = document.getElementById(
-        "metadata-container-regions"
+        "metadata-container-regions",
     );
     const descriptionElementRegions = document.getElementById(
-        "indicator-description-regions"
+        "indicator-description-regions",
     );
     const sourceElementRegions = document.getElementById(
-        "indicator-source-regions"
+        "indicator-source-regions",
     );
     const methodElementRegions = document.getElementById(
-        "indicator-method-regions"
+        "indicator-method-regions",
     );
     const yearSelectorContainerRegions = document.getElementById(
-        "year-selector-container-regions"
+        "year-selector-container-regions",
     );
     const chartNoteContainerRegions = document.getElementById(
-        "chart-note-container-regions"
+        "chart-note-container-regions",
     );
     const availableYearsElementRegions = document.getElementById(
-        "indicator-available-years-regions"
+        "indicator-available-years-regions",
     );
     // Variables para boton de tamaño completo
     const fullscreenBtn = document.getElementById("fullscreen-btn");
     const fullscreenModal = document.getElementById("chart-fullscreen-modal");
     const fullscreenChartContainer = document.getElementById(
-        "fullscreen-chart-container"
+        "fullscreen-chart-container",
     );
     const fullscreenModalTitle = document.getElementById(
-        "fullscreen-modal-title"
+        "fullscreen-modal-title",
     );
     const fullscreenBtnRegions = document.getElementById(
-        "fullscreen-btn-regions"
+        "fullscreen-btn-regions",
     );
     let fullscreenChart = null;
     let lastChartOptions = {};
@@ -261,47 +292,47 @@ document.addEventListener("DOMContentLoaded", function () {
         // 1. Reemplaza los IDs de los paneles colapsables
         clonedAccordionHTML = clonedAccordionHTML.replace(
             /id="collapse-dimension-/g,
-            'id="collapse-dimension-region-'
+            'id="collapse-dimension-region-',
         );
         clonedAccordionHTML = clonedAccordionHTML.replace(
             /id="collapse-tematica-/g,
-            'id="collapse-tematica-region-'
+            'id="collapse-tematica-region-',
         );
 
         // 2. Reemplaza los data-bs-target de los botones que los controlan
         clonedAccordionHTML = clonedAccordionHTML.replace(
             /data-bs-target="#collapse-dimension-/g,
-            'data-bs-target="#collapse-dimension-region-'
+            'data-bs-target="#collapse-dimension-region-',
         );
         clonedAccordionHTML = clonedAccordionHTML.replace(
             /data-bs-target="#collapse-tematica-/g,
-            'data-bs-target="#collapse-tematica-region-'
+            'data-bs-target="#collapse-tematica-region-',
         );
 
         // 3. Reemplaza los data-bs-parent para que cada acordeón sea independiente
         clonedAccordionHTML = clonedAccordionHTML.replace(
             /data-bs-parent="#accordionDimensions"/g,
-            'data-bs-parent="#accordionDimensionsRegions"'
+            'data-bs-parent="#accordionDimensionsRegions"',
         );
         clonedAccordionHTML = clonedAccordionHTML.replace(
             /data-bs-parent="#accordionTematicas-/g,
-            'data-bs-parent="#accordionTematicas-region-'
+            'data-bs-parent="#accordionTematicas-region-',
         );
 
         // 4. (LA CLAVE) Reemplaza nuestros data-attributes personalizados en los links
         clonedAccordionHTML = clonedAccordionHTML.replace(
             /data-dimension-target="#collapse-dimension-/g,
-            'data-dimension-target="#collapse-dimension-region-'
+            'data-dimension-target="#collapse-dimension-region-',
         );
         clonedAccordionHTML = clonedAccordionHTML.replace(
             /data-tematica-target="#collapse-tematica-/g,
-            'data-tematica-target="#collapse-tematica-region-'
+            'data-tematica-target="#collapse-tematica-region-',
         );
 
         // 5. Reemplaza el ID del sub-acordeón
         clonedAccordionHTML = clonedAccordionHTML.replace(
             /id="accordionTematicas-/g,
-            'id="accordionTematicas-region-'
+            'id="accordionTematicas-region-',
         );
 
         // --- FIN DE LA CADENA ---
@@ -309,7 +340,7 @@ document.addEventListener("DOMContentLoaded", function () {
         accordionRegionsContainer.innerHTML = clonedAccordionHTML;
         setupIndicatorSearch(
             "indicador-search-regions",
-            "accordionDimensionsRegions"
+            "accordionDimensionsRegions",
         );
     }
 
@@ -481,7 +512,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             resumenBtn.href = resumenUrlPrototype.replace(
                 "ID_PLACEHOLDER",
-                municipioId
+                municipioId,
             );
         } else {
             resumenBtn.style.display = "none";
@@ -497,7 +528,7 @@ document.addEventListener("DOMContentLoaded", function () {
      */
     function filtrarAcordeonRegional(showAll = false) {
         const links = document.querySelectorAll(
-            "#accordionDimensionsRegions .indicador-link"
+            "#accordionDimensionsRegions .indicador-link",
         );
         links.forEach((link) => {
             // Seleccionamos el <li> padre para ocultarlo completamente
@@ -520,13 +551,13 @@ document.addEventListener("DOMContentLoaded", function () {
     function ocultarTematicasVacias() {
         // Obtenemos todos los acordeones de temáticas en la vista de regiones
         const tematicas = document.querySelectorAll(
-            "#accordionDimensionsRegions .accordion-item"
+            "#accordionDimensionsRegions .accordion-item",
         );
 
         tematicas.forEach((tematica) => {
             // Buscamos si dentro de esta temática hay algún indicador (<li>) que esté visible
             const indicadorVisible = tematica.querySelector(
-                'li[style*="display: block"]'
+                'li[style*="display: block"]',
             );
 
             if (indicadorVisible) {
@@ -551,7 +582,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const todosLosBotones =
             accordionElement.querySelectorAll(".accordion-button");
         const todosLosPaneles = accordionElement.querySelectorAll(
-            ".accordion-collapse"
+            ".accordion-collapse",
         );
 
         todosLosBotones.forEach((boton) => boton.classList.add("collapsed"));
@@ -560,7 +591,7 @@ document.addEventListener("DOMContentLoaded", function () {
         // 2. Después, abrimos solo el primer item.
         const primerBoton = accordionElement.querySelector(".accordion-button");
         const primerPanel = accordionElement.querySelector(
-            ".accordion-collapse"
+            ".accordion-collapse",
         );
 
         if (primerBoton && primerPanel) {
@@ -573,23 +604,23 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!linkElemento) return;
         const dimensionTargetId = linkElemento.dataset.dimensionTarget.replace(
             "#",
-            ""
+            "",
         );
         const tematicaTargetId = linkElemento.dataset.tematicaTarget.replace(
             "#",
-            ""
+            "",
         );
 
         // Usamos los IDs limpios para buscar en el documento y activar el colapsable
         const dimensionEl =
             document.getElementById(dimensionTargetId) ||
             document.getElementById(
-                dimensionTargetId.replace("dimension", "dimension-region")
+                dimensionTargetId.replace("dimension", "dimension-region"),
             );
         const tematicaEl =
             document.getElementById(tematicaTargetId) ||
             document.getElementById(
-                tematicaTargetId.replace("tematica", "tematica-region")
+                tematicaTargetId.replace("tematica", "tematica-region"),
             );
 
         if (dimensionEl) {
@@ -629,13 +660,13 @@ document.addEventListener("DOMContentLoaded", function () {
             const [responseMun, responseMicro, responseMacro] =
                 await Promise.all([
                     fetch(
-                        `${window.APP_URL}/geojson/municipios_puebla_slim.geojson`
+                        `${window.APP_URL}/geojson/municipios_puebla_slim.geojson`,
                     ),
                     fetch(
-                        `${window.APP_URL}/geojson/microrregiones_puebla_sin_adecuacion.geojson`
+                        `${window.APP_URL}/geojson/Microrregiones2026.geojson`,
                     ),
                     fetch(
-                        `${window.APP_URL}/geojson/macrorregiones_2025_slim.geojson`
+                        `${window.APP_URL}/geojson/macrorregiones_2025_slim.geojson`,
                     ),
                 ]);
 
@@ -646,7 +677,7 @@ document.addEventListener("DOMContentLoaded", function () {
         } catch (error) {
             console.error(
                 "Error crítico: No se pudo cargar el archivo GeoJSON.",
-                error
+                error,
             );
             if (mapContainer)
                 mapContainer.innerHTML =
@@ -706,13 +737,13 @@ document.addEventListener("DOMContentLoaded", function () {
             const [responseMun, responseMicro, responseMacro] =
                 await Promise.all([
                     fetch(
-                        `${window.APP_URL}/geojson/municipios_puebla_slim.geojson`
+                        `${window.APP_URL}/geojson/municipios_puebla_slim.geojson`,
                     ),
                     fetch(
-                        `${window.APP_URL}/geojson/microrregiones_puebla_sin_adecuacion.geojson`
+                        `${window.APP_URL}/geojson/microrregiones_puebla_sin_adecuacion.geojson`,
                     ),
                     fetch(
-                        `${window.APP_URL}/geojson/macrorregiones_2025_slim.geojson`
+                        `${window.APP_URL}/geojson/macrorregiones_2025_slim.geojson`,
                     ),
                 ]);
 
@@ -724,7 +755,7 @@ document.addEventListener("DOMContentLoaded", function () {
         } catch (error) {
             console.error(
                 "Error crítico: No se pudo cargar el archivo GeoJSON.",
-                error
+                error,
             );
             if (mapContainer)
                 mapContainer.innerHTML =
@@ -736,96 +767,6 @@ document.addEventListener("DOMContentLoaded", function () {
      * Muestra el mapa de coropletas para la vista estatal.
      * @param {object} mapData Objeto con {municipioId: valor}.
      */
-    // function displayChoroplethMap(mapData) {
-    //     if (!pueblaGeoJSON || !map) {
-    //         console.error("El mapa o el GeoJSON no se han inicializado.");
-    //         return;
-    //     }
-
-    //     if (geojsonLayer) map.removeLayer(geojsonLayer);
-
-    //     const values = Object.values(mapData)
-    //         .filter((v) => v !== null)
-    //         .sort((a, b) => a - b);
-    //     const formatNumber = (num) =>
-    //         num !== undefined && num !== null
-    //             ? new Intl.NumberFormat().format(Math.round(num))
-    //             : "N/A";
-
-    //     let quintiles = [];
-    //     let styleFunction;
-
-    //     // 2. Decide el tipo de simbología según la cantidad de datos.
-    //     if (values.length >= 5) {
-    //         // --- LÓGICA DE QUINTILES (5 GRUPOS) ---
-    //         quintiles = [
-    //             values[Math.floor(values.length * 0.2)],
-    //             values[Math.floor(values.length * 0.4)],
-    //             values[Math.floor(values.length * 0.6)],
-    //             values[Math.floor(values.length * 0.8)],
-    //         ];
-    //         styleFunction = (feature) => ({
-    //             fillColor: getColor(
-    //                 mapData[feature.properties.cvegeo] || null,
-    //                 quintiles
-    //             ),
-    //             weight: 1,
-    //             opacity: 1,
-    //             color: "white",
-    //             fillOpacity: 0.8,
-    //         });
-
-    //         // --- LEYENDA DETALLADA DE 5 GRUPOS ---
-    //         mapLegend.innerHTML = `
-    //                 <div class="d-flex align-items-center justify-content-center flex-wrap" style="font-size: 0.8rem;">
-    //                     <strong class="me-3">Leyenda:</strong>
-    //                     <div class="me-2"><i class="fas fa-square me-1" style="color:#264653;"></i> ${formatNumber(
-    //                         values[0]
-    //                     )} - ${formatNumber(quintiles[0])}</div>
-    //                     <div class="me-2"><i class="fas fa-square me-1" style="color:#2a9d8f;"></i> ${formatNumber(
-    //                         quintiles[0]
-    //                     )} - ${formatNumber(quintiles[1])}</div>
-    //                     <div class="me-2"><i class="fas fa-square me-1" style="color:#e9c46a;"></i> ${formatNumber(
-    //                         quintiles[1]
-    //                     )} - ${formatNumber(quintiles[2])}</div>
-    //                     <div class="me-2"><i class="fas fa-square me-1" style="color:#f4a261;"></i> ${formatNumber(
-    //                         quintiles[2]
-    //                     )} - ${formatNumber(quintiles[3])}</div>
-    //                     <div class="me-2"><i class="fas fa-square me-1" style="color:#e76f51;"></i> &gt; ${formatNumber(
-    //                         quintiles[3]
-    //                     )}</div>
-    //                 </div>
-    //             `;
-    //     } else {
-    //         // --- LÓGICA SIMPLE (Pocos datos) ---
-    //         styleFunction = (feature) => ({
-    //             fillColor:
-    //                 (mapData[feature.properties.cvegeo] || null) !== null
-    //                     ? "#2a9d8f"
-    //                     : "#ccc",
-    //             weight: 1,
-    //             opacity: 1,
-    //             color: "white",
-    //             fillOpacity: 0.8,
-    //         });
-    //         mapLegend.innerHTML = `<div class="d-flex align-items-center justify-content-center flex-wrap" style="font-size: 0.8rem;"><strong class="me-3">Leyenda:</strong><div class="me-2"><i class="fas fa-square me-1" style="color:#2a9d8f;"></i> Municipios con datos</div></div>`;
-    //     }
-
-    //     geojsonLayer = L.geoJSON(pueblaGeoJSON, {
-    //         style: styleFunction, // tu styleFunction que ya tienes está bien
-    //         onEachFeature: (feature, layer) => {
-    //             const nombre = feature.properties.nomgeo;
-    //             const valor = mapData[feature.properties.cvegeo]
-    //                 ? formatNumber(mapData[feature.properties.cvegeo])
-    //                 : "Sin datos";
-    //             layer.bindPopup(
-    //                 `<strong>${nombre}</strong><br>Valor: ${valor}`
-    //             );
-    //         },
-    //     }).addTo(map);
-
-    //     map.setView([19.0414, -98.2063], 7);
-    // }
     function displayChoroplethMap(mapData) {
         if (!mapMunicipal || !pueblaGeoJSON) {
             console.error("El mapa o el GeoJSON no se han inicializado.");
@@ -1022,8 +963,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 const nombre = feature.properties.nomgeo;
                 const rawVal = mapData[feature.properties.cvegeo];
                 const val = parseSeguro(rawVal);
-                const textoValor = val !== null ? formatNumber(val) : "Sin datos";
-                layer.bindPopup(`<strong>${nombre}</strong><br>Valor: ${textoValor}`);
+                const textoValor =
+                    val !== null ? formatNumber(val) : "Sin datos";
+                layer.bindPopup(
+                    `<strong>${nombre}</strong><br>Valor: ${textoValor}`,
+                );
             },
         }).addTo(mapMunicipal);
 
@@ -1036,251 +980,67 @@ document.addEventListener("DOMContentLoaded", function () {
      * @param {string} propertyKey El nombre de la propiedad donde buscar el ID (ej. "cvegeo", "id_micro")
      */
     function displaySingleFeatureMap(geojsonData, idToFind, propertyKey) {
-        if (!geojsonData || !mapRegional) {
-            console.error("El mapa o el GeoJSON no se han inicializado.");
-            return;
-        }
+        if (!geojsonData || !mapRegional) return;
         if (geojsonLayerRegional) mapRegional.removeLayer(geojsonLayerRegional);
-        mapLegend.style.display = "none";
-
-        let foundFeature = false;
 
         geojsonLayerRegional = L.geoJson(geojsonData, {
             style: function (feature) {
+                const idActual = feature.properties[propertyKey]?.toString();
+                const esBloqueado = IDS_BLOQUEADOS.includes(idActual);
+
+                if (esBloqueado) {
+                    return {
+                        fillColor: "#95a5a6",
+                        weight: 1.5,
+                        color: "#7f8c8d",
+                        fillOpacity: 0.4,
+                        dashArray: "4, 4",
+                    };
+                }
                 if (feature.properties[propertyKey] == idToFind) {
-                    // Estilo para la forma resaltada
                     return {
                         fillColor: "#246257",
                         weight: 2,
                         color: "#333",
                         fillOpacity: 0.7,
                     };
-                } else {
-                    // Estilo para las otras formas
-                    return {
-                        fillColor: "#ccc",
-                        weight: 1,
-                        color: "white",
-                        fillOpacity: 0.5,
-                    };
                 }
+                return {
+                    fillColor: "#ccc",
+                    weight: 1,
+                    color: "white",
+                    fillOpacity: 0.5,
+                };
             },
             onEachFeature: function (feature, layer) {
-                if (feature.properties[propertyKey] == idToFind) {
-                    mapRegional.fitBounds(layer.getBounds()); // Hacemos zoom
-                    foundFeature = true;
+                const idActual = feature.properties[propertyKey]?.toString();
+                const esBloqueado = IDS_BLOQUEADOS.includes(idActual);
+
+                if (esBloqueado) {
+                    // Evento Clic
+                    layer.on("click", function (e) {
+                        L.DomEvent.stopPropagation(e);
+                        Swal.fire({
+                            icon: "info",
+                            title: "Zona Especial",
+                            text: MENSAJE_REGIONALIZACION, // <--- NOMBRE CORREGIDO
+                        });
+                    });
+
+                    // Evento Mouseover (Forma segura de cambiar el cursor)
+                    layer.on("mouseover", function () {
+                        const el = layer.getElement();
+                        if (el) el.style.cursor = "not-allowed";
+                    });
+                } else if (feature.properties[propertyKey] == idToFind) {
+                    mapRegional.fitBounds(layer.getBounds());
                 }
-                // Añadimos el popup (puedes mejorarlo para que muestre el nombre)
+
                 layer.bindPopup(
-                    `<strong>${feature.properties.nombre || feature.properties.nomgeo
-                    }</strong>`
+                    `<strong>${feature.properties.nombre || feature.properties.nomgeo}</strong>`,
                 );
             },
         }).addTo(mapRegional);
-
-        if (!foundFeature) {
-            console.warn(
-                `No se encontró el polígono con ${propertyKey}: ${idToFind}`
-            );
-        }
-    }
-    function displayChoroplethMapOLD(mapData) {
-        if (!map || !pueblaGeoJSON) {
-            console.error("El mapa o el GeoJSON no se han inicializado.");
-            return;
-        }
-        if (geojsonLayer) {
-            map.removeLayer(geojsonLayer);
-        }
-
-        // --- 1. SEPARAMOS A PUEBLA ---
-        const PUEBLA_CVEGEO = "21114";
-        const pueblaValue = mapData[PUEBLA_CVEGEO];
-        const otherMunicipalitiesData = { ...mapData };
-        delete otherMunicipalitiesData[PUEBLA_CVEGEO];
-
-        // --- 2. CÁLCULO DE VALORES ---
-        const initialValues = Object.values(otherMunicipalitiesData);
-        // console.log(
-        //   "1. Valores ANTES de la conversión (deberían ser strings):",
-        //   initialValues.slice(0, 5)
-        // );
-
-        const convertedValues = initialValues.map((v) => parseFloat(v));
-        // console.log(
-        //   "2. Valores DESPUÉS de parseFloat:",
-        //   convertedValues.slice(0, 5)
-        // );
-
-        const finalValues = convertedValues.filter(
-            (v) => !isNaN(v) && isFinite(v)
-        );
-        // console.log(
-        //   "3. Valores FINALES después de filtrar (deben ser números):",
-        //   finalValues.slice(0, 5)
-        // );
-
-        // console.log(
-        //   `%cTotal de valores numéricos válidos: ${finalValues.length}`,
-        //   "color: green; font-weight: bold;"
-        // );
-
-        const values = Object.values(otherMunicipalitiesData)
-            .map((v) => parseFloat(v))
-            .filter((v) => !isNaN(v) && isFinite(v));
-        values.sort((a, b) => a - b);
-
-        const formatNumber = (num) => {
-            // Si el número es nulo o indefinido, devolvemos 'N/A'
-            if (num === undefined || num === null) return "N/A";
-
-            // 1. Convertimos el texto (ej. "21032.0000") a un número.
-            const numericValue = parseFloat(num);
-
-            // 2. Redondeamos al entero más cercano para quitar los decimales.
-            const roundedValue = Math.round(numericValue);
-
-            // 3. Le damos el formato local (es-MX) que añade las comas.
-            return roundedValue.toLocaleString("es-MX");
-        };
-
-        let styleFunction;
-
-        // --- INICIO DE LA LÓGICA ADAPTABLE ---
-
-        if (values.length >= 5) {
-            // CASO A: HAY SUFICIENTES DATOS, usamos la lógica de 5 cuantiles.
-            // console.log(
-            //   "-> Hay suficientes datos. Usando simbología de 5 cuantiles."
-            // );
-
-            const breaks = [
-                values[0],
-                values[Math.floor(values.length * 0.2)],
-                values[Math.floor(values.length * 0.4)],
-                values[Math.floor(values.length * 0.6)],
-                values[Math.floor(values.length * 0.8)],
-            ];
-            const PUEBLA_COLOR = "#b10026";
-            function getColor(value, cvegeo) {
-                if (cvegeo == PUEBLA_CVEGEO) return PUEBLA_COLOR;
-
-                // --- CORRECCIÓN CLAVE AQUÍ ---
-                // 1. Convertimos el valor (que puede ser un string) a número justo antes de comparar.
-                const numericValue = parseFloat(value);
-
-                // 2. Si no es un número válido o no hay datos, lo pintamos de gris.
-                if (isNaN(numericValue)) return "#ccc";
-
-                // 3. Ahora la comparación es entre NÚMERO y NÚMERO, 100% confiable.
-                return numericValue >= breaks[4]
-                    ? "#084594"
-                    : numericValue >= breaks[3]
-                        ? "#2171b5"
-                        : numericValue >= breaks[2]
-                            ? "#4292c6"
-                            : numericValue >= breaks[1]
-                                ? "#6baed6"
-                                : "#9ecae1";
-            }
-
-            styleFunction = (feature) => ({
-                fillColor: getColor(
-                    mapData[feature.properties.cvegeo],
-                    feature.properties.cvegeo
-                ),
-                weight: 1,
-                opacity: 1,
-                color: "white",
-                fillOpacity: 0.8,
-            });
-
-            mapLegend.innerHTML = `
-            <h5>Leyenda</h5>
-            ${pueblaValue !== undefined
-                    ? `<div><i class="legend-swatch" style="background:${PUEBLA_COLOR}"></i> Puebla (${formatNumber(
-                        pueblaValue
-                    )})</div><hr class='my-1'>`
-                    : ""
-                }
-            <div class="text-muted small">Resto de municipios:</div>
-            <div><i class="legend-swatch" style="background:#084594"></i> ${formatNumber(
-                    breaks[4],
-                )} o más</div>
-            <div><i class="legend-swatch" style="background:#2171b5"></i> ${formatNumber(
-                    breaks[3],
-                )} - ${formatNumber(breaks[4])}</div>
-            <div><i class="legend-swatch" style="background:#4292c6"></i> ${formatNumber(
-                    breaks[2],
-                )} - ${formatNumber(breaks[3])}</div>
-            <div><i class="legend-swatch" style="background:#6baed6"></i> ${formatNumber(
-                    breaks[1],
-                )} - ${formatNumber(breaks[2])}</div>
-            <div><i class="legend-swatch" style="background:#9ecae1"></i> Menos de ${formatNumber(
-                    breaks[1],
-                )}</div>
-            <div><i class="legend-swatch" style="background:#ccc"></i> Sin datos</div>
-        `;
-        } else {
-            // CASO B: NO HAY SUFICIENTES DATOS, usamos una lógica simple.
-            // console.log(
-            //     "-> No hay suficientes datos. Usando simbología simple."
-            // );
-
-            const PUEBLA_COLOR = "#b10026"; // Color para Puebla
-            const DATA_COLOR = "#4292c6"; // Color para otros municipios con datos
-
-            styleFunction = (feature) => {
-                const cvegeo = feature.properties.cvegeo;
-                let color = "#ccc"; // Color por defecto (sin datos)
-                if (cvegeo == PUEBLA_CVEGEO && pueblaValue !== undefined) {
-                    color = PUEBLA_COLOR;
-                } else if (
-                    mapData[cvegeo] !== undefined &&
-                    mapData[cvegeo] !== null
-                ) {
-                    color = DATA_COLOR;
-                }
-                return {
-                    fillColor: color,
-                    weight: 1,
-                    opacity: 1,
-                    color: "white",
-                    fillOpacity: 0.8,
-                };
-            };
-
-            mapLegend.innerHTML = `
-            <h5>Leyenda</h5>
-            ${pueblaValue !== undefined
-                    ? `<div><i style="background:${PUEBLA_COLOR}"></i> Puebla (${formatNumber(
-                        pueblaValue,
-                    )})</div>`
-                    : ""
-                }
-            ${values.length > 0
-                    ? `<div><i class="legend-swatch" style="background:${DATA_COLOR}"></i> Otros municipios con datos</div>`
-                    : ""
-                }
-            <div><i style="background:#ccc"></i> Sin datos</div>
-        `;
-        }
-
-        // --- FIN DE LA LÓGICA ADAPTABLE ---
-
-        // El resto de la función que dibuja el mapa se queda igual
-        geojsonLayer = L.geoJson(pueblaGeoJSON, {
-            style: styleFunction,
-            onEachFeature: (feature, layer) => {
-                const nombre = feature.properties.nomgeo;
-                const valor = formatNumber(mapData[feature.properties.cvegeo]);
-                layer.bindPopup(
-                    `<strong>${nombre}</strong><br>Valor: ${valor}`
-                );
-            },
-        }).addTo(map);
-
-        mapLegend.style.display = "block";
     }
 
     /**
@@ -1288,60 +1048,38 @@ document.addEventListener("DOMContentLoaded", function () {
      * @param {string} municipioId El ID (cvegeo) del municipio a resaltar.
      */
     function displaySingleMunicipalityMap(municipioId) {
-        // Seguridad: no hacer nada si el mapa o el GeoJSON no están listos.
-        if (!pueblaGeoJSON || !mapMunicipal) {
-            console.error("El mapa o el GeoJSON no se han inicializado.");
-            return;
-        }
-
-        // Limpia cualquier capa de municipios y la leyenda anterior.
-        if (geojsonLayerMunicipal) {
+        if (!pueblaGeoJSON || !mapMunicipal) return;
+        if (geojsonLayerMunicipal)
             mapMunicipal.removeLayer(geojsonLayerMunicipal);
-        }
-        mapLegend.innerHTML = ""; // No necesitamos leyenda para un solo municipio.
 
-        let found = false;
-        // Dibuja la capa de municipios con una lógica de estilo condicional.
+        mapLegend.innerHTML = "";
+
         geojsonLayerMunicipal = L.geoJSON(pueblaGeoJSON, {
             style: function (feature) {
-                // Si el 'cvegeo' del polígono coincide con el ID que buscamos...
                 if (feature.properties.cvegeo == municipioId) {
-                    // ...lo pintamos de color azul y con un borde más grueso.
                     return {
-                        fillColor: "#0c312d", // Azul primario de Bootstrap
+                        fillColor: "#0c312d",
                         weight: 2,
-                        color: "#333", // Borde oscuro
+                        color: "#333",
                         fillOpacity: 0.7,
                     };
-                } else {
-                    // A todos los demás les damos un estilo neutro y semitransparente.
-                    return {
-                        fillColor: "#ccc",
-                        weight: 1,
-                        color: "white",
-                        fillOpacity: 0.5,
-                    };
                 }
+                return {
+                    fillColor: "#ccc",
+                    weight: 1,
+                    color: "white",
+                    fillOpacity: 0.5,
+                };
             },
             onEachFeature: function (feature, layer) {
-                // Cuando Leaflet dibuja el polígono del municipio que nos interesa...
                 if (feature.properties.cvegeo == municipioId) {
-                    // ...le decimos al mapa que haga zoom y se centre en los límites de ese polígono.
                     mapMunicipal.fitBounds(layer.getBounds());
-                    found = true;
                 }
-                // A todos los municipios les añadimos un popup con su nombre.
                 layer.bindPopup(
-                    `<strong>${feature.properties.nomgeo}</strong>`
+                    `<strong>${feature.properties.nomgeo}</strong>`,
                 );
             },
         }).addTo(mapMunicipal);
-
-        if (!found) {
-            console.warn(
-                `No se encontró el polígono para el municipio con cvegeo: ${municipioId}`,
-            );
-        }
     }
 
     /**
@@ -1376,7 +1114,7 @@ document.addEventListener("DOMContentLoaded", function () {
             .then((response) => {
                 if (!response.ok)
                     throw new Error(
-                        "La respuesta del servidor no fue exitosa."
+                        "La respuesta del servidor no fue exitosa.",
                     );
                 return response.blob();
                 // Convertimos la respuesta en un objeto de archivo
@@ -1539,9 +1277,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 <ul class="mb-0 ps-3">`;
 
             // Ordenamos los años
-            const aniosConNotas = Object.keys(datosParaGrafico.notas_explicativas).sort();
+            const aniosConNotas = Object.keys(
+                datosParaGrafico.notas_explicativas,
+            ).sort();
 
-            aniosConNotas.forEach(anio => {
+            aniosConNotas.forEach((anio) => {
                 const motivo = datosParaGrafico.notas_explicativas[anio];
                 htmlNotas += `<li><strong>${anio}:</strong> ${motivo}</li>`;
             });
@@ -1662,13 +1402,13 @@ document.addEventListener("DOMContentLoaded", function () {
                         // --- CASO A: "CULTIVOS" (Complejo) ---
                         // 1. Extraer los años para controlar el eje
                         const allYears = datosParaGrafico.series.flatMap(
-                            (serie) => serie.data.map((point) => point[0])
+                            (serie) => serie.data.map((point) => point[0]),
                         );
                         const validYears = allYears.filter(
-                            (year) => year !== null && year !== undefined
+                            (year) => year !== null && year !== undefined,
                         );
                         const uniqueYears = [...new Set(validYears)].sort(
-                            (a, b) => a - b
+                            (a, b) => a - b,
                         );
 
                         const minYear = Math.min(...uniqueYears);
@@ -1701,7 +1441,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                 labels: {
                                     formatter: (value) =>
                                         new Intl.NumberFormat("es-MX").format(
-                                            value
+                                            value,
                                         ),
                                 },
                             },
@@ -1733,7 +1473,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                 y: {
                                     formatter: (value) =>
                                         new Intl.NumberFormat("es-MX").format(
-                                            value
+                                            value,
                                         ),
                                     title: {
                                         formatter: (seriesName) =>
@@ -1753,7 +1493,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             (serie) => serie.data.map((point) => point[0]),
                         );
                         const uniqueYears = [...new Set(allYears)].sort(
-                            (a, b) => a - b
+                            (a, b) => a - b,
                         );
                         const newSeries = datosParaGrafico.series.map(
                             (serie) => {
@@ -1761,10 +1501,10 @@ document.addEventListener("DOMContentLoaded", function () {
                                 return {
                                     name: serie.name,
                                     data: uniqueYears.map(
-                                        (year) => dataMap.get(year) ?? null
+                                        (year) => dataMap.get(year) ?? null,
                                     ),
                                 };
-                            }
+                            },
                         );
 
                         options = {
@@ -1785,7 +1525,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                 labels: {
                                     formatter: (value) =>
                                         new Intl.NumberFormat("es-MX").format(
-                                            value
+                                            value,
                                         ),
                                 },
                             },
@@ -1806,7 +1546,6 @@ document.addEventListener("DOMContentLoaded", function () {
                                 },
                                 labels: {
                                     formatter: function (value) {
-                                        // Si el valor es "N/A", null, o vacío, mostramos "Total Estatal"
                                         if (
                                             value === "N/A" ||
                                             value === null ||
@@ -1829,7 +1568,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 } else {
                     // --- CASO C: GRÁFICO DE LÍNEA QUE YA TENÍA CATEGORÍAS ---
-                    // console.log("¡¡¡ESTOY ENTRANDO A CASO C!!!");
                     options = {
                         series: datosParaGrafico.series,
                         chart: {
@@ -1851,7 +1589,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             labels: {
                                 formatter: (value) =>
                                     new Intl.NumberFormat("es-MX").format(
-                                        value
+                                        value,
                                     ),
                             },
                         },
@@ -2336,7 +2074,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     "shown.bs.tab",
                     () => {
                         console.log(
-                            "Pestaña regional terminó de mostrarse. Ahora sí, cargando datos..."
+                            "Pestaña regional terminó de mostrarse. Ahora sí, cargando datos...",
                         );
 
                         appState.indicatorId = indicadorIdFromUrl;
@@ -2349,7 +2087,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         appState.selectedYears = aniosFromUrl;
                         // 2. Activamos el indicador (ahora sí existe)
                         linkActivo = document.querySelector(
-                            `.indicador-link[data-indicador-id='${appState.indicatorId}']`
+                            `.indicador-link[data-indicador-id='${appState.indicatorId}']`,
                         );
                         if (linkActivo) {
                             linkActivo.classList.add("fw-bold", "text-primary");
@@ -2363,7 +2101,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         updateDashboard();
                         gestionarBotonResumen();
                     },
-                    { once: true }
+                    { once: true },
                 ); // {once: true} es clave, asegura que este listener solo corra 1 vez
 
                 // 4. Mostramos la pestaña
@@ -2387,7 +2125,7 @@ document.addEventListener("DOMContentLoaded", function () {
             appState.municipioIds = municipioIdsFromUrl.split(",");
             municipioSelector.setValue(appState.municipioIds, true);
             linkActivo = document.querySelector(
-                `.indicador-link[data-indicador-id='${appState.indicatorId}']`
+                `.indicador-link[data-indicador-id='${appState.indicatorId}']`,
             );
         }
         // CASO C: CARGA POR DEFECTO
@@ -2401,7 +2139,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 let idSeleccionInicial = "estatal";
                 if (tipoDato.toLowerCase() !== "absoluto") {
                     const primerMunicipio = document.querySelector(
-                        "#municipio-selector option:not([value='estatal'])"
+                        "#municipio-selector option:not([value='estatal'])",
                     );
                     if (primerMunicipio)
                         idSeleccionInicial = primerMunicipio.value;
@@ -2432,7 +2170,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     window.addEventListener("popstate", (event) => {
         console.log(
-            "Evento popstate detectado. Recargando estado desde la URL."
+            "Evento popstate detectado. Recargando estado desde la URL.",
         );
 
         // Simplemente volvemos a ejecutar CargaInicial.
@@ -2506,7 +2244,7 @@ document.addEventListener("DOMContentLoaded", function () {
             document
                 .querySelectorAll(".indicador-link")
                 .forEach((el) =>
-                    el.classList.remove("fw-bold", "text-primary")
+                    el.classList.remove("fw-bold", "text-primary"),
                 );
 
             if (metadataContainer) metadataContainer.style.display = "none";
@@ -2750,7 +2488,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // 1. Inicializar los tooltips de los nuevos botones
     const tooltipTriggerList = [].slice.call(
-        document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        document.querySelectorAll('[data-bs-toggle="tooltip"]'),
     );
     tooltipTriggerList.map(function (tooltipTriggerEl) {
         return new bootstrap.Tooltip(tooltipTriggerEl);

@@ -13,11 +13,9 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap">
 
     <!-- Scripts -->
-    {{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
-    {{-- <link rel="stylesheet" href="{{ asset('css/app.css') }}"> --}}
-        <link href="{{ asset('img/favicon.ico') }}" rel="icon">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link href="{{ asset('img/favicon.ico') }}" rel="icon">
     <link rel="stylesheet" href="{{ asset('css/login.css') }}">
-    <script src="{{ asset('js/app.js') }}" defer></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
