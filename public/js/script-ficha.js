@@ -1355,8 +1355,13 @@ document.addEventListener("DOMContentLoaded", function () {
                         text: "Número de Habitantes",
                     },
                     labels: {
-                        formatter: (value) => Math.abs(value),
+                        formatter: (value) => {
+                            const val = Math.abs(value);
+                            return isNaN(val) ? "0" : val;
+                        },
                     },
+                    tooltip: { enabled: false },
+                    crosshairs: { show: false },
                 },
                 yaxis: {
                     title: {
@@ -1366,7 +1371,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 tooltip: {
                     shared: false,
                     y: {
-                        formatter: (value) => Math.abs(value) + " personas",
+                        formatter: (value) => {
+                            const val = Math.abs(value);
+                            return (isNaN(val) ? "0" : val) + " personas";
+                        },
                     },
                 },
                 dataLabels: {
@@ -1439,14 +1447,16 @@ document.addEventListener("DOMContentLoaded", function () {
                             yaxis: {
                                 title: { text: datosParaGrafico.eje_y.titulo },
                                 labels: {
-                                    formatter: (value) =>
-                                        new Intl.NumberFormat("es-MX").format(
-                                            value,
-                                        ),
+                                    formatter: (value) => {
+                                        if (value === null || isNaN(value))
+                                            return "0";
+                                        return new Intl.NumberFormat(
+                                            "es-MX",
+                                        ).format(value);
+                                    },
                                 },
                             },
                             xaxis: {
-                                // <-- TU EJE X LIMPIO (CHECK)
                                 type: "numeric",
                                 min: minYear,
                                 max: maxYear,
@@ -1456,25 +1466,28 @@ document.addEventListener("DOMContentLoaded", function () {
                                         datosParaGrafico.eje_x.titulo || "Año",
                                 },
                                 labels: {
-                                    formatter: (value) => parseInt(value, 10),
+                                    formatter: (value) => {
+                                        const parsed = parseInt(value, 10);
+                                        return isNaN(parsed) ? value : parsed;
+                                    },
                                 },
+                                tooltip: { enabled: false },
+                                crosshairs: { show: false },
                             },
                             tooltip: {
-                                shared: false, // (CHECK) Tooltip no compartido
-                                intersect: true, // (CHECK) Requiere tocar el marcador
-
-                                // ¡LA LÍNEA MÁGICA!
-                                // Oculta la "mira" vertical (xaxis.tooltip) que
-                                // estaba causando la ambigüedad.
+                                shared: false,
+                                intersect: true,
                                 x: {
                                     show: false,
                                 },
-                                // Formateador para el valor (buena práctica)
                                 y: {
-                                    formatter: (value) =>
-                                        new Intl.NumberFormat("es-MX").format(
-                                            value,
-                                        ),
+                                    formatter: (value) => {
+                                        if (value === null || isNaN(value))
+                                            return "N/D";
+                                        return new Intl.NumberFormat(
+                                            "es-MX",
+                                        ).format(value);
+                                    },
                                     title: {
                                         formatter: (seriesName) =>
                                             seriesName + ":",
@@ -1508,7 +1521,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         );
 
                         options = {
-                            series: newSeries, // Usa las series re-mapeadas
+                            series: newSeries,
                             chart: {
                                 type: "line",
                                 height: 500,
@@ -1523,20 +1536,15 @@ document.addEventListener("DOMContentLoaded", function () {
                             yaxis: {
                                 title: { text: datosParaGrafico.eje_y.titulo },
                                 labels: {
-                                    formatter: (value) =>
-                                        new Intl.NumberFormat("es-MX").format(
-                                            value,
-                                        ),
+                                    formatter: (value) => {
+                                        if (value === null || isNaN(value))
+                                            return "0";
+                                        return new Intl.NumberFormat(
+                                            "es-MX",
+                                        ).format(value);
+                                    },
                                 },
                             },
-                            // xaxis: {
-                            //     type: "category",
-                            //     categories: uniqueYears,
-                            //     title: {
-                            //         text:
-                            //             datosParaGrafico.eje_x.titulo || "Año",
-                            //     },
-                            // },
                             xaxis: {
                                 type: "category",
                                 categories: uniqueYears,
@@ -1556,10 +1564,21 @@ document.addEventListener("DOMContentLoaded", function () {
                                         return value;
                                     },
                                 },
+                                tooltip: { enabled: false },
+                                crosshairs: { show: false },
                             },
                             tooltip: {
                                 shared: false,
                                 intersect: true,
+                                y: {
+                                    formatter: (value) => {
+                                        if (value === null || isNaN(value))
+                                            return "N/D";
+                                        return new Intl.NumberFormat(
+                                            "es-MX",
+                                        ).format(value);
+                                    },
+                                },
                             },
                             noData: {
                                 text: "No hay datos disponibles para esta selección.",
@@ -1583,19 +1602,33 @@ document.addEventListener("DOMContentLoaded", function () {
                         xaxis: {
                             type: "category",
                             categories: datosParaGrafico.eje_x.categorias || [],
+                            tooltip: { enabled: false },
+                            crosshairs: { show: false },
                         },
                         yaxis: {
                             title: { text: datosParaGrafico.eje_y.titulo },
                             labels: {
-                                formatter: (value) =>
-                                    new Intl.NumberFormat("es-MX").format(
-                                        value,
-                                    ),
+                                formatter: (value) => {
+                                    if (value === null || isNaN(value))
+                                        return "0";
+                                    return new Intl.NumberFormat(
+                                        "es-MX",
+                                    ).format(value);
+                                },
                             },
                         },
                         tooltip: {
                             shared: false,
                             intersect: true,
+                            y: {
+                                formatter: (value) => {
+                                    if (value === null || isNaN(value))
+                                        return "N/D";
+                                    return new Intl.NumberFormat(
+                                        "es-MX",
+                                    ).format(value);
+                                },
+                            },
                         },
                         dataLabels: { enabled: false },
                         stroke: { curve: "smooth", width: 2 },
@@ -1618,15 +1651,32 @@ document.addEventListener("DOMContentLoaded", function () {
                     xaxis: {
                         type: "category",
                         categories: datosParaGrafico.eje_x.categorias || [],
+                        tooltip: { enabled: false },
+                        crosshairs: { show: false },
                     },
                     yaxis: {
                         title: { text: datosParaGrafico.eje_y.titulo },
                         labels: {
-                            formatter: (value) =>
-                                new Intl.NumberFormat("es-MX").format(value),
+                            formatter: (value) => {
+                                if (value === null || isNaN(value)) return "0";
+                                return new Intl.NumberFormat("es-MX").format(
+                                    value,
+                                );
+                            },
                         },
                     },
-                    tooltip: { shared: false, intersect: true },
+                    tooltip: {
+                        shared: false,
+                        intersect: true,
+                        y: {
+                            formatter: (value) => {
+                                if (value === null || isNaN(value)) return "N/D";
+                                return new Intl.NumberFormat("es-MX").format(
+                                    value,
+                                );
+                            },
+                        },
+                    },
                     dataLabels: { enabled: false },
                     stroke: { curve: "smooth", width: 2 },
                     noData: {
