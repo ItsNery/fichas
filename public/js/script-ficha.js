@@ -60,8 +60,8 @@ document.addEventListener("DOMContentLoaded", function () {
             const currentSelection = Array.isArray(value)
                 ? value
                 : value
-                    ? [value]
-                    : [];
+                  ? [value]
+                  : [];
             let finalSelection = [...currentSelection];
             let needsUpdate = false;
 
@@ -422,32 +422,6 @@ document.addEventListener("DOMContentLoaded", function () {
      * Muestra u oculta la opción "Total Estatal" basándose en el tipo de dato.
      * @param {string} tipoDato El tipo de dato del indicador actual.
      */
-
-    // function gestionarOpcionEstatal(tipoDato) {
-    //     // Verificamos si la opción 'estatal' ya existe en la instancia de Tom Select
-    //     const existeAhora = municipioSelector.options.hasOwnProperty("estatal");
-
-    //     if (tipoDato.toLowerCase() === "absoluto") {
-    //         // MOSTRAR: Si es absoluto y la opción no existe, la añadimos.
-    //         if (!existeAhora) {
-    //             municipioSelector.addOption({
-    //                 value: "estatal",
-    //                 text: "-- Total Estatal --",
-    //             });
-    //             console.log("-> Opción 'Total Estatal' AÑADIDA.");
-    //         }
-    //     } else {
-    //         // OCULTAR: Si no es absoluto y la opción existe, la eliminamos.
-    //         if (existeAhora) {
-    //             // Opcional pero recomendado: si 'estatal' estaba seleccionado, limpiamos la selección.
-    //             if (municipioSelector.getValue() === "estatal") {
-    //                 municipioSelector.clear();
-    //             }
-    //             municipioSelector.removeOption("estatal");
-    //             console.log("-> Opción 'Total Estatal' ELIMINADA.");
-    //         }
-    //     }
-    // }
     function gestionarOpcionEstatal(tipoDato) {
         appState.indicatorTipoDato = tipoDato;
         if (tipoDato.toLowerCase() === "absoluto") {
@@ -941,16 +915,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
             mapLegend.innerHTML = `
             <h5>Leyenda</h5>
-            ${pueblaValue !== null
+            ${
+                pueblaValue !== null
                     ? `<div><i class="legend-swatch" style="background:${PUEBLA_COLOR}"></i> Puebla (${formatNumber(
-                        pueblaValue,
-                    )})</div>`
+                          pueblaValue,
+                      )})</div>`
                     : ""
-                }
-            ${nonZeroValues.length > 0
+            }
+            ${
+                nonZeroValues.length > 0
                     ? `<div><i class="legend-swatch" style="background:${DATA_COLOR}"></i> Con registros (> 0)</div>`
                     : ""
-                }
+            }
             <div><i class="legend-swatch" style="background:${ZERO_COLOR}; border: 1px solid #ccc;"></i> 0</div>
             <div><i class="legend-swatch" style="background:#ccc"></i> Sin datos</div>
         `;
@@ -1140,42 +1116,33 @@ document.addEventListener("DOMContentLoaded", function () {
     // function renderizarGrafico(datosParaGrafico) {
     function renderizarGrafico(datosParaGrafico, container, titleElement) {
         container.innerHTML = "";
-
         titleElement.innerText = datosParaGrafico.titulo;
 
         const activeExportBtn =
             appState.nivelDeAgregacion === "municipio"
                 ? exportBtn
                 : exportBtnRegions;
-        // chartContainer.innerHTML = "";
-        container.innerHTML = "";
-        titleElement.innerText = datosParaGrafico.titulo;
         exportBtn.style.display = "none";
         exportBtnRegions.style.display = "none";
 
-        // --- LÓGICA PARA ELEGIR LOS ELEMENTOS CORRECTOS ---
+        // --- LÓGICA DE MODALES Y METADATOS (Se queda igual, funciona perfecto) ---
         const isMunicipal = appState.nivelDeAgregacion === "municipio";
         const verMunicipiosBtn = document.getElementById("ver-municipios-btn");
         const modalTitle = document.getElementById("municipios-modal-title");
         const modalBody = document.getElementById("municipios-modal-body");
+
         if (
             !isMunicipal &&
             datosParaGrafico.municipios_incluidos &&
             datosParaGrafico.municipios_incluidos.length > 0
         ) {
-            // 3. Mostramos el botón
             verMunicipiosBtn.style.display = "block";
-
-            // 4. Construimos el título del modal (usando el título del gráfico)
             let regionNombre = "la región";
             const tituloPartido = datosParaGrafico.titulo.split(" - ");
             if (tituloPartido.length > 1) {
-                // Toma "Mixteca" de "Población - Mixteca (Año: 2020)"
                 regionNombre = tituloPartido[1].split(" (")[0];
             }
             modalTitle.innerText = `Municipios en ${regionNombre}`;
-
-            // 5. Construimos el cuerpo del modal (la lista)
             let listaHtml = '<ul class="list-group list-group-flush">';
             datosParaGrafico.municipios_incluidos.forEach((mun) => {
                 listaHtml += `<li class="list-group-item">${mun}</li>`;
@@ -1183,7 +1150,6 @@ document.addEventListener("DOMContentLoaded", function () {
             listaHtml += "</ul>";
             modalBody.innerHTML = listaHtml;
         } else {
-            // 6. Si no es regional o no hay datos, ocultamos el botón
             verMunicipiosBtn.style.display = "none";
         }
 
@@ -1206,9 +1172,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const currentYearContainer = isMunicipal
             ? yearSelectorContainer
             : yearSelectorContainerRegions;
-        const currentYearSelector = isMunicipal
-            ? yearSelector
-            : document.getElementById("year-selector-regions");
         const currentYearEl = isMunicipal
             ? yearSelectorEl
             : yearSelectorElRegions;
@@ -1216,13 +1179,14 @@ document.addEventListener("DOMContentLoaded", function () {
             ? availableYearsElement
             : availableYearsElementRegions;
 
-        // --- AHORA USAMOS LAS VARIABLES 'current' ---
         currentMetadata.style.display = "block";
         currentDescription.innerText =
             datosParaGrafico.descripcion || "No disponible.";
         currentSource.innerText = datosParaGrafico.fuente || "No disponible.";
+        if (currentMethod)
+            currentMethod.innerText =
+                datosParaGrafico.metodo_calculo || "No disponible.";
 
-        // Mostramos el botón de pantalla completa si hay un gráfico
         if (datosParaGrafico.series && datosParaGrafico.series.length > 0) {
             fullscreenBtn.style.display = "block";
             fullscreenBtnRegions.style.display = "block";
@@ -1232,71 +1196,39 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         if (Array.isArray(years) && years.length > 0) {
-            // Si 'years' es un array y no está vacío, lo mostramos.
             currentAvailableYearsElement.innerText = years.sort().join(", ");
-
-            // Mostramos el contenedor del selector de años y el botón de exportar.
             currentYearContainer.style.display = "block";
             activeExportBtn.style.display = "block";
-
-            // Lógica para llenar el selector de años con las nuevas opciones.
             currentYearEl.clearOptions();
-            years.forEach((year) => {
-                currentYearEl.addOption({ value: year, text: year });
-            });
-
-            // Sincronizamos el selector con los años que ya están seleccionados en el estado.
+            years.forEach((year) =>
+                currentYearEl.addOption({ value: year, text: year }),
+            );
             if (datosParaGrafico.selected_years) {
                 currentYearEl.setValue(datosParaGrafico.selected_years, true);
             }
         } else {
-            // Para cualquier otro caso (si no hay años disponibles), mostramos "No disponible".
             currentAvailableYearsElement.innerText = "No disponible";
-
-            // Ocultamos el selector de años y el botón de exportar.
             currentYearContainer.style.display = "none";
             activeExportBtn.style.display = "none";
         }
-        if (currentMethod) {
-            // Comprobamos que exista por si no lo tienes en una de las vistas
-            currentMethod.innerText =
-                datosParaGrafico.metodo_calculo || "No disponible.";
-        }
 
-        // --- VISUALIZACIÓN DE NOTAS EXPLICATIVAS ---
         let htmlNotas = "";
-
-        // 1. Notas de Datos Faltantes (del Catálogo ND)
         if (
             datosParaGrafico.notas_explicativas &&
             Object.keys(datosParaGrafico.notas_explicativas).length > 0
         ) {
-            htmlNotas += `
-            <div class="alert alert-warning border-0 bg-opacity-10 mt-3 py-2 px-3 small" style="background-color: #fff3cd;">
-                <strong class="d-block mb-1 text-warning-emphasis"><i class="fas fa-info-circle me-1"></i> Información sobre datos no disponibles:</strong>
-                <ul class="mb-0 ps-3">`;
-
-            // Ordenamos los años
+            htmlNotas += `<div class="alert alert-warning border-0 bg-opacity-10 mt-3 py-2 px-3 small" style="background-color: #fff3cd;"><strong class="d-block mb-1 text-warning-emphasis"><i class="fas fa-info-circle me-1"></i> Información sobre datos no disponibles:</strong><ul class="mb-0 ps-3">`;
             const aniosConNotas = Object.keys(
                 datosParaGrafico.notas_explicativas,
             ).sort();
-
             aniosConNotas.forEach((anio) => {
-                const motivo = datosParaGrafico.notas_explicativas[anio];
-                htmlNotas += `<li><strong>${anio}:</strong> ${motivo}</li>`;
+                htmlNotas += `<li><strong>${anio}:</strong> ${datosParaGrafico.notas_explicativas[anio]}</li>`;
             });
-
             htmlNotas += `</ul></div>`;
         }
-
-        // 2. Nota General del Indicador (Metadatos)
         if (datosParaGrafico.nota_explicativa) {
-            htmlNotas += `<p class="mb-0 mt-2 text-muted small border-top pt-2">
-                <i class="fas fa-comment-dots me-1"></i> ${datosParaGrafico.nota_explicativa}
-            </p>`;
+            htmlNotas += `<p class="mb-0 mt-2 text-muted small border-top pt-2"><i class="fas fa-comment-dots me-1"></i> ${datosParaGrafico.nota_explicativa}</p>`;
         }
-
-        // 3. Renderizar en el contenedor
         if (htmlNotas) {
             currentNote.innerHTML = htmlNotas;
             currentNote.style.display = "block";
@@ -1305,397 +1237,197 @@ document.addEventListener("DOMContentLoaded", function () {
             currentNote.style.display = "none";
         }
 
-        if (
-            datosParaGrafico.available_years &&
-            datosParaGrafico.available_years.length > 0
-        ) {
-            // Hacemos visible el contenedor del selector de años
-            currentYearContainer.style.display = "block";
-
-            // Mostramos el botón de exportar correspondiente
-            activeExportBtn.style.display = "block";
-
-            // Vaciamos las opciones anteriores de Tom Select antes de añadir las nuevas
-            currentYearEl.clearOptions();
-
-            // Añadimos las nuevas opciones disponibles
-            datosParaGrafico.available_years.forEach((year) => {
-                currentYearEl.addOption({ value: year, text: year });
-            });
-
-            // Si el backend nos indica qué años deben estar seleccionados, los establecemos
-            if (datosParaGrafico.selected_years) {
-                // Usamos setValue y el parámetro 'silent' (true) para evitar un bucle infinito de eventos
-                currentYearEl.setValue(datosParaGrafico.selected_years, true);
-            }
-        } else {
-            // Si no hay años disponibles, ocultamos el selector
-            currentYearContainer.style.display = "none";
-        }
-
+        // ====================================================================
+        // --- AQUÍ EMPIEZA LA MAGIA DE ECHARTS ---
+        // ====================================================================
         let options = {};
+
+        // Función auxiliar para formatear números
+        const formatNum = (val) => new Intl.NumberFormat("es-MX").format(val);
+
         if (datosParaGrafico.tipo_grafico === "piramide") {
+            // --- GRÁFICO DE PIRÁMIDE POBLACIONAL ---
             options = {
-                series: datosParaGrafico.series,
-                chart: {
-                    type: "bar",
-                    height: 440,
-                    stacked: true,
-                },
-                colors: ["#008FFB", "#FF4560"],
-                plotOptions: {
-                    bar: {
-                        horizontal: true,
-                        barHeight: "80%",
-                    },
-                },
-                xaxis: {
-                    categories: datosParaGrafico.eje_x.categorias,
-                    title: {
-                        text: "Número de Habitantes",
-                    },
-                    labels: {
-                        formatter: (value) => {
-                            const val = Math.abs(value);
-                            return isNaN(val) ? "0" : val;
-                        },
-                    },
-                    tooltip: { enabled: false },
-                    crosshairs: { show: false },
-                },
-                yaxis: {
-                    title: {
-                        text: "Grupos de Edad",
-                    },
-                },
+                color: ["#008FFB", "#FF4560"],
                 tooltip: {
-                    shared: false,
-                    y: {
-                        formatter: (value) => {
-                            const val = Math.abs(value);
-                            return (isNaN(val) ? "0" : val) + " personas";
-                        },
+                    trigger: "axis",
+                    axisPointer: { type: "shadow" },
+                    formatter: function (params) {
+                        let html = `<strong>${params[0].axisValueLabel}</strong><br/>`;
+                        params.forEach((p) => {
+                            let val = Math.abs(p.value);
+                            html += `${p.marker} ${p.seriesName}: ${formatNum(val)} personas<br/>`;
+                        });
+                        return html;
                     },
                 },
-                dataLabels: {
-                    enabled: false,
-                },
-                stroke: {
-                    width: 1,
-                    colors: ["#fff"],
-                },
+                legend: { top: "bottom" },
                 grid: {
-                    xaxis: {
-                        lines: {
-                            show: false,
-                        },
+                    left: "3%",
+                    right: "4%",
+                    bottom: "10%",
+                    containLabel: true,
+                },
+                xAxis: {
+                    type: "value",
+                    name: "Número de Habitantes",
+                    nameLocation: "middle",
+                    nameGap: 30,
+                    axisLabel: {
+                        formatter: (value) => formatNum(Math.abs(value)),
                     },
                 },
-                noData: {
-                    text: "No hay datos disponibles para esta selección.",
+                yAxis: {
+                    type: "category",
+                    name: "Grupos de Edad",
+                    data: datosParaGrafico.eje_x.categorias,
+                    inverse: true,
                 },
+                series: datosParaGrafico.series.map((s) => ({
+                    name: s.name,
+                    type: "bar",
+                    stack: "Total", // Apilado horizontal
+                    data: s.data,
+                })),
             };
         } else {
-            // --- INICIO DE CORRECCIÓN DEFINITIVA ---
+            // --- GRÁFICOS DE LÍNEAS Y BARRAS ---
+            let xAxisData = [];
+            let seriesData = [];
 
-            // CASO 1: Gráfico de LÍNEA
-            if (datosParaGrafico.tipo_grafico === "line") {
-                // Revisa si el backend mandó datos como [x,y] (sin categorías)
-                if (
-                    !datosParaGrafico.eje_x.categorias ||
-                    datosParaGrafico.eje_x.categorias.length === 0
-                ) {
-                    // Si SÍ es un indicador complejo (CULTIVOS)
-                    if (appState.indicatorEsComplejo) {
-                        // --- CASO A: "CULTIVOS" (Complejo) ---
-                        // 1. Extraer los años para controlar el eje
-                        const allYears = datosParaGrafico.series.flatMap(
-                            (serie) => serie.data.map((point) => point[0]),
-                        );
-                        const validYears = allYears.filter(
-                            (year) => year !== null && year !== undefined,
-                        );
-                        const uniqueYears = [...new Set(validYears)].sort(
-                            (a, b) => a - b,
-                        );
+            // Detectamos si es un arreglo de pares [año, valor] (Cultivos, Delitos, Población sin categorias)
+            if (
+                datosParaGrafico.tipo_grafico === "line" &&
+                (!datosParaGrafico.eje_x.categorias ||
+                    datosParaGrafico.eje_x.categorias.length === 0)
+            ) {
+                // 1. Extraemos los años únicos y ordenados
+                const allYears = datosParaGrafico.series
+                    .flatMap((s) => s.data.map((p) => p[0]))
+                    .filter((y) => y != null);
+                xAxisData = [...new Set(allYears)].sort((a, b) => a - b);
 
-                        const minYear = Math.min(...uniqueYears);
-                        const maxYear = Math.max(...uniqueYears);
-
-                        let tickAmount = uniqueYears.length - 1;
-                        if (tickAmount > 10) {
-                            tickAmount = 10;
-                        }
-                        if (tickAmount <= 0) {
-                            tickAmount = 1;
-                        }
-                        // console.log("¡¡¡ESTOY ENTRANDO A CASO A (CULTIVOS)!!!");
-                        // 2. Opciones finales
-                        options = {
-                            series: datosParaGrafico.series,
-                            chart: {
-                                type: "line",
-                                height: 500,
-                                animations: { enabled: false },
-                                toolbar: { show: true },
-                            },
-                            colors: PALETA_COLORES,
-                            markers: {
-                                size: 5,
-                            },
-                            stroke: { curve: "smooth", width: 2 },
-                            yaxis: {
-                                title: { text: datosParaGrafico.eje_y.titulo },
-                                labels: {
-                                    formatter: (value) => {
-                                        if (value === null || isNaN(value))
-                                            return "0";
-                                        return new Intl.NumberFormat(
-                                            "es-MX",
-                                        ).format(value);
-                                    },
-                                },
-                            },
-                            xaxis: {
-                                type: "numeric",
-                                min: minYear,
-                                max: maxYear,
-                                tickAmount: tickAmount,
-                                title: {
-                                    text:
-                                        datosParaGrafico.eje_x.titulo || "Año",
-                                },
-                                labels: {
-                                    formatter: (value) => {
-                                        const parsed = parseInt(value, 10);
-                                        return isNaN(parsed) ? value : parsed;
-                                    },
-                                },
-                                tooltip: { enabled: false },
-                                crosshairs: { show: false },
-                            },
-                            tooltip: {
-                                shared: false,
-                                intersect: true,
-                                x: {
-                                    show: false,
-                                },
-                                y: {
-                                    formatter: (value) => {
-                                        if (value === null || isNaN(value))
-                                            return "N/D";
-                                        return new Intl.NumberFormat(
-                                            "es-MX",
-                                        ).format(value);
-                                    },
-                                    title: {
-                                        formatter: (seriesName) =>
-                                            seriesName + ":",
-                                    },
-                                },
-                            },
-                            noData: {
-                                text: "No hay datos disponibles para esta selección.",
-                            },
-                        };
-                    } else {
-                        // console.log("CASO B");
-                        // --- CASO B: "POBLACIÓN" (Simple) ---
-                        // Queremos eje de categorías para que se vea limpio.
-                        const allYears = datosParaGrafico.series.flatMap(
-                            (serie) => serie.data.map((point) => point[0]),
-                        );
-                        const uniqueYears = [...new Set(allYears)].sort(
-                            (a, b) => a - b,
-                        );
-                        const newSeries = datosParaGrafico.series.map(
-                            (serie) => {
-                                const dataMap = new Map(serie.data);
-                                return {
-                                    name: serie.name,
-                                    data: uniqueYears.map(
-                                        (year) => dataMap.get(year) ?? null,
-                                    ),
-                                };
-                            },
-                        );
-
-                        options = {
-                            series: newSeries,
-                            chart: {
-                                type: "line",
-                                height: 500,
-                                animations: { enabled: false },
-                                toolbar: { show: true },
-                            },
-                            colors: PALETA_COLORES,
-                            markers: {
-                                size: 5,
-                            },
-                            stroke: { curve: "smooth", width: 2 },
-                            yaxis: {
-                                title: { text: datosParaGrafico.eje_y.titulo },
-                                labels: {
-                                    formatter: (value) => {
-                                        if (value === null || isNaN(value))
-                                            return "0";
-                                        return new Intl.NumberFormat(
-                                            "es-MX",
-                                        ).format(value);
-                                    },
-                                },
-                            },
-                            xaxis: {
-                                type: "category",
-                                categories: uniqueYears,
-                                title: {
-                                    text:
-                                        datosParaGrafico.eje_x.titulo || "Año",
-                                },
-                                labels: {
-                                    formatter: function (value) {
-                                        if (
-                                            value === "N/A" ||
-                                            value === null ||
-                                            value === ""
-                                        ) {
-                                            return "Total Estatal";
-                                        }
-                                        return value;
-                                    },
-                                },
-                                tooltip: { enabled: false },
-                                crosshairs: { show: false },
-                            },
-                            tooltip: {
-                                shared: false,
-                                intersect: true,
-                                y: {
-                                    formatter: (value) => {
-                                        if (value === null || isNaN(value))
-                                            return "N/D";
-                                        return new Intl.NumberFormat(
-                                            "es-MX",
-                                        ).format(value);
-                                    },
-                                },
-                            },
-                            noData: {
-                                text: "No hay datos disponibles para esta selección.",
-                            },
-                        };
-                    }
-                } else {
-                    // --- CASO C: GRÁFICO DE LÍNEA QUE YA TENÍA CATEGORÍAS ---
-                    options = {
-                        series: datosParaGrafico.series,
-                        chart: {
-                            type: "line",
-                            height: 450,
-                            toolbar: { show: true },
-                            animations: { enabled: false },
-                        },
-                        colors: PALETA_COLORES,
-                        markers: {
-                            size: 5,
-                        },
-                        xaxis: {
-                            type: "category",
-                            categories: datosParaGrafico.eje_x.categorias || [],
-                            tooltip: { enabled: false },
-                            crosshairs: { show: false },
-                        },
-                        yaxis: {
-                            title: { text: datosParaGrafico.eje_y.titulo },
-                            labels: {
-                                formatter: (value) => {
-                                    if (value === null || isNaN(value))
-                                        return "0";
-                                    return new Intl.NumberFormat(
-                                        "es-MX",
-                                    ).format(value);
-                                },
-                            },
-                        },
-                        tooltip: {
-                            shared: false,
-                            intersect: true,
-                            y: {
-                                formatter: (value) => {
-                                    if (value === null || isNaN(value))
-                                        return "N/D";
-                                    return new Intl.NumberFormat(
-                                        "es-MX",
-                                    ).format(value);
-                                },
-                            },
-                        },
-                        dataLabels: { enabled: false },
-                        stroke: { curve: "smooth", width: 2 },
-                        noData: {
-                            text: "No hay datos disponibles para esta selección.",
-                        },
+                // 2. Mapeamos limpiamente. ECharts ama los nulls, no necesitamos fantasmas.
+                seriesData = datosParaGrafico.series.map((serie) => {
+                    const dataMap = new Map(serie.data);
+                    return {
+                        name: serie.name,
+                        type: "line",
+                        data: xAxisData.map((y) => dataMap.get(y) ?? null),
+                        symbol: "circle",
+                        symbolSize: 6,
+                        connectNulls: false, // Deja el hueco si no hay dato intermedio
+                        smooth: true, // En ECharts el smooth no desaparece los puntos únicos
                     };
-                }
+                });
             } else {
-                // --- CASO D: GRÁFICO DE BARRAS ---
-                options = {
-                    series: datosParaGrafico.series,
-                    chart: {
-                        type: "bar",
-                        height: 450,
-                        toolbar: { show: true },
-                        animations: { enabled: false },
-                    },
-                    colors: PALETA_COLORES,
-                    xaxis: {
-                        type: "category",
-                        categories: datosParaGrafico.eje_x.categorias || [],
-                        tooltip: { enabled: false },
-                        crosshairs: { show: false },
-                    },
-                    yaxis: {
-                        title: { text: datosParaGrafico.eje_y.titulo },
-                        labels: {
-                            formatter: (value) => {
-                                if (value === null || isNaN(value)) return "0";
-                                return new Intl.NumberFormat("es-MX").format(
-                                    value,
-                                );
-                            },
-                        },
-                    },
-                    tooltip: {
-                        shared: false,
-                        intersect: true,
-                        y: {
-                            formatter: (value) => {
-                                if (value === null || isNaN(value)) return "N/D";
-                                return new Intl.NumberFormat("es-MX").format(
-                                    value,
-                                );
-                            },
-                        },
-                    },
-                    dataLabels: { enabled: false },
-                    stroke: { curve: "smooth", width: 2 },
-                    noData: {
-                        text: "No hay datos disponibles para esta selección.",
-                    },
-                    grid: {
-                        padding: {
-                            bottom: 20,
-                        },
-                    },
-                };
+                // Caso: Líneas o Barras que ya traen "categorias" desde el backend
+                xAxisData = datosParaGrafico.eje_x.categorias || [];
+                const tipoSeries =
+                    datosParaGrafico.tipo_grafico === "bar" ? "bar" : "line";
+
+                seriesData = datosParaGrafico.series.map((serie) => ({
+                    name: serie.name,
+                    type: tipoSeries,
+                    data: serie.data,
+                    symbol: "circle",
+                    symbolSize: 6,
+                    smooth: true,
+                }));
             }
-            // --- FIN DE CORRECCIÓN ---
+
+            options = {
+                color: PALETA_COLORES,
+                tooltip: {
+                    trigger: "item", // ESTA ES LA JOYA: Cruza todos los datos verticalmente
+                    axisPointer: {
+                        type: "cross",
+                        label: { backgroundColor: "#6a7985" },
+                    },
+                    valueFormatter: (value) =>
+                        value == null || isNaN(value)
+                            ? "N/D"
+                            : formatNum(value),
+                    formatter: function (params) {
+                        // Como ahora es 'item', params es un solo objeto, no un arreglo.
+                        // Si el valor es nulo (N/D), simplemente no mostramos el cuadro
+                        if (params.value == null || isNaN(params.value))
+                            return "";
+
+                        // Construimos el diseño compacto para un solo punto
+                        let html = `<div style="font-weight:bold; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">${params.name}</div>`;
+
+                        html += `<div style="display: flex; justify-content: space-between; gap: 20px; font-size: 13px;">
+                                    <span>${params.marker} ${params.seriesName}</span>
+                                    <span style="font-weight: bold;">${new Intl.NumberFormat("es-MX").format(params.value)}</span>
+                                 </div>`;
+
+                        return html;
+                    },
+                },
+                legend: {
+                    show: seriesData.length > 1,
+                    type: "scroll",
+                    bottom: 0,
+                },
+                grid: {
+                    left: "3%",
+                    right: "4%",
+                    bottom: "15%",
+                    containLabel: true,
+                },
+                xAxis: {
+                    type: "category",
+                    data: xAxisData,
+                    name: datosParaGrafico.eje_x.titulo || "",
+                    nameLocation: "middle",
+                    nameGap: 30,
+                    axisLabel: {
+                        formatter: function (value) {
+                            if (
+                                value === "N/A" ||
+                                value === null ||
+                                value === ""
+                            )
+                                return "Total Estatal";
+                            return value;
+                        },
+                    },
+                },
+                yAxis: {
+                    type: "value",
+                    name: datosParaGrafico.eje_y.titulo,
+                    nameTextStyle: {
+                        align: "left",
+                        padding: [0, 0, 0, -30], // Opcional: Un pequeño empujón para alinearlo perfecto con los números
+                    },
+                    axisLabel: { formatter: (value) => formatNum(value) },
+                },
+                series: seriesData,
+            };
         }
 
+        // ====================================================================
+        // --- RENDERIZADO EN PANTALLA ---
+        // ====================================================================
+
+        // Guardamos las opciones para la pantalla completa
         lastChartOptions = options;
-        if (chart) chart.destroy();
-        chart = new ApexCharts(container, options);
-        chart.render();
+
+        // IMPORTANTE: Aseguramos que el contenedor tenga dimensiones
+        container.style.width = "100%";
+        container.style.height = "500px";
+
+        // Destruimos la gráfica anterior si existe
+        if (chart) {
+            // Compatibilidad por si todavía hay un ApexChart vivo
+            if (chart.dispose) chart.dispose();
+            else if (chart.destroy) chart.destroy();
+        }
+
+        // Inicializamos ECharts
+        chart = echarts.init(container);
+        chart.setOption(options);
     }
 
     // --- 5. FUNCIÓN "DIRECTORA" PRINCIPAL ---
@@ -2266,7 +1998,9 @@ document.addEventListener("DOMContentLoaded", function () {
             yearSelectorContainerRegions.style.display = "none";
 
             if (chart) {
-                chart.destroy();
+                if (chart.dispose) chart.dispose();
+                else if (chart.destroy) chart.destroy();
+
                 chart = null;
             }
             // 4. Limpiamos el gráfico y deseleccionamos indicadores
@@ -2508,31 +2242,35 @@ document.addEventListener("DOMContentLoaded", function () {
 
     fullscreenModal.addEventListener("shown.bs.modal", () => {
         if (fullscreenChart) {
-            fullscreenChart.destroy();
+            if (fullscreenChart.dispose) fullscreenChart.dispose();
+            else if (fullscreenChart.destroy) fullscreenChart.destroy();
         }
-        // Creamos una copia de las opciones, pero ajustamos la altura
-        let fullscreenOptions = { ...lastChartOptions };
-        fullscreenOptions.chart.height = window.innerHeight * 0.8; // 80% de la altura de la pantalla
 
         fullscreenModalTitle.innerText =
             lastChartOptions.series.length > 10
                 ? "Indicador complejo en Pantalla Completa"
                 : "Gráfico en Pantalla Completa";
 
-        fullscreenChart = new ApexCharts(
-            fullscreenChartContainer,
-            fullscreenOptions,
-        );
-        fullscreenChart.render();
+        // Aseguramos que el contenedor del modal tenga altura dinámica
+        fullscreenChartContainer.style.width = "100%";
+        fullscreenChartContainer.style.height =
+            window.innerHeight * 0.75 + "px";
+
+        // Inicializamos ECharts en el Modal
+        fullscreenChart = echarts.init(fullscreenChartContainer);
+        fullscreenChart.setOption(lastChartOptions);
     });
 
-    // Listener para cuando el modal se oculta
     fullscreenModal.addEventListener("hidden.bs.modal", () => {
-        // Destruimos el gráfico para liberar memoria
         if (fullscreenChart) {
-            fullscreenChart.destroy();
+            fullscreenChart.dispose();
             fullscreenChart = null;
         }
+    });
+
+    // (Opcional) Hacer que el gráfico normal se adapte si cambias el tamaño de la ventana
+    window.addEventListener("resize", function () {
+        if (chart && chart.resize) chart.resize();
     });
     // --- 7. LÓGICA PARA OCULTAR/MOSTRAR EL CATÁLOGO ---
 
@@ -2588,29 +2326,18 @@ document.addEventListener("DOMContentLoaded", function () {
             // Forzar al gráfico y al mapa a redibujarse
             // para que se ajusten al nuevo tamaño del contenedor.
             setTimeout(() => {
-                // --- INICIO DE CORRECCIÓN DEL BUG (Glitcheo) ---
-                if (chart && lastChartOptions && chart.el) {
-                    // 1. Obtenemos el contenedor que el chart usaba
-                    const container = chart.el;
-
-                    // 2. Destruimos el chart anterior
-                    chart.destroy();
-
-                    // 3. Creamos uno NUEVO en el MISMO contenedor
-                    //    usando las últimas opciones guardadas.
-                    //    Esto lo fuerza a recalcular el ancho correctamente.
-                    chart = new ApexCharts(container, lastChartOptions);
-                    chart.render();
+                // --- ECHARTS RESIZE NATIVO ---
+                if (chart && chart.resize) {
+                    chart.resize(); // ECharts recalcula el ancho automáticamente
                 }
-                // --- FIN DE LA CORRECCIÓN ---
 
                 if (mapMunicipal) {
-                    mapMunicipal.invalidateSize(true); // Leaflet
+                    mapMunicipal.invalidateSize(true);
                 }
                 if (mapRegional) {
-                    mapRegional.invalidateSize(true); // Leaflet
+                    mapRegional.invalidateSize(true);
                 }
-            }, 300); // Un pequeño retraso para dar tiempo a que la animación de la columna termine
+            }, 300);
         });
     });
     exportBtn.addEventListener("click", handleExport);
