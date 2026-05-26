@@ -19,6 +19,8 @@ class Indicador extends Model
         'solo_resumen',
         'priorizar_total',
         'nombre_tecnico',
+        'polaridad',
+        'orden',
     ];
 
     public function tematica()
@@ -28,5 +30,10 @@ class Indicador extends Model
     public function variables()
     {
         return $this->hasMany(Variable::class);
+    }
+
+    public function configuracionFicha()
+    {
+        return $this->hasOne(ConfiguracionFicha::class);
     }
 }

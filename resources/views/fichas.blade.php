@@ -26,420 +26,367 @@ $currentUrl = url()->current();
 @section('jss')
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<script src="{{ asset('js/script-ficha.js') }}?v={{ time() }}"></script>
 @endsection
 
 @section('content')
 <div class="container-fluid my-4" data-api-url="{{ route('api.data') }}" data-csrf-token="{{ csrf_token() }}"
-    data-export-url="{{ route('fichas.exportar') }}">
-    <div class="px-5">
+    data-export-url="{{ route('banco-indicadores.exportar') }}">
+    <div class="px-2 px-md-4">
+        <div class="row">
+            {{-- Columna Lateral: Catálogo (Persistente) --}}
+            <div class="col-md-3 catalogo-col">
+                <h2 class="h4 mb-3 fw-bold">Banco de Indicadores</h2>
 
-        <h2>Banco de Indicadores</h2>
+                {{-- Selector de Nivel (Segmented Control) - Persistente --}}
+                <div class="level-switcher mb-3">
+                    <div class="nav nav-pills nav-fill bg-light p-1 rounded-pill shadow-sm" id="pills-tab-nivel" role="tablist">
+                        <button class="nav-link active rounded-pill py-1 px-2 small" id="pill-municipios-tab"
+                            data-bs-target="#pane-municipios" type="button" role="tab" data-nivel="municipio">Municipio</button>
+                        <button class="nav-link rounded-pill py-1 px-2 small" id="pill-microrregiones-tab"
+                            data-bs-target="#pane-regiones" type="button" role="tab" data-nivel="microrregion">Microrregión</button>
+                        <button class="nav-link rounded-pill py-1 px-2 small" id="pill-macrorregiones-tab"
+                            data-bs-target="#pane-regiones" type="button" role="tab" data-nivel="macrorregion">Macrorregión</button>
+                    </div>
+                </div>
 
-        <ul class="nav nav-pills nav-fill mb-4" id="pills-tab-nivel" role="tablist">
-            <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="pill-municipios-tab" data-bs-toggle="pill"
-                    data-bs-target="#pane-municipios" type="button" role="tab" data-nivel="municipio">Por
-                    Municipio</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="pill-microrregiones-tab" data-bs-toggle="pill"
-                    data-bs-target="#pane-regiones" type="button" role="tab" data-nivel="microrregion">Por
-                    Microrregión</button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link" id="pill-macrorregiones-tab" data-bs-toggle="pill"
-                    data-bs-target="#pane-regiones" type="button" role="tab" data-nivel="macrorregion">Por
-                    Macrorregión</button>
-            </li>
-        </ul>
-
-        <div class="tab-content" id="pills-tabContent-nivel">
-
-            <div class="tab-pane fade show active" id="pane-municipios" role="tabpanel">
-                <div class="row">
-                    <div class="col-md-3 catalogo-col">
-                        <h4>Catálogo de Indicadores</h4>
-                        <div class="p-3 border-bottom bg-light">
+                {{-- Contenido de Búsqueda y Acordeón --}}
+                <div class="tab-content" id="pills-sidebar-content">
+                    {{-- Pane Municipal --}}
+                    <div class="tab-pane fade show active" id="sidebar-pane-municipios" role="tabpanel">
+                        <div class="p-3 border-bottom bg-light rounded-3 mb-3">
                             <div class="input-group">
-                                <span class="input-group-text" id="search-addon"><i class="fas fa-search"></i></span>
-                                <input type="search" id="indicador-search" class="form-control"
-                                    placeholder="Buscar indicador por nombre..." aria-label="Buscar indicador"
-                                    aria-describedby="search-addon">
+                                <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-search text-muted"></i></span>
+                                <input type="search" id="indicador-search" class="form-control border-start-0"
+                                    placeholder="Buscar indicador...">
                             </div>
                         </div>
-                        <div class="accordion" id="accordionDimensions">
+                        <div class="accordion accordion-flush dashboard-accordion" id="accordionDimensions">
                             @foreach ($dimensiones as $dimension)
-                            <div class="accordion-item">
+                            <div class="accordion-item dimension-item">
                                 <h2 class="accordion-header" id="heading-dimension-{{ $dimension->id }}">
-                                    <button class="accordion-button collapsed text-white" type="button"
+                                    <button class="accordion-button collapsed dimension-button" type="button"
                                         data-bs-toggle="collapse"
                                         data-bs-target="#collapse-dimension-{{ $dimension->id }}"
-                                        style="background-color: {{ $dimension->color ?? '#6c757d' }};">
+                                        style="border-left: 4px solid {{ $dimension->color ?? '#6c757d' }};">
                                         {{ $dimension->nombre }}
                                     </button>
                                 </h2>
                                 <div id="collapse-dimension-{{ $dimension->id }}"
                                     class="accordion-collapse collapse" data-bs-parent="#accordionDimensions">
                                     <div class="accordion-body p-0">
-
-                                        <div class="accordion accordion-flush"
-                                            id="accordionTematicas-{{ $dimension->id }}">
+                                        <div class="accordion accordion-flush tematica-accordion" id="accordionTematicas-{{ $dimension->id }}">
                                             @foreach ($dimension->tematicas as $tematica)
-                                            <div class="accordion-item">
-                                                <h2 class="accordion-header"
-                                                    id="heading-tematica-{{ $tematica->id }}">
-                                                    <button class="accordion-button collapsed py-2"
+                                            <div class="accordion-item tematica-item">
+                                                <h2 class="accordion-header" id="heading-tematica-{{ $tematica->id }}">
+                                                    <button class="accordion-button collapsed py-2 tematica-button"
                                                         type="button" data-bs-toggle="collapse"
                                                         data-bs-target="#collapse-tematica-{{ $tematica->id }}">
                                                         {{ $tematica->nombre }}
                                                     </button>
                                                 </h2>
-                                                <div id="collapse-tematica-{{ $tematica->id }}"
-                                                    class="accordion-collapse collapse"
+                                                <div id="collapse-tematica-{{ $tematica->id }}" class="accordion-collapse collapse"
                                                     data-bs-parent="#accordionTematicas-{{ $dimension->id }}">
-                                                    <div class="accordion-body py-1 px-3">
-
-                                                        <ul class="list-unstyled">
+                                                    <div class="accordion-body py-1 ps-4 pe-2">
+                                                        <ul class="list-unstyled indicator-list">
                                                             @foreach ($tematica->indicadores as $indicador)
                                                             <li>
-                                                                <a href="#"
-                                                                    class="indicador-link d-block py-1 text-black"
+                                                                <a href="#" class="indicador-link d-flex align-items-center py-1"
                                                                     data-indicador-id="{{ $indicador->id }}"
-                                                                    data-tipo-dato="{{ $indicador->tipo_dato }}"
-                                                                    data-dimension-target="#collapse-dimension-{{ $dimension->id }}"
-                                                                    data-tematica-target="#collapse-tematica-{{ $tematica->id }}"
-                                                                    data-es-complejo="{{ $indicador->es_complejo ? 'true' : 'false' }}">
-                                                                    {{ $indicador->nombre_amigable }}
+                                                                    data-es-complejo="{{ $indicador->es_complejo ? 'true' : 'false' }}"
+                                                                    data-tipo-dato="{{ $indicador->tipo_dato }}">
+                                                                    <span class="indicator-name">{{ $indicador->nombre_amigable }}</span>
                                                                 </a>
                                                             </li>
                                                             @endforeach
                                                         </ul>
-
                                                     </div>
                                                 </div>
                                             </div>
                                             @endforeach
                                         </div>
-
                                     </div>
                                 </div>
                             </div>
                             @endforeach
                         </div>
                     </div>
-                    <div class="col-md-9 content-col">
-                        <button class="btn btn-sm btn-outline-secondary mb-2 toggle-catalogo-btn"
-                            data-bs-toggle="tooltip" title="Ocultar catálogo">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <div class="card shadow-sm">
-                            <div class="card-header bg-light py-3">
-                                <h5 id="chart-title" class="mb-0">Selecciona un indicador</h5>
 
-                                <button id="fullscreen-btn" class="btn btn-sm btn-outline-secondary my-2"
-                                    data-bs-toggle="modal" data-bs-target="#chart-fullscreen-modal"
-                                    style="display: none;">
-                                    <i class="fas fa-expand me-1"></i> Pantalla Completa
-                                </button>
+                    {{-- Pane Regional --}}
+                    <div class="tab-pane fade" id="sidebar-pane-regiones" role="tabpanel">
+                        <div class="p-3 border-bottom bg-light rounded-3 mb-3">
+                            <div class="input-group">
+                                <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-search text-muted"></i></span>
+                                <input type="search" id="indicador-search-regions" class="form-control border-start-0"
+                                    placeholder="Buscar indicador...">
                             </div>
-
-                            <div class="card-body">
-                                <div class="card shadow-sm mb-4">
-                                    <div class="card-header bg-light">
-                                        <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Panel de Control</h5>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row g-3 align-items-end">
-
-                                            {{-- Columna para el Selector de Municipio y Botón Estatal --}}
-                                            <div class="col-lg-6">
-                                                <div id="municipio-selector-container">
-                                                    <label for="municipio-selector"
-                                                        class="form-label fw-bold">Ubicación:</label>
-                                                    <div class="input-group">
-                                                        <select id="municipio-selector" multiple>
-                                                            {{-- La opción 'estatal' se controla por JS, no es necesaria aquí --}}
-                                                            @foreach ($municipios as $municipio)
-                                                            <option value="{{ $municipio->id }}"
-                                                                data-cvegeo="{{ $municipio->cvegeo }}"
-                                                                data-orden="1">
-                                                                {{ $municipio->nombre }}
-                                                            </option>
-                                                            @endforeach
-                                                        </select>
-                                                        <button id="estatal-btn" class="btn btn-outline-secondary"
-                                                            type="button" title="Ver Total Estatal">
-                                                            <i class="fas fa-globe-americas"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                {{-- Interruptor de Comparación Estatal --}}
-                                                <!-- <div class="mt-3 form-check form-switch">
-                                                    <input class="form-check-input" type="checkbox" id="compare-state-switch">
-                                                    <label class="form-check-label" for="compare-state-switch">
-                                                        Comparar con <strong>Total Estatal</strong>
-                                                    </label>
-                                                </div> -->
-                                            </div>
-
-                                            {{-- Columna para el Selector de Años --}}
-                                            <div class="col-lg-3">
-                                                <div id="year-selector-container" style="display: none;">
-                                                    <label for="year-selector" class="form-label fw-bold">Año(s)
-                                                        disponibles:</label>
-                                                    <select id="year-selector" multiple></select>
-                                                </div>
-                                            </div>
-                                            <div class="col-lg-3">
-                                                <div class="input-group">
-                                                    <button id="consultar-btn" class="btn btn-custom-primary w-75"
-                                                        type="button">
-                                                        <i class="fas fa-search me-1"></i> Consultar
-                                                    </button>
-                                                    <button id="share-btn" class="btn btn-outline-secondary w-25"
-                                                        type="button" title="Compartir Vista">
-                                                        <i class="fas fa-share-alt"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            {{-- Fila para el botón de Resumen, que aparece cuando es necesario --}}
-                                            <div class="col-12 mt-3">
-                                                <a href="{{ route('fichas.resumen', ['municipio' => 'ID_PLACEHOLDER']) }}"
-                                                    id="resumen-btn" class="btn btn-link btn-sm p-0 disabled"
-                                                    style="display: none; text-decoration: none;">
-                                                    <i class="fa-solid fa-circle-info me-1"></i>
-                                                    Ver Ficha de Resumen Municipal
-                                                </a>
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row mt-3">
-                                    <div class="col-lg-9">
-                                        <div id="chart-container" style="min-height: 400px;">
-                                            <p class="text-muted text-center pt-5">Selecciona un indicador y un
-                                                municipio para
-                                                comenzar.
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-lg-3">
-                                        <div id="map-container" style="display: none;">
-                                            <div id="map"
-                                                style="height: 400px; width: 100%; border-radius: .25rem;"></div>
-                                            <div id="map-legend" class="mt-2 text-center"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                {{-- <div id="chart-container" style="min-height: 400px;">
-                                        <p class="text-muted text-center pt-5">Selecciona un indicador y un municipio para
-                                            comenzar.
-                                        </p>
-                                    </div> --}}
-                                <div id="chart-note-container" class="alert alert-info mt-3" role="alert"
-                                    style="display: none; font-size: 0.9rem;">
-                                </div>
-                                <div id="metadata-container" class="metadata-block mt-4 pt-3 border-top"
-                                    style="display: none; font-size: 0.9rem;">
-                                    <div class="row align-items-start">
-
-                                        <div class="col-md-7">
-                                            <h6>Detalles del Indicador</h6>
-                                            <p class="mb-1"><strong>Definición:</strong> <span
-                                                    id="indicator-description" class="text-justify"></span></p>
-                                            <p class="mb-1"><strong>Método de cálculo:</strong> <span
-                                                    id="indicator-method" class="text-justify"></span></p>
-                                            <p class="mb-1"><strong>Fuente:</strong> <span id="indicator-source"
-                                                    class="text-justify"></span>
-                                            </p>
-                                            <p class="mb-0"><strong>Años de información disponible:</strong> <span
-                                                    id="indicator-available-years" class="text-justify"></span></p>
-                                        </div>
-
-                                        <div class="col-md-5 text-md-start mt-3 mt-md-0">
-                                            <h6 class="d-none d-md-block">Acciones</h6>
-
-                                            <button id="export-btn" class="btn btn-sm btn-outline-success"
-                                                style="display: none;">
-                                                <i class="fa-solid fa-file-arrow-down me-1"></i>
-                                                Exportar (CSV)
-                                            </button>
-
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
+                        </div>
+                        <div class="accordion accordion-flush dashboard-accordion" id="accordionDimensionsRegions">
+                            {{-- Clonado vía JS --}}
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="tab-pane fade" id="pane-regiones" role="tabpanel">
-                <div class="row">
+            {{-- Columna Central/Derecha: Contenido y Visualización --}}
+            <div class="col-md-9 content-col">
+                <div class="tab-content" id="pills-main-content">
 
-                    <div class="col-lg-3 catalogo-col">
-                        {{-- El mismo acordeón se usa aquí, pero será filtrado por JS --}}
-                        <h4>Catálogo de Indicadores</h4>
-                        <div class="input-group input-group-sm mb-2">
-                            <span class="input-group-text"><i class="fas fa-search"></i></span>
-                            <input type="search" id="indicador-search-regions" class="form-control"
-                                placeholder="Buscar en esta pestaña...">
-                        </div>
-                        <div class="accordion" id="accordionDimensionsRegions">
-                            {{-- Clonaremos el acordeón original aquí con JS --}}
-                        </div>
-
-                    </div>
-                    <div class="col-lg-9 content-col">
-                        <button class="btn btn-sm btn-outline-secondary mb-2 toggle-catalogo-btn"
-                            data-bs-toggle="tooltip" title="Ocultar catálogo">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <div class="card shadow-sm">
-                            <div class="card-header bg-light py-3">
-                                <h5 id="chart-title-regions" class="mb-0">Selecciona un indicador y una región</h5>
-                                <button id="fullscreen-btn-regions" class="btn btn-sm btn-outline-secondary"
-                                    data-bs-toggle="modal" data-bs-target="#chart-fullscreen-modal"
-                                    style="display: none;">
-                                    <i class="fas fa-expand me-1"></i> Pantalla Completa
-                                </button>
+                    {{-- Vista Municipal --}}
+                    <div class="tab-pane fade show active" id="pane-municipios" role="tabpanel">
+                        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                            <div class="card-header bg-white py-3 border-bottom-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <button class="btn btn-sm btn-outline-secondary toggle-catalogo-btn rounded-circle" data-bs-toggle="tooltip" title="Ocultar catálogo">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <h5 id="chart-title" class="mb-0 fw-bold text-dark">Selecciona un municipio</h5>
+                                    <div class="d-flex gap-2">
+                                        <div id="resumen-container" style="display: none;">
+                                            <a href="{{ route('ficha-municipal.show', ['municipio' => 'ID_PLACEHOLDER']) }}"
+                                                id="resumen-btn" class="btn btn-sm btn-outline-info rounded-pill disabled" title="Resumen Municipal">
+                                                <i class="fa-solid fa-file-invoice me-1"></i> Resumen
+                                            </a>
+                                        </div>
+                                        <button id="toggle-map-btn" class="btn btn-sm btn-outline-primary rounded-pill">
+                                            <i class="fas fa-map me-1"></i> Mapa
+                                        </button>
+                                        <button id="fullscreen-btn" class="btn btn-sm btn-outline-secondary rounded-pill"
+                                            data-bs-toggle="modal" data-bs-target="#chart-fullscreen-modal" style="display: none;">
+                                            <i class="fas fa-expand me-1"></i> Expandir
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-dark rounded-pill" onclick="window.print()">
+                                            <i class="fas fa-print me-1"></i> Imprimir
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="card-body">
-                                <div class="row g-3 align-items-center border-bottom pb-3 mb-3">
-                                    <div class="card shadow-sm mb-4">
-                                        <div class="card-header bg-light">
-                                            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Panel de Control
-                                                Regional</h5>
+                            <div class="card-body pt-0">
+                                {{-- Barra de Filtros Municipal --}}
+                                <div class="filter-bar p-2 bg-light mb-3 rounded-4 shadow-sm">
+                                    <div class="row g-2 align-items-center">
+                                        <div class="col-md-5">
+                                            <div id="municipio-selector-container">
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-map-marker-alt text-muted"></i></span>
+                                                    <select id="municipio-selector" multiple class="form-control-sm border-start-0">
+                                                        @foreach ($municipios as $municipio)
+                                                        <option value="{{ $municipio->id }}" data-cvegeo="{{ $municipio->cvegeo }}"
+                                                            data-slug="{{ $municipio->slug }}"
+                                                            data-orden="{{ $municipio->orden ?? 0 }}">
+                                                            {{ $municipio->nombre }}
+                                                        </option>
+                                                        @endforeach
+                                                    </select>
+                                                    <button id="estatal-btn" class="btn btn-outline-secondary" type="button" title="Ver Total Estatal">
+                                                        <i class="fas fa-globe-americas"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="card-body">
-                                            <div class="row g-3 align-items-end">
-
-                                                {{-- Columna para los Selectores de Región --}}
-                                                <div class="col-lg-6">
-                                                    {{-- Contenedor para Microrregiones (visible por defecto) --}}
-                                                    <div id="microrregion-selector-container">
-                                                        <label for="microrregion-selector"
-                                                            class="form-label fw-bold">Microrregión:</label>
-                                                        <select id="microrregion-selector">
-                                                            @foreach ($microrregiones as $region)
-                                                            <option value="{{ $region->id }}">
-                                                                {{ $region->nombre }}
-                                                            </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-                                                    {{-- Contenedor para Macrorregiones (oculto por defecto) --}}
-                                                    <div id="macrorregion-selector-container" style="display: none;">
-                                                        <label for="macrorregion-selector"
-                                                            class="form-label fw-bold">Macrorregión:</label>
-                                                        <select id="macrorregion-selector">
-                                                            @foreach ($macrorregiones as $region)
-                                                            <option value="{{ $region->id }}">
-                                                                {{ $region->nombre }}
-                                                            </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
+                                        <div class="col-md-4">
+                                            <div id="year-selector-container" style="display: none;">
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white border-end-0"><i class="fas fa-calendar-alt text-muted"></i></span>
+                                                    <select id="year-selector" multiple class="form-control-sm border-start-0"></select>
                                                 </div>
-
-                                                {{-- Columna para el Selector de Años de Regiones --}}
-                                                <div class="col-lg-3">
-                                                    <div id="year-selector-container-regions" style="display: none;">
-                                                        <label for="year-selector-regions"
-                                                            class="form-label fw-bold">Año(s):</label>
-                                                        <select id="year-selector-regions" multiple></select>
-                                                    </div>
-                                                </div>
-
-                                                {{-- Columna para el Botón "Consultar" --}}
-                                                <div class="col-lg-3">
-                                                    <div class="input-group">
-                                                        <button id="consultar-btn-regions"
-                                                            class="btn btn-custom-primary w-75" type="button">
-                                                            <i class="fas fa-search me-1"></i> Consultar
-                                                        </button>
-                                                        <button id="share-btn-regions"
-                                                            class="btn btn-outline-secondary w-25" type="button"
-                                                            title="Compartir Vista">
-                                                            <i class="fas fa-share-alt"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                {{-- <div class="col-lg-3">
-                                                        <button id="consultar-btn-regions"
-                                                            class="btn btn-custom-primary w-100">
-                                                            <i class="fas fa-search me-1"></i> Consultar
-                                                        </button>
-                                                    </div> --}}
-
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <button id="consultar-btn" class="btn btn-sm btn-custom-primary flex-grow-1">
+                                                    <i class="fas fa-search"></i> Consultar
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row">
-                                        {{-- Columna para el Gráfico --}}
-                                        <div class="col-lg-9">
-                                            <div id="chart-container-regions" style="min-height: 400px;">
-                                                <p class="text-muted text-center pt-5">Selecciona un indicador y una
-                                                    región para comenzar.</p>
-                                            </div>
-                                        </div>
+                                </div>
 
-                                        {{-- Columna para el Mapa --}}
-                                        <div class="col-lg-3">
-                                            {{-- Contenedor del Mapa (el que faltaba) --}}
-                                            <div id="map-container-regions" style="display: none;">
-                                                <div id="map-regions"
-                                                    style="height: 400px; width: 100%; border-radius: .25rem;"></div>
-                                                <div id="map-legend-regions" class="mt-2 text-center"></div>
-
-                                                <a href="#" id="ver-municipios-btn"
-                                                    class="btn btn-link btn-sm mt-2" data-bs-toggle="modal"
-                                                    data-bs-target="#municipios-modal"
-                                                    style="display: none; text-decoration: none;">
-                                                    <i class="fas fa-list-ul me-1"></i> Ver municipios de esta región
-                                                </a>
-                                            </div>
+                                {{-- Contenedor de Gráfica --}}
+                                <div id="consult-feedback" class="small text-muted mb-2">
+                                    Elige un indicador y al menos un municipio para habilitar la consulta.
+                                </div>
+                                <div id="view-summary" class="alert alert-light border rounded-4 py-2 px-3 small mb-3">
+                                    Consulta actual: Aún no has seleccionado un indicador.
+                                </div>
+                                <div id="view-guidance" class="alert alert-info border-0 rounded-4 py-2 px-3 small mb-3">
+                                    Puedes seleccionar hasta 2 municipios. El total estatal solo está disponible para indicadores absolutos.
+                                </div>
+                                <div class="viz-wrapper position-relative">
+                                    <div id="chart-container" style="min-height: 500px; width: 100%;">
+                                        <div class="d-flex flex-column align-items-center justify-content-center h-100 py-5">
+                                            <i class="fas fa-chart-line fa-4x text-light mb-3"></i>
+                                            <p class="text-muted fw-semibold mb-2">Sigue estos pasos para comenzar</p>
+                                            <p class="text-muted mb-1">1. Elige un indicador del catálogo.</p>
+                                            <p class="text-muted mb-1">2. Selecciona uno o dos municipios.</p>
+                                            <p class="text-muted mb-0">3. Presiona Consultar para cargar la gráfica.</p>
                                         </div>
                                     </div>
 
-                                    <div id="chart-note-container-regions" class="alert alert-info mt-3"
-                                        role="alert" style="display: none; font-size: 0.9rem;"></div>
-                                    <div id="metadata-container-regions" class="metadata-block mt-4 pt-3 border-top"
-                                        style="display: none; font-size: 0.9rem;">
-                                        <div class="row align-items-start">
+                                    {{-- Mapa Flotante --}}
+                                    <div id="map-container" class="floating-map-overlay shadow-lg" style="display: none;">
+                                        <div class="map-overlay-header d-flex justify-content-between align-items-center px-2 py-1 bg-white border-bottom">
+                                            <span class="small fw-bold text-muted">Vista Espacial</span>
+                                            <button type="button" class="btn-close" style="font-size: 0.6rem;" onclick="document.getElementById('toggle-map-btn').click()"></button>
+                                        </div>
+                                        <div id="map" style="height: 220px; width: 220px;"></div>
+                                        <div id="map-legend" class="p-1 bg-white border-top small text-center"></div>
+                                    </div>
+                                </div>
+                                <div id="chart-note-container" class="mb-3" style="display: none;"></div>
 
-                                            <div class="col-md-8">
-                                                <h6>Detalles del Indicador</h6>
-                                                <p class="mb-1"><strong>Descripción:</strong> <span
-                                                        id="indicator-description-regions"
-                                                        class="text-justify"></span>
-                                                </p>
-                                                <p class="mb-1"><strong>Método de cálculo:</strong> <span
-                                                        id="indicator-method-regions" class="text-justify"></span></p>
-                                                <p class="mb-1"><strong>Fuente:</strong> <span
-                                                        id="indicator-source-regions" class="text-justify"></span></p>
-                                                <p class="mb-0"><strong>Años de información disponible:</strong>
-                                                    <span id="indicator-available-years-regions"
-                                                        class="text-justify"></span>
-                                                </p>
+                                <div id="metadata-container" class="metadata-block mt-4 pt-3 border-top" style="display: none;">
+                                    {{-- Contenido de metadatos (Definición, Fuente, etc.) --}}
+                                    <div class="row g-4">
+                                        <div class="col-md-8">
+                                            <div class="mb-3">
+                                                <label class="fw-bold small text-uppercase text-muted d-block">Definición</label>
+                                                <span id="indicator-description" class="text-justify small d-block"></span>
                                             </div>
+                                            <div class="mb-3">
+                                                <label class="fw-bold small text-uppercase text-muted d-block">Método de cálculo</label>
+                                                <span id="indicator-method" class="text-justify small d-block"></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card bg-light border-0 p-3 rounded-4">
+                                                <div class="mb-2">
+                                                    <label class="fw-bold small text-muted d-block">Fuente</label>
+                                                    <span id="indicator-source" class="small"></span>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label class="fw-bold small text-muted d-block">Años disponibles</label>
+                                                    <span id="indicator-available-years" class="small"></span>
+                                                </div>
+                                                <button id="export-btn" class="btn btn-sm btn-outline-success mt-2 w-100">
+                                                    <i class="fas fa-download me-1"></i> Exportar CSV
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                                            <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                                                <h6 class="d-none d-md-block">Acciones</h6>
-                                                <button id="export-btn-regions" class="btn btn-sm btn-outline-success"
-                                                    style="display: none;">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16"
-                                                        height="16" fill="currentColor"
-                                                        class="bi bi-download me-1" viewBox="0 0 16 16">
-                                                        <path
-                                                            d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
-                                                        <path
-                                                            d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z" />
-                                                    </svg>
-                                                    Exportar (CSV)
+                    {{-- Vista Regional --}}
+                    <div class="tab-pane fade" id="pane-regiones" role="tabpanel">
+                        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                            <div class="card-header bg-white py-3 border-bottom-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <button class="btn btn-sm btn-outline-secondary toggle-catalogo-btn rounded-circle" data-bs-toggle="tooltip" title="Ocultar catálogo">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <h5 id="chart-title-regions" class="mb-0 fw-bold text-dark">Selecciona una región</h5>
+                                    <div class="d-flex gap-2">
+                                        <button id="toggle-map-btn-regions" class="btn btn-sm btn-outline-primary rounded-pill">
+                                            <i class="fas fa-map me-1"></i> Mapa
+                                        </button>
+                                        <button id="fullscreen-btn-regions" class="btn btn-sm btn-outline-secondary rounded-pill"
+                                            data-bs-toggle="modal" data-bs-target="#chart-fullscreen-modal" style="display: none;">
+                                            <i class="fas fa-expand me-1"></i> Expandir
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-dark rounded-pill" onclick="window.print()">
+                                            <i class="fas fa-print me-1"></i> Imprimir
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body pt-0">
+                                {{-- Barra de Filtros Regional --}}
+                                <div class="filter-bar p-2 bg-light mb-3 rounded-4 shadow-sm">
+                                    <div class="row g-2 align-items-center">
+                                        <div class="col-md-5">
+                                            <div id="microrregion-selector-container">
+                                                <select id="microrregion-selector" class="form-control-sm">
+                                                    @foreach ($microrregiones as $region)
+                                                    <option value="{{ $region->id }}">
+                                                        {{ $region->nombre }}
+                                                    </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div id="macrorregion-selector-container" style="display: none;">
+                                                <select id="macrorregion-selector" class="form-control-sm">
+                                                    @foreach ($macrorregiones as $region)
+                                                    <option value="{{ $region->id }}">
+                                                        {{ $region->nombre }}
+                                                    </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div id="year-selector-container-regions" style="display: none;">
+                                                <select id="year-selector-regions" multiple class="form-control-sm"></select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="d-flex gap-1">
+                                                <button id="consultar-btn-regions" class="btn btn-sm btn-custom-primary flex-grow-1">Consultar</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Contenedor de Gráfica (Regiones) --}}
+                                <div class="viz-wrapper position-relative">
+                                    <div id="consult-feedback-regions" class="small text-muted mb-2">
+                                        Elige un indicador y una región para habilitar la consulta.
+                                    </div>
+                                    <div id="view-summary-regions" class="alert alert-light border rounded-4 py-2 px-3 small mb-3">
+                                        Consulta actual: Aún no has seleccionado un indicador regional.
+                                    </div>
+                                    <div id="view-guidance-regions" class="alert alert-info border-0 rounded-4 py-2 px-3 small mb-3">
+                                        Algunas microrregiones no se muestran por limitaciones de desagregación. El mapa se activa cuando la consulta regional aplica.
+                                    </div>
+                                    <div id="chart-container-regions" style="min-height: 500px; width: 100%;">
+                                        <div class="d-flex flex-column align-items-center justify-content-center h-100 py-5">
+                                            <i class="fas fa-chart-area fa-4x text-light mb-3"></i>
+                                            <p class="text-muted fw-semibold mb-2">Sigue estos pasos para comenzar</p>
+                                            <p class="text-muted mb-1">1. Elige un indicador del catálogo.</p>
+                                            <p class="text-muted mb-1">2. Selecciona una microrregión o macrorregión.</p>
+                                            <p class="text-muted mb-0">3. Presiona Consultar para cargar la gráfica.</p>
+                                            <p class="text-muted">Selecciona un indicador y una región para comenzar.</p>
+                                        </div>
+                                    </div>
+
+                                    {{-- Mapa Flotante (Regiones) --}}
+                                    <div id="map-container-regions" class="floating-map-overlay shadow-lg" style="display: none;">
+                                        <div class="map-overlay-header d-flex justify-content-between align-items-center px-2 py-1 bg-white border-bottom">
+                                            <span class="small fw-bold text-muted">Vista Espacial</span>
+                                            <button type="button" class="btn-close" style="font-size: 0.6rem;" onclick="document.getElementById('toggle-map-btn-regions').click()"></button>
+                                        </div>
+                                        <div id="map-regions" style="height: 220px; width: 220px;"></div>
+                                        <div id="map-legend-regions" class="p-1 bg-white border-top small text-center"></div>
+                                    </div>
+                                </div>
+                                <div id="chart-note-container-regions" class="mb-3" style="display: none;"></div>
+
+                                <div id="metadata-container-regions" class="metadata-block mt-4 pt-3 border-top" style="display: none;">
+                                    <div class="row g-4">
+                                        <div class="col-md-8">
+                                            <div class="mb-3">
+                                                <label class="fw-bold small text-uppercase text-muted d-block">Descripción</label>
+                                                <span id="indicator-description-regions" class="text-justify small d-block"></span>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="fw-bold small text-uppercase text-muted d-block">Método de cálculo</label>
+                                                <span id="indicator-method-regions" class="text-justify small d-block"></span>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card bg-light border-0 p-3 rounded-4">
+                                                <div class="mb-2">
+                                                    <label class="fw-bold small text-muted d-block">Fuente</label>
+                                                    <span id="indicator-source-regions" class="small"></span>
+                                                </div>
+                                                <div class="mb-2">
+                                                    <label class="fw-bold small text-muted d-block">Años disponibles</label>
+                                                    <span id="indicator-available-years-regions" class="small"></span>
+                                                </div>
+                                                <button id="export-btn-regions" class="btn btn-sm btn-outline-success mt-2 w-100">
+                                                    <i class="fas fa-download me-1"></i> Exportar CSV
                                                 </button>
                                             </div>
                                         </div>
@@ -451,54 +398,22 @@ $currentUrl = url()->current();
                 </div>
             </div>
         </div>
-    </div>
-    <div class="modal fade" id="chart-fullscreen-modal" tabindex="-1">
-        <div class="modal-dialog modal-fullscreen">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="fullscreen-modal-title">Gráfico en Pantalla Completa</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    {{-- El gráfico clonado se renderizará aquí --}}
-                    <div id="fullscreen-chart-container"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="municipios-modal" tabindex="-1" aria-labelledby="municipios-modal-title"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="municipios-modal-title">Municipios</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" id="municipios-modal-body" style="background-color: #f8f9fa;">
+
+        {{-- Modal Fullscreen --}}
+        <div class="modal fade" id="chart-fullscreen-modal" tabindex="-1">
+            <div class="modal-dialog modal-fullscreen">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="fullscreen-modal-title">Visualización</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <div id="chart-fullscreen-container" style="width: 100%; height: 100%;"></div>
+                    </div>
                 </div>
             </div>
         </div>
+
     </div>
 </div>
-<section class="archivos-com">
-    <div class="container my-3">
-        <h2 class="py-5">Archivos complementarios</h2>
-        <div class="container-fluid row">
-            <div class="mx-auto px-4 col-lg-3 col-md-6 col-sm-12 col-12">
-                <div class="contenedor-tarjetadocs-compacta">
-                    <p class="titulo-documento-compacta">Proyecciones de población 1990-2040 para el estado de Puebla</p> <a
-                        href="{{ asset('documentos/Proyecciones19902040Puebla.zip') }}"
-                        class="boton-descargar-compacta" download="" rel="noopener"> <i
-                            class="fas fa-file-zipper"></i>
-                        Descargar
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-<script src="{{ asset('js/script-ficha.js?v=' . filemtime(public_path('js/script-ficha.js'))) }}" defer></script>
-<script src="{{ asset('js/buscador-indicadores.js?v=' . filemtime(public_path('js/buscador-indicadores.js'))) }}"
-    defer></script>
-{{-- <script src="{{ asset('js/mapa-dashboard.js') }}" defer></script> --}}
 @endsection

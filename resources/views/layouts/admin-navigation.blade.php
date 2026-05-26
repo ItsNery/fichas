@@ -24,6 +24,11 @@
                         href="{{ route('admin.datos.index') }}">{{ __('Datos') }}</a>
                 </li>
                 <li class="nav-item">
+                    <a href="{{ route('admin.configuracion-fichas.index') }}" class="nav-link {{ request()->routeIs('admin.configuracion-fichas.*') ? 'active' : '' }}">
+                        {{ __('Configuración Fichas') }}
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link {{ request()->routeIs('admin.salud-datos*') ? 'active' : '' }}"
                         href="{{ route('admin.salud-datos') }}">{{ __('Salud') }}</a>
                 </li>

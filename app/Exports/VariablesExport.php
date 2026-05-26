@@ -28,6 +28,7 @@ class VariablesExport implements FromQuery, WithHeadings, WithMapping
             'Unidad de Medida',
             'Mapeo de Valores (JSON)', 
             'Es KPI',
+            'Orden',
         ];
     }
 
@@ -49,6 +50,7 @@ class VariablesExport implements FromQuery, WithHeadings, WithMapping
             $variable->unidad_medida,
             $variable->mapeo_valores,         
             $variable->es_kpi ? 'Sí' : 'No', 
+            $variable->orden,
         ];
     }
 }

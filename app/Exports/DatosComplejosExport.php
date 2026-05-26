@@ -22,12 +22,17 @@ class DatosComplejosExport implements FromCollection, WithHeadings
     }
     public function collection()
     {
-        // 1. Obtenemos los datos, PERO AHORA FILTRADOS POR AÑO
-        $datos = DatoIndicadorComplejo::where('indicador_id', $this->indicador->id)
-            ->where('anio', $this->anio) // <-- EL NUEVO FILTRO
+        // 1. Obtenemos los datos, PERO AHORA FILTRADOS POR AÑO (si no es "todos")
+        $query = DatoIndicadorComplejo::where('indicador_id', $this->indicador->id)
             ->with('municipio')
             ->orderBy('municipio_id', 'asc')
-            ->get();
+            ->orderBy('anio', 'desc');
+
+        if ($this->anio && $this->anio !== 'todos') {
+            $query->where('anio', $this->anio);
+        }
+
+        $datos = $query->get();
 
         $filasAplanadas = collect();
 

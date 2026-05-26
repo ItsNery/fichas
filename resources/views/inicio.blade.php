@@ -17,22 +17,42 @@
     <section class="hero-section text-white text-center">
         <div class="hero-overlay"></div>
         <div class="container d-flex flex-column justify-content-center h-100">
+            <h1 class="display-4 fw-bold mb-3">Portal de Información Municipal y Regional del Estado de Puebla</h1>
+            <p class="lead mb-5">Información estadística y geográfica para la toma de decisiones.</p>
+
             <div class="row justify-content-center">
-                <div class="col-lg-9">
-                    <h1 class="display-4 fw-bold">Portal de Información Municipal y Regional del Estado de Puebla</h1>
-                    <p class="lead my-4">Explora, compara y descarga
-                        información clave de tu municipio o región.</p>
+                <div class="col-lg-8">
+                    <div class="card border-0 rounded-4 shadow-lg p-2" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                        <!-- Pestañas de Navegación -->
+                        <ul class="nav nav-pills nav-justified mb-3" id="heroTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active text-white fw-bold rounded-pill inicio" data-bs-toggle="pill" data-bs-target="#tab-municipio" type="button" role="tab" aria-selected="true">Mi Municipio</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link text-white fw-bold rounded-pill inicio" data-bs-toggle="pill" data-bs-target="#tab-indicadores" type="button" role="tab" aria-selected="false">Datos Temáticos</button>
+                            </li>
+                        </ul>
 
-                    {{-- Botón de Llamada a la Acción Principal --}}
-                    <a href="{{ route('fichas.index') }}" class="btn btn-custom-primary btn-lg px-5 py-3 mb-4">
-                        <i class="fas fa-chart-line me-2"></i> Iniciar Exploración
-                    </a>
-
-                    {{-- Búsqueda Rápida de Municipios --}}
-                    <div class="quick-search-container mx-auto">
-                        <label for="municipio-quick-search" class="form-label mb-2">O busca directamente un
-                            municipio:</label>
-                        <select id="municipio-quick-search" placeholder="Escribe el nombre de un municipio..."></select>
+                        <!-- Contenido de Pestañas -->
+                        <div class="tab-content bg-white text-dark p-4 rounded-4 text-start" id="heroTabsContent">
+                            <!-- Tab Municipio -->
+                            <div class="tab-pane fade show active" id="tab-municipio" role="tabpanel">
+                                <h5 class="fw-bold mb-2"><i class="fas fa-map-marker-alt texto-color-1 me-2"></i>Consulta la Ficha de tu Municipio</h5>
+                                <p class="text-muted small mb-3">Obtén un resumen completo de población, economía y servicios de tu localidad.</p>
+                                <div class="quick-search-container mx-auto">
+                                    <select id="municipio-quick-search" placeholder="Escribe el nombre de un municipio..."></select>
+                                </div>
+                            </div>
+                            
+                            <!-- Tab Indicadores -->
+                            <div class="tab-pane fade" id="tab-indicadores" role="tabpanel">
+                                <h5 class="fw-bold mb-2"><i class="fas fa-chart-line custom-text-primary me-2"></i>Banco de Indicadores</h5>
+                                <p class="text-muted small mb-3">Accede a la base de datos completa para explorar, comparar y descargar indicadores estadísticos a nivel estatal.</p>
+                                <a href="{{ route('banco-indicadores.index') }}" class="btn btn-custom-primary w-100 py-2 fw-bold">
+                                    <i class="fas fa-database me-2"></i>Explorar Base de Datos
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -155,7 +175,7 @@
                     if (value) {
                         // Reemplaza 'fichas.resumen' con el nombre de tu ruta de resumen municipal
                         let url =
-                            "{{ route('fichas.resumen', ['municipio' => 'ID_PLACEHOLDER']) }}";
+                            "{{ route('ficha-municipal.show', ['municipio' => 'ID_PLACEHOLDER']) }}";
                         window.location.href = url.replace('ID_PLACEHOLDER', value);
                     }
                 }

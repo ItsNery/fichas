@@ -12,6 +12,7 @@ class Tematica extends Model
         'dimension_id',
         'nombre',
         'nombre_tecnico',
+        'orden',
     ];
     
     public function dimension()

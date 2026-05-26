@@ -11,6 +11,7 @@ use App\Http\Controllers\FichaController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MunicipioController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\ConfiguracionFichaController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,14 +27,23 @@ Route::get('/prueba-header', function () {
 Route::get('/', [HomeController::class, 'index']);
 Route::get('/api/municipios/search', [MunicipioController::class, 'search'])->name('api.municipios.search');
 
-Route::prefix('banco-indicadores')->name('fichas.')->group(function () {
+// --- Módulo 1: Banco de Indicadores ---
+Route::prefix('banco-indicadores')->name('banco-indicadores.')->group(function () {
     Route::get('/', [FichaController::class, 'index'])->name('index');
-    Route::get('/resumen/{municipio}', [FichaController::class, 'resumenMunicipal'])->name('resumen');
     Route::post('/exportar', [FichaController::class, 'exportData'])->name('exportar');
-    Route::get('/resumen/{municipio}/pdf', [FichaController::class, 'exportarResumenPDF'])->name('resumen.pdf');
     Route::post('/api/data', [FichaController::class, 'getData'])->name('api.data');
     Route::get('/api/mapa-datos/{indicador}/{anio}', [FichaController::class, 'getMapData'])->name('api.mapa.data');
     Route::get('/api/indicador-anios/{indicador}', [FichaController::class, 'getIndicatorYears'])->name('api.indicador.anios');
+});
+
+// --- Módulo 2: Fichas Municipales ---
+Route::prefix('ficha-municipal')->name('ficha-municipal.')->group(function () {
+    Route::get('/', [FichaController::class, 'directorioVisual'])->name('index');
+    Route::get('/{municipio:slug}', [FichaController::class, 'resumenMunicipal'])->name('show');
+    Route::get('/{municipio:slug}/test', [FichaController::class, 'resumenMunicipalTest'])->name('test');
+    Route::get('/{municipio:slug}/v3', [FichaController::class, 'resumenMunicipalV3'])->name('v3');
+    Route::get('/{municipio:slug}/perfil', [FichaController::class, 'perfilMunicipal'])->name('perfil');
+    Route::get('/{municipio:slug}/pdf', [FichaController::class, 'exportarResumenPDF'])->name('pdf');
 });
 
 // Route::get('/datos-abiertos', function () {
@@ -89,6 +99,8 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
     Route::resource('users', UserController::class);
     Route::resource('instrumentos', InstrumentoController::class);
     Route::resource('municipios', AdminMunicipioController::class);
+    Route::resource('configuracion-fichas', ConfiguracionFichaController::class);
+    Route::get('/configuracion-fichas/api/variables-por-indicador/{indicador}', [ConfiguracionFichaController::class, 'getVariablesPorIndicador'])->name('configuracion-fichas.api-variables');
 
     Route::get('/municipios/{municipio}/instrumentos', [AdminMunicipioController::class, 'getInstrumentosJson'])->name('municipios.getInstrumentos');
     Route::post('/municipios/{municipio}/instrumentos', [AdminMunicipioController::class, 'syncInstrumentos'])->name('municipios.syncInstrumentos');

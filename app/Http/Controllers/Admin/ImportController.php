@@ -176,24 +176,27 @@ class ImportController extends Controller
 
         switch ($tipo) {
             case 'dimensiones':
-                $headings           = ['nombre', 'color', 'nombre_tecnico'];
+                $headings           = ['nombre', 'color', 'nombre_tecnico', 'orden'];
                 $fileName           = 'plantilla_dimensiones.xlsx';
                 $diccionarioDeDatos = [
                     ['nombre', 'Nombre de la dimensión.', 'Texto, ej: "Demografía"'],
                     ['color', 'Color hexadecimal para identificar la dimensión.', 'Ej: "#264653"'],
                     ['nombre_tecnico', 'Nombre técnico único de la dimensión.', 'Texto, ej: "demografia" (sin espacios, puede usar guiones bajos)'],
+                    ['orden', 'Orden de aparición.', 'Número entero, ej: 1'],
                 ];
                 break;
             case 'tematicas':
-                $headings           = ['dimension_tecnico', 'nombre'];
+                $headings           = ['dimension_tecnico', 'nombre', 'nombre_tecnico', 'orden'];
                 $fileName           = 'plantilla_tematicas.xlsx';
                 $diccionarioDeDatos = [
                     ['dimension_tecnico', 'Nombre tecnico de la dimensión.', 'Texto, ej: "demografia", debe coincidir con alguno en la pestaña "Catálogo Dimensiones"'],
                     ['nombre', 'Nombre de la temática.', 'Texto, ej: "Población"'],
+                    ['nombre_tecnico', 'Nombre técnico único de la temática.', 'Texto, ej: "poblacion"'],
+                    ['orden', 'Orden de aparición.', 'Número entero, ej: 1'],
                 ];
                 break;
             case 'indicadores':
-                $headings           = ['tematica_tecnico', 'nombre_amigable', 'nombre_tecnico', 'descripcion', 'fuente', 'tipo_dato', 'tipo_grafico_default', 'metodo_calculo', 'solo_resumen', 'es_complejo', 'priorizar_total'];
+                $headings           = ['tematica_tecnico', 'nombre_amigable', 'nombre_tecnico', 'descripcion', 'fuente', 'tipo_dato', 'tipo_grafico_default', 'metodo_calculo', 'solo_resumen', 'es_complejo', 'priorizar_total', 'orden'];
                 $fileName           = 'plantilla_indicadores.xlsx';
                 $diccionarioDeDatos = [
                     ['tematica_tecnico', 'Nombre técnico de la temática. ', 'Texto, ej: "gob_poblacion", debe coincidir con alguno en la pestaña "Catálogo Temáticas"'],
@@ -207,10 +210,11 @@ class ImportController extends Controller
                     ['solo_resumen', 'Indica si el indicador es solo para resúmenes de municipio.', '0 o 1 (0 = No, 1 = Sí)'],
                     ['es_complejo', 'Indica si el indicador es complejo.', '0 o 1 (0 = No, 1 = Sí)'],
                     ['priorizar_total', 'Indica si se debe priorizar el total en los cálculos y visualizaciones.', '0 o 1 (0 = No, 1 = Sí)'],
+                    ['orden', 'Orden de aparición.', 'Número entero, ej: 1'],
                 ];
                 break;
             case 'variables':
-                $headings           = ['indicador_tecnico', 'nombre_tecnico', 'nombre_amigable', 'unidad_medida', 'es_kpi', 'mapeo_valores'];
+                $headings           = ['indicador_tecnico', 'nombre_tecnico', 'nombre_amigable', 'unidad_medida', 'es_kpi', 'mapeo_valores', 'orden'];
                 $fileName           = 'plantilla_variables.xlsx';
                 $diccionarioDeDatos = [
                     ['indicador_tecnico', 'Nombre técnico del indicador padre, es unico.', 'Texto, ej: "pob_total", debe coincidir con alguno en la pestaña "Catálogo Indicadores"'],
@@ -219,6 +223,7 @@ class ImportController extends Controller
                     ['unidad_medida', 'Unidad de medida de la variable.', 'Texto, ej: "habitantes", puede estar vacío'],
                     ['es_kpi', 'Indica si la variable es un KPI (Indicador Clave de Desempeño).', '0 o 1 (0 = No, 1 = Sí)'],
                     ['mapeo_valores', 'Mapeo opcional de valores para categorías específicas.', 'JSON, ej: {"1":"Urbano","2":"Rural"}, puede estar vacío'],
+                    ['orden', 'Orden de aparición.', 'Número entero, ej: 1'],
                 ];
                 break;
 

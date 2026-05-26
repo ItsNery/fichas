@@ -75,12 +75,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('fontAwesome/css/all.min.css') }}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="{{ asset('css/estilos.css') }}?v={{ time() }}">
+    @vite(['resources/css/estilos.css', 'resources/js/app.js', 'resources/js/scripts.js'])
 
-    <!-- Recursos JS -->
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="{{ asset('js/scripts.js') }}"></script>
 
     <script>
         window.APP_URL = "{{ url('/') }}";

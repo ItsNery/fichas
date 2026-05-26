@@ -8,7 +8,7 @@
                 <div class="logos-group left">
                     <a href="https://puebla.gob.mx/" target="_blank" title="Gobierno del Estado de Puebla">
                         {{-- Asegúrate de poner la ruta correcta de tu tira de logos --}}
-                        <img src="{{ asset('img/logo-gobierno.png') }}" alt="Gobierno de Puebla">
+                        <img src="{{ asset('img/Logos-SPFA.png') }}" alt="Gobierno de Puebla">
                     </a>
                 </div>
 
@@ -49,6 +49,14 @@
                 <a href="{{ url('/banco-indicadores') }}"
                     class="{{ request()->is('banco-indicadores*') ? 'active' : '' }}">
                     Banco de Indicadores
+                </a>
+            </li>
+
+            {{-- ENLACE 3: Fichas Municipales --}}
+            <li>
+                <a href="{{ route('ficha-municipal.index') }}"
+                    class="{{ request()->is('ficha-municipal*') ? 'active' : '' }}">
+                    Fichas Municipales
                 </a>
             </li>
 

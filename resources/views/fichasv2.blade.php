@@ -30,7 +30,7 @@
 
 @section('content')
     <div class="container-fluid my-4" data-api-url="{{ route('api.data') }}" data-csrf-token="{{ csrf_token() }}"
-        data-export-url="{{ route('fichas.exportar') }}">
+        data-export-url="{{ route('banco-indicadores.exportar') }}">
         <div class="px-5">
 
             <h2>Banco de Indicadores</h2>
@@ -187,7 +187,7 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-3">
-                                    <a href="{{ route('fichas.resumen', ['municipio' => 'ID_PLACEHOLDER']) }}"
+                                    <a href="{{ route('ficha-municipal.show', ['municipio' => 'ID_PLACEHOLDER']) }}"
                                         id="resumen-btn" class="btn btn-link btn-sm p-0 disabled"
                                         style="display: none; text-decoration: none;">
                                         <i class="fa-solid fa-circle-info me-1"></i>

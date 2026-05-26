@@ -31,6 +31,7 @@ class IndicadoresExport implements FromQuery, WithHeadings, WithMapping
             'Solo Resumen',
             'Es Complejo',
             'Priorizar Total',
+            'Orden',
         ];
     }
     /** @param Indicador $indicador */
@@ -52,6 +53,7 @@ class IndicadoresExport implements FromQuery, WithHeadings, WithMapping
             $indicador->solo_resumen ? 'Sí' : 'No',
             $indicador->es_complejo ? 'Sí' : 'No',
             $indicador->priorizar_total ? 'Sí' : 'No',
+            $indicador->orden,
         ];
     }
 }

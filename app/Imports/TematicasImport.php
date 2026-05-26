@@ -68,6 +68,7 @@ class TematicasImport implements ToModel, WithHeadingRow, WithChunkReading
             [
                 'dimension_id' => $dimensionId,
                 'nombre'       => $row['nombre'],
+                'orden'        => $row['orden'] ?? 0,
             ]
         );
     }

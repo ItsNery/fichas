@@ -16,6 +16,7 @@ class Variable extends Model
         'es_destacada',
         'es_kpi',
         'mapeo_valores',
+        'orden',
     ];
 
     protected $casts = [
@@ -29,5 +30,10 @@ class Variable extends Model
     public function datosHistoricos()
     {
         return $this->hasMany(DatoHistorico::class);
+    }
+
+    public function configuracionesFicha()
+    {
+        return $this->belongsToMany(ConfiguracionFicha::class);
     }
 }

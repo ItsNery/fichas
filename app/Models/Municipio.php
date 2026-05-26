@@ -8,6 +8,20 @@ class Municipio extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'nombre',
+        'slug',
+        'microrregion_id',
+        'cvegeo',
+        'banner_image_url',
+        'logo_url',
+        'presidente_municipal',
+        'periodo_gobierno',
+        'cabecera',
+        'clima',
+        'superficie',
+    ];
+
     public function microrregion()
     {
         return $this->belongsTo(Microrregion::class);

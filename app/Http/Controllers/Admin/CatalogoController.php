@@ -27,9 +27,13 @@ class CatalogoController extends Controller
     public function index()
     {
         return view('catalogo.index', [
-            'dimensiones' => Dimension::with('tematicas.indicadores.variables')->get(),
-            'tematicas'   => Tematica::orderBy('nombre')->get(),           // Para el form de Indicadores
-            'indicadores' => Indicador::orderBy('nombre_amigable')->get(), // Para el form de Variables
+            'dimensiones' => Dimension::with([
+                'tematicas' => function ($q) { $q->orderBy('orden')->orderBy('nombre'); },
+                'tematicas.indicadores' => function ($q) { $q->orderBy('orden')->orderBy('nombre_amigable'); },
+                'tematicas.indicadores.variables' => function ($q) { $q->orderBy('orden')->orderBy('nombre_amigable'); }
+            ])->orderBy('orden')->orderBy('nombre')->get(),
+            'tematicas'   => Tematica::orderBy('orden')->orderBy('nombre')->get(),           // Para el form de Indicadores
+            'indicadores' => Indicador::orderBy('orden')->orderBy('nombre_amigable')->get(), // Para el form de Variables
         ]);
     }
 
@@ -59,6 +63,7 @@ class CatalogoController extends Controller
             'nombre'         => 'required|string|unique:dimensions,nombre',
             'nombre_tecnico' => 'required|string|unique:dimensions,nombre_tecnico',
             'color'          => 'required|string|max:7',
+            'orden'          => 'nullable|integer',
         ]);
         $dimension = Dimension::create($validated);
         return response()->json($dimension);
@@ -77,6 +82,7 @@ class CatalogoController extends Controller
             'nombre'         => 'required|string|unique:dimensions,nombre,' . $dimension->id,
             'nombre_tecnico' => 'required|string|unique:dimensions,nombre_tecnico,' . $dimension->id,
             'color'          => 'nullable|string|max:7',
+            'orden'          => 'nullable|integer',
         ]);
         $dimension->update($validated);
         return response()->json($dimension);
@@ -107,11 +113,13 @@ class CatalogoController extends Controller
             'nombre'         => 'required|string|max:255',
             'nombre_tecnico' => 'required|string|unique:tematicas,nombre_tecnico',
             'parent_id'      => 'required|exists:dimensions,id',
+            'orden'          => 'nullable|integer',
         ]);
         $tematica = Tematica::create([
             'nombre'         => $validated['nombre'],
             'nombre_tecnico' => $validated['nombre_tecnico'],
             'dimension_id'   => $validated['parent_id'],
+            'orden'          => $validated['orden'] ?? 0,
         ]);
         return response()->json($tematica);
     }
@@ -128,6 +136,7 @@ class CatalogoController extends Controller
         $validated = $request->validate([
             'nombre'         => 'required|string|max:255',
             'nombre_tecnico' => 'required|string|unique:tematicas,nombre_tecnico,' . $tematica->id,
+            'orden'          => 'nullable|integer',
         ]);
 
         $tematica->update($validated);
@@ -167,6 +176,8 @@ class CatalogoController extends Controller
             'solo_resumen'         => 'nullable|boolean',
             'priorizar_total'      => 'nullable|boolean',
             'es_complejo'          => 'nullable|boolean',
+            'polaridad'            => 'nullable|string|in:asendente,descendente,neutro',
+            'orden'                => 'nullable|integer',
         ]);
 
         $indicador = Indicador::create([
@@ -181,6 +192,8 @@ class CatalogoController extends Controller
             'solo_resumen'         => $request->has('solo_resumen'),
             'priorizar_total'      => $request->has('priorizar_total'),
             'es_complejo'          => $request->has('es_complejo'),
+            'polaridad'            => $validated['polaridad'] ?? 'neutro',
+            'orden'                => $validated['orden'] ?? 0,
         ]);
         return response()->json($indicador);
     }
@@ -203,6 +216,8 @@ class CatalogoController extends Controller
             'metodo_calculo'       => 'nullable|string',
             'tipo_dato'            => 'required|string',
             'tipo_grafico_default' => 'nullable|string|in:Barras,Lineal,Piramide',
+            'polaridad'            => 'nullable|string|in:asendente,descendente,neutro',
+            'orden'                => 'nullable|integer',
         ]);
 
         // 1. Actualiza los campos que vienen del formulario validado
@@ -247,6 +262,7 @@ class CatalogoController extends Controller
             'unidad_medida'   => 'nullable|string',
             'es_destacada'    => 'nullable|boolean',
             'es_kpi'          => 'nullable|boolean',
+            'orden'           => 'nullable|integer',
         ]);
         $variable = Variable::create([
             'nombre_tecnico'  => $validated['nombre_tecnico'],
@@ -255,6 +271,7 @@ class CatalogoController extends Controller
             'unidad_medida'   => $validated['unidad_medida'],
             'es_destacada'    => $request->has('es_destacada'),
             'es_kpi'          => $request->has('es_kpi'),
+            'orden'           => $validated['orden'] ?? 0,
         ]);
         return response()->json($variable);
     }
@@ -273,6 +290,7 @@ class CatalogoController extends Controller
             'nombre_amigable' => 'required|string',
             'indicador_id'    => 'required|exists:indicadors,id',
             'unidad_medida'   => 'nullable|string',
+            'orden'           => 'nullable|integer',
         ]);
 
         // 2. Manejamos los checkboxes explícitamente después de la validación

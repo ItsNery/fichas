@@ -22,6 +22,7 @@ class DimensionesExport implements FromQuery, WithHeadings, WithMapping// <-- 2.
             'Nombre Dimensión',
             'Nombre tecnico (único)',
             'Color',
+            'Orden',
         ];
     }
 
@@ -36,6 +37,7 @@ class DimensionesExport implements FromQuery, WithHeadings, WithMapping// <-- 2.
             $dimension->nombre,
             $dimension->nombre_tecnico,
             $dimension->color,
+            $dimension->orden,
         ];
     }
 }

@@ -120,7 +120,6 @@
     --colorPDF: red;
     --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     --card-border-radius: 0.75rem;
-    /* Estilos para la navegación */
     --light-gray: #f4f4f4;
     --border-color: #eaeaea;
     --shadow-nav: 0 4px 10px rgba(0, 0, 0, 0.08);
@@ -286,6 +285,10 @@ p {
     }
 }
 
+.container {
+    max-width: 1200px;
+}
+
 /* ==========================================================================
    2. HEADER: NIVEL SUPERIOR (LOGOS)
    ========================================================================== */
@@ -322,7 +325,7 @@ p {
 }
 
 .logos-group.left img {
-    height: 100px;
+    height: 140px;
     width: auto;
     max-width: 100%;
     object-fit: contain;
@@ -1031,6 +1034,50 @@ footer {
     z-index: 2;
 }
 
+.hero-ficha__descripcion {
+    width: auto;
+    position: relative;
+    z-index: 2;
+}
+
+.hero-ficha__extracto {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.9);
+    font-weight: 300;
+    margin-bottom: 1rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.hero-ficha__extracto:hover {
+    -webkit-line-clamp: 10;
+    color: #fff;
+}
+
+.hero-ficha__fuente-wiki {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #c5a059;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    opacity: 0.8;
+}
+
+.hero-ficha__fuente-wiki:hover {
+    color: #fff;
+    opacity: 1;
+    transform: translateX(5px);
+}
+
 /* Buscador del inicio */
 .flickity-viewport {
     min-height: 300px !important;
@@ -1370,4 +1417,523 @@ footer {
     color: #adb5bd !important;
     cursor: not-allowed !important;
     font-style: italic;
+}
+
+/* --- OPTIMIZACIÓN DE ESPACIO BANCO DE INDICADORES --- */
+.catalogo-col h4 {
+    font-size: 1.15rem;
+    color: var(--color1);
+    border-bottom: 2px solid var(--color4);
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.accordion-button {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+}
+
+.accordion-body .indicador-link {
+    font-size: 0.85rem;
+    padding: 4px 0;
+    transition: all 0.2s;
+    border-radius: 4px;
+}
+
+.accordion-body .indicador-link:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    padding-left: 5px;
+    color: var(--color2) !important;
+}
+
+/* --- COMMAND CENTER REDESIGN --- */
+.content-col .card {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+#chart-title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--color1);
+    letter-spacing: -0.03em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Fix Z-index for Dropdowns */
+.filter-bar {
+    position: relative;
+    z-index: 1050;
+    /* Por encima del gráfico */
+    background: rgba(255, 255, 255, 0.8) !important;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+    padding: 12px 16px !important;
+}
+
+.ts-dropdown {
+    z-index: 2000 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+    border: 1px solid #eee !important;
+}
+
+/* Segmented Control (Level Switcher) */
+.level-switcher .nav-pills {
+    background: #eaeff5 !important;
+    padding: 4px !important;
+}
+
+.level-switcher .nav-link {
+    color: #64748b !important;
+    font-weight: 700;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none !important;
+}
+
+.level-switcher .nav-link.active {
+    background: white !important;
+    color: var(--color1) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    transform: scale(1.02);
+}
+
+/* Sidebar Catalog Improvements */
+.catalogo-col {
+    background: #f8faff;
+    border-radius: 28px;
+    padding: 24px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: sticky;
+    top: 20px;
+}
+
+/* Accordion Hierarchy */
+.dashboard-accordion .dimension-item {
+    background: white;
+    border-radius: 16px !important;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+}
+
+.dimension-button {
+    font-weight: 700 !important;
+    color: #334155 !important;
+    padding: 16px 20px !important;
+    background: #fdfdfd !important;
+}
+
+.dimension-button:not(.collapsed) {
+    background: #fff !important;
+    color: var(--color1) !important;
+}
+
+.tematica-item {
+    border-left: 1px solid #edf2f7;
+    margin-left: 20px;
+}
+
+.tematica-button {
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    color: #64748b !important;
+    padding: 10px 15px !important;
+}
+
+.indicator-list {
+    border-left: 2px solid #f1f5f9;
+    margin-left: 10px;
+    padding-left: 5px;
+}
+
+.indicador-link {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #475569 !important;
+    transition: all 0.2s ease;
+    border-radius: 10px !important;
+    padding: 6px 12px !important;
+}
+
+.indicador-link:hover {
+    background: #f1f5f9;
+    color: var(--color1) !important;
+}
+
+.indicador-link.active {
+    background: var(--color1) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(95, 27, 45, 0.25);
+}
+
+.indicator-dot {
+    font-size: 0.5rem;
+    opacity: 0.4;
+}
+
+/* Floating Mini-Map */
+.floating-map-overlay {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.9);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
+}
+
+/* Actions & Resumen */
+#resumen-btn {
+    border-color: var(--color6) !important;
+    color: var(--color6) !important;
+    font-weight: 700;
+    transition: all 0.3s ease;
+}
+
+#resumen-btn:hover:not(.disabled) {
+    background: var(--color6) !important;
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(36, 98, 87, 0.3);
+}
+
+/* Visualization Container */
+.viz-wrapper {
+    background: #fff;
+    border-radius: 32px;
+    padding: 24px;
+    border: 1px solid #f1f5f9;
+}
+
+/* Resource Cards */
+.resource-card {
+    border-radius: 20px !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.resource-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Custom Scrollbar */
+.catalogo-col::-webkit-scrollbar {
+    width: 4px;
+}
+
+.catalogo-col::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+/* Transitions */
+.viz-wrapper,
+.filter-bar,
+.catalogo-col {
+    animation: fadeInScale 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.99);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Botón Consultar */
+#consultar-btn,
+#consultar-btn-regions {
+    background: linear-gradient(135deg, var(--color1), var(--color2));
+    border: none !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 12px rgba(95, 27, 45, 0.2);
+}
+
+#consultar-btn:hover:not(:disabled) {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(95, 27, 45, 0.3);
+}
+
+/* Media Queries */
+@media (max-width: 991px) {
+    .floating-map-overlay {
+        position: relative !important;
+        top: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        margin-top: 24px;
+    }
+}
+
+@media print {
+
+    /* 1. OCULTAR LO QUE NO SIRVE EN PAPEL */
+    .catalogo-col,
+    .filter-bar,
+    .level-switcher,
+    .toggle-catalogo-btn,
+    .btn,
+    nav,
+    /* header, */
+    footer,
+    #view-summary,
+    #view-guidance,
+    #consult-feedback,
+    #consult-feedback-regions,
+    .hamburger-menu,
+    #view-guidance-regions,
+    #view-summary-regions,
+    #consult-feedback-regions {
+        display: none !important;
+    }
+
+    /* 2. EXPANDIR LA FICHA A TODO EL ANCHO */
+    .content-col {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 0 0 100% !important;
+        padding: 0 !important;
+    }
+
+    /* 3. LIMPIAR BORDES Y SOMBRAS DE LAS TARJETAS */
+    body {
+        background-color: white !important;
+    }
+
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .card-header {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    /* 4. OBLIGAR AL NAVEGADOR A IMPRIMIR LOS COLORES EXACTOS */
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* 5. EVITAR QUE LOS METADATOS SE CORTEN A LA MITAD DE LA PÁGINA */
+    .metadata-block {
+        page-break-inside: avoid;
+        border-top: 2px solid #246257 !important;
+        /* Le damos un toque elegante al PDF */
+    }
+
+    .viz-wrapper {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+    }
+
+    /* 6. ACOMODAR EL MAPA SI ESTÁ VISIBLE */
+    .floating-map-overlay {
+        position: relative !important;
+        box-shadow: none !important;
+        border: none !important;
+        margin-top: 20px;
+        page-break-inside: avoid;
+        text-align: center;
+    }
+
+    .floating-map-overlay>div {
+        margin: 0 auto !important;
+    }
+
+    /* Ocultamos la crucecita y el título de "Vista Espacial" en el PDF */
+    .map-overlay-header {
+        display: none !important;
+    }
+
+    #chart-container div,
+    #chart-container canvas,
+    #chart-container-regions div,
+    #chart-container-regions canvas {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+
+    .metadata-block::after {
+        content: "Ficha generada el " attr(data-fecha-impresion) " | Banco de Indicadores - PIMREP";
+        display: block;
+        text-align: center;
+        font-size: 10px;
+        color: #777;
+        margin-top: 40px;
+        padding-top: 10px;
+        border-top: 1px solid #ddd;
+        page-break-inside: avoid;
+    }
+
+    /* 9. ESTILO DE HOJA MEMBRETADA PARA EL HEADER */
+    header.site-header {
+        display: block !important;
+        position: static !important;
+        /* Quita el sticky por si bajaste el scroll antes de imprimir */
+        width: 100% !important;
+        background: transparent !important;
+        border-bottom: 2px solid #5f1b2d !important;
+        /* Línea color guinda institucional */
+        margin-bottom: 20px !important;
+        padding-bottom: 10px !important;
+    }
+
+    .logos-wrapper {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        width: 100% !important;
+    }
+
+    .logos-group img {
+        max-height: 55px !important;
+        width: auto !important;
+    }
+}
+
+/* Estilos para el directorio de municipios */
+.directory-banner {
+    height: 350px;
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1716818732769-55fec1b05f44?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') center/cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+}
+
+.directory-banner h1 {
+    font-size: clamp(2.5rem, 8vw + 1rem, 4rem);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+}
+
+.region-nav {
+    background: white;
+    padding: 1rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    border-radius: 1rem;
+    z-index: 10;
+    position: relative;
+}
+
+.nav-pills .nav-link {
+    color: #666;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s;
+}
+
+.nav-pills .nav-link.active {
+    background: var(--color4);
+    color: white;
+}
+
+.municipality-card {
+    border: none;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    position: relative;
+    height: 250px;
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.municipality-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+}
+
+.municipality-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: all 0.5s;
+}
+
+.municipality-card:hover img {
+    transform: scale(1.1);
+}
+
+.municipality-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0) 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 1.5rem;
+    color: white;
+}
+
+.municipality-card h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.municipality-card p {
+    font-size: 0.85rem;
+    opacity: 0.8;
+    margin-bottom: 1rem;
+}
+
+.btn-ver {
+    background: var(--color4);
+    color: white;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    border-radius: 2rem;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    align-self: flex-start;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.btn-ver:hover {
+    background: white;
+    color: var(--color6);
+    transform: scale(1.05);
+}
+
+.search-container {
+    max-width: 600px;
+    margin: 2rem auto;
+}
+
+.search-input {
+    border-radius: 2rem;
+    padding: 1rem 2rem;
+    border: 2px solid #eee;
+    font-size: 1.1rem;
+}
+
+.search-input:focus {
+    border-color: var(--color4);
+    box-shadow: none;
 }

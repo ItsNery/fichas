@@ -66,6 +66,7 @@ class IndicadorsImport implements ToModel, WithHeadingRow, WithChunkReading
                 'solo_resumen'         => filter_var($row['solo_resumen'] ?? false, FILTER_VALIDATE_BOOLEAN),
                 'es_complejo'          => filter_var($row['es_complejo'] ?? false, FILTER_VALIDATE_BOOLEAN),
                 'priorizar_total'      => filter_var($row['priorizar_total'] ?? true, FILTER_VALIDATE_BOOLEAN),
+                'orden'                => $row['orden'] ?? 0,
             ]
         );
     }

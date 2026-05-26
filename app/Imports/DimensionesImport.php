@@ -26,6 +26,7 @@ class DimensionesImport implements ToModel, WithHeadingRow
                 // Los datos que se usarán si se crea un nuevo registro
                 'nombre' => $row['nombre'],
                 'color'  => $row['color'] ?? '#6c757d', // Un color por defecto si está vacío
+                'orden'  => $row['orden'] ?? 0,
             ]
         );
     }

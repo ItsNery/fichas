@@ -52,8 +52,8 @@
                         <a href="{{ url()->previous() }}" class="btn btn-outline-secondary mb-2">
                             <i class="fas fa-arrow-left me-1"></i> Regresar
                         </a>
-                        <a href="{{ route('fichas.resumen.pdf', $municipio) }}" class="btn btn-danger mb-2" target="_blank">
-                            <i class="far fa-file-pdf me-1"></i> Exportar PDF
+                        <a href="{{ route('ficha-municipal.pdf', $municipio) }}" class="btn btn-danger mb-2" target="_blank">
+                            <i class="fas fa-file-pdf me-2"></i> Descargar PDF
                         </a>
                     </div>
                 </div>
@@ -121,7 +121,7 @@
                                                     </div>
                                                 </div>
                                             @else
-                                                <a href="{{ !$kpi['solo_resumen'] ? route('fichas.index', ['indicador_id' => $kpi['indicador_id'], 'municipio_ids' => $municipio->id]) : '#' }}"
+                                                <a href="{{ !$kpi['solo_resumen'] ? route('banco-indicadores.index', ['indicador_id' => $kpi['indicador_id'], 'municipio_ids' => $municipio->id]) : '#' }}"
                                                     class="card h-100 text-decoration-none text-dark stat-card shadow-sm"
                                                     style="border-left-color: {{ $dimensionData['color'] ?? '#0d6efd' }};">
 

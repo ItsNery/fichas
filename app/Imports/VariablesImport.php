@@ -62,6 +62,7 @@ class VariablesImport implements ToModel, WithHeadingRow, WithChunkReading
                 'es_kpi'          => filter_var($row['es_kpi'] ?? false, FILTER_VALIDATE_BOOLEAN),
                 'es_destacada'    => filter_var($row['es_destacada'] ?? false, FILTER_VALIDATE_BOOLEAN),
                 'mapeo_valores'   => $row['mapeo_valores'] ?? null,
+                'orden'           => $row['orden'] ?? 0,
             ]
         );
     }

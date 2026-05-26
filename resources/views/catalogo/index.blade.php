@@ -93,7 +93,9 @@
                                 <button class="btn-icon-square edit" data-bs-toggle="modal"
                                     data-bs-target="#catalogModal" data-nombre="{{ $dimension->nombre }}"
                                     data-nombre-tecnico="{{ $dimension->nombre_tecnico }}"
-                                    data-color="{{ $dimension->color }}" data-tipo="Dimension" data-template="dimension"
+                                    data-color="{{ $dimension->color }}"
+                                    data-orden="{{ $dimension->orden }}"
+                                    data-tipo="Dimension" data-template="dimension"
                                     data-url="{{ route('admin.catalogos.dimensions.update', $dimension) }}">
                                     <i class="fa-solid fa-pen" data-bs-toggle="tooltip" title="Editar Dimensión"></i>
                                 </button>
@@ -137,6 +139,7 @@
                                         data-tipo="Temática" data-template="tematica"
                                         data-nombre="{{ $tematica->nombre }}"
                                         data-nombre-tecnico="{{ $tematica->nombre_tecnico }}"
+                                        data-orden="{{ $tematica->orden }}"
                                         data-url="{{ route('admin.catalogos.tematicas.update', $tematica) }}">
                                         <i class="fa-solid fa-pen small"></i>
                                     </button>
@@ -184,8 +187,10 @@
                                                 data-metodo-calculo="{{ $indicador->metodo_calculo }}"
                                                 data-tipo-grafico-default="{{ $indicador->tipo_grafico_default }}"
                                                 data-solo-resumen="{{ $indicador->solo_resumen ? '1' : '0' }}"
-                                                data-es-complejo="{{ $indicador->es_complejo ? '1' : '0' }}"
-                                                data-priorizar-total="{{ $indicador->priorizar_total ? '1' : '0' }}">
+                                                data-es_complejo="{{ $indicador->es_complejo ? '1' : '0' }}"
+                                                data-priorizar_total="{{ $indicador->priorizar_total ? '1' : '0' }}"
+                                                data-polaridad="{{ $indicador->polaridad }}"
+                                                data-orden="{{ $indicador->orden }}">
                                                 <i class="fa-solid fa-pen" style="font-size: 0.7rem;"></i>
                                             </button>
                                             <button class="btn-icon-square danger sm delete-btn" style="width: 30px; height: 30px;"
@@ -229,7 +234,8 @@
                                                         data-es-kpi="{{ $variable->es_kpi ? '1' : '0' }}"
                                                         data-es-destacada="{{ $variable->es_destacada ? '1' : '0' }}"
                                                         data-indicador-tipo-dato="{{ $variable->indicador->tipo_dato }}"
-                                                        data-indicador-id="{{ $variable->indicador_id }}">
+                                                        data-indicador-id="{{ $variable->indicador_id }}"
+                                                        data-orden="{{ $variable->orden }}">
                                                         <i class="fa-solid fa-pen" style="font-size: 0.8rem;"></i>
                                                     </button>
                                                     <button class="btn btn-link text-danger p-0 delete-btn"
@@ -300,9 +306,13 @@
                                     <label class="form-label fw-bold text-secondary small">Nombre Técnico</label>
                                     <input type="text" name="nombre_tecnico" id="dim_nombre_tecnico" class="form-control font-monospace text-muted" placeholder="Ej: dim_social">
                                 </div>
-                                <div class="col-12">
+                                <div class="col-md-6">
                                     <label class="form-label fw-bold text-secondary small">Color Identificador</label>
                                     <input type="color" name="color" id="dim_color" class="form-control form-control-color w-100" title="Elige un color">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-secondary small">Orden</label>
+                                    <input type="number" name="orden" id="dim_orden" class="form-control" placeholder="0">
                                 </div>
                             </div>
                         </div>
@@ -314,9 +324,13 @@
                                     <label class="form-label fw-bold text-secondary small">Nombre de la Temática</label>
                                     <input type="text" name="nombre" id="tem_nombre" class="form-control text-vino fw-bold">
                                 </div>
-                                <div class="col-md-12">
+                                <div class="col-md-6">
                                     <label class="form-label fw-bold text-secondary small">Nombre Técnico</label>
                                     <input type="text" name="nombre_tecnico" id="tem_nombre_tecnico" class="form-control font-monospace text-muted">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-secondary small">Orden</label>
+                                    <input type="number" name="orden" id="tem_orden" class="form-control" placeholder="0">
                                 </div>
                             </div>
                         </div>
@@ -361,6 +375,18 @@
                                         <option value="indice">Índice</option>
                                     </select>
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-secondary small">Polaridad (Evaluación)</label>
+                                    <select name="polaridad" id="ind_polaridad" class="form-select">
+                                        <option value="neutro">Informativo (Neutro)</option>
+                                        <option value="asendente">Ascendente (Más es Mejor)</option>
+                                        <option value="descendente">Descendente (Menos es Mejor)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-secondary small">Orden</label>
+                                    <input type="number" name="orden" id="ind_orden" class="form-control" placeholder="0">
+                                </div>
 
                                 <div class="col-12">
                                     <label class="form-label fw-bold text-secondary small">Método de Cálculo</label>
@@ -397,9 +423,13 @@
                                     <label class="form-label fw-bold text-secondary small">Nombre Técnico</label>
                                     <input type="text" name="nombre_tecnico" id="var_nombre_tecnico" class="form-control font-monospace text-muted">
                                 </div>
-                                <div class="col-12">
+                                <div class="col-md-6">
                                     <label class="form-label fw-bold text-secondary small">Unidad de Medida</label>
                                     <input type="text" name="unidad_medida" id="var_unidad_medida" class="form-control">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold text-secondary small">Orden</label>
+                                    <input type="number" name="orden" id="var_orden" class="form-control" placeholder="0">
                                 </div>
 
                                 <div class="col-12 bg-light p-3 rounded border mt-2">

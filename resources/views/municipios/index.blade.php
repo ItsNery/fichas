@@ -45,14 +45,22 @@
                                     </div>
                                 </td>
                                 <td class="text-center">
-                                    {{-- Botón Cuadrado con Tooltip --}}
-                                    <button type="button" class="btn-icon-square edit"
-                                        data-bs-toggle="modal" data-bs-target="#asignarModal"
-                                        data-municipio-id="{{ $municipio->id }}"
-                                        data-municipio-nombre="{{ $municipio->nombre }}"
-                                        style="width: 42px; height: 42px;"> <i class="fas fa-file-signature fs-5" data-bs-toggle="tooltip" title="Asignar Instrumentos"></i>
-                                    </button>
+                                    <div class="d-flex justify-content-center gap-2">
+                                        {{-- Botón Editar Info --}}
+                                        <a href="{{ route('admin.municipios.edit', $municipio) }}" class="btn-icon-square">
+                                            <i class="fas fa-edit fs-5" data-bs-toggle="tooltip" title="Editar Información"></i>
+                                        </a>
+
+                                        {{-- Botón Asignar Instrumentos --}}
+                                        <button type="button" class="btn-icon-square edit"
+                                            data-bs-toggle="modal" data-bs-target="#asignarModal"
+                                            data-municipio-id="{{ $municipio->id }}"
+                                            data-municipio-nombre="{{ $municipio->nombre }}"
+                                            style="width: 42px; height: 42px;"> <i class="fas fa-file-signature fs-5" data-bs-toggle="tooltip" title="Asignar Instrumentos"></i>
+                                        </button>
+                                    </div>
                                 </td>
+
                             </tr>
                             @endforeach
                         </tbody>

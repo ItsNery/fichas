@@ -42,7 +42,7 @@ class HomeController extends Controller
                     'valor'     => number_format($ultimoDato->valor_total, 0, '.', ','),
                     'anio'      => $ultimoDato->anio,
                     'sparkline' => $sparklineData,
-                    'link'      => route('fichas.index', [
+                    'link'      => route('banco-indicadores.index', [
                         'indicador_id'  => $variable->indicador->id,
                         'municipio_ids' => 'estatal',
                     ]),

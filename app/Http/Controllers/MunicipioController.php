@@ -23,7 +23,7 @@ class MunicipioController extends Controller
         }
 
         $municipios = Municipio::where('nombre', 'LIKE', "%{$searchTerm}%")
-            ->select('id', 'nombre as text') // Formato que Tom Select entiende
+            ->select('slug as id', 'nombre as text')
             ->limit(10)
             ->get();
 

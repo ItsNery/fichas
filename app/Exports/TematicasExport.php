@@ -22,6 +22,7 @@ class TematicasExport implements FromQuery, WithHeadings, WithMapping
             'Nombre Dimensión Padre',
             'Nombre Temática',
             'Nombre Técnico (único)',
+            'Orden',
         ];
     }
 
@@ -34,6 +35,7 @@ class TematicasExport implements FromQuery, WithHeadings, WithMapping
             $tematica->dimension->nombre,
             $tematica->nombre,
             $tematica->nombre_tecnico,
+            $tematica->orden,
         ];
     }
 }

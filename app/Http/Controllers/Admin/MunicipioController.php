@@ -58,11 +58,11 @@ class MunicipioController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  \App\Models\Municipio  $municipio
-     * @return void
+     * @return \Illuminate\View\View
      */
     public function edit(Municipio $municipio)
     {
-        //
+        return view('municipios.edit', compact('municipio'));
     }
 
     /**
@@ -70,12 +70,28 @@ class MunicipioController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Municipio  $municipio
-     * @return void
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, Municipio $municipio)
     {
-        //
+        $request->validate([
+            'nombre'                => 'required|string|max:255',
+            'cvegeo'                => 'required|string|max:10',
+            'cabecera'              => 'nullable|string|max:255',
+            'presidente_municipal'  => 'nullable|string|max:255',
+            'periodo_gobierno'      => 'nullable|string|max:100',
+            'banner_image_url'      => 'nullable|url|max:255',
+            'logo_url'              => 'nullable|url|max:255',
+            'clima'                 => 'nullable|string|max:255',
+            'superficie'            => 'nullable|numeric',
+        ]);
+
+        $municipio->update($request->all());
+
+        return redirect()->route('admin.municipios.index')
+            ->with('success', 'Información del municipio ' . $municipio->nombre . ' actualizada correctamente.');
     }
+
 
     /**
      * Remove the specified resource from storage.

@@ -11,6 +11,7 @@ class Dimension extends Model
         'nombre',
         'color',
         'nombre_tecnico',
+        'orden',
     ];
 
     public function tematicas()

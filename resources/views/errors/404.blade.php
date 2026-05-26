@@ -56,7 +56,7 @@
                     </li>
                     <li class="mb-2">
                         <i class="fas fa-search me-2 text-muted"></i>
-                        <a href="{{ route('fichas.index') }}" class="text-decoration-none">Explorar los indicadores</a>
+                        <a href="{{ route('banco-indicadores.index') }}" class="text-decoration-none">Explorar los indicadores</a>
                     </li>
                 </ul>
             </div>

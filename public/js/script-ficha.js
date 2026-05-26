@@ -1,4 +1,5 @@
 // LOCAL
+console.log("Script-ficha.js cargado correctamente v2");
 // --- VARIABLES GLOBALES PARA EL MAPA ---
 // Las declaramos aquí para que sean accesibles por todas las funciones.
 let mapMunicipal = null;
@@ -21,6 +22,17 @@ document.addEventListener("DOMContentLoaded", function () {
         return; // Si no estamos en la página de fichas, no ejecutamos nada.
     }
 
+    // --- 2. EL "CEREBRO" O ESTADO CENTRAL ---
+    const appState = {
+        nivelDeAgregacion: "municipio",
+        indicatorId: null,
+        indicatorEsComplejo: false,
+        municipioIds: [],
+        microrregionId: null,
+        macrorregionId: null,
+        selectedYears: [],
+    };
+
     const API_URL = appContainer.dataset.apiUrl;
     const EXPORT_URL = appContainer.dataset.exportUrl;
     const CSRF_TOKEN = appContainer.dataset.csrfToken;
@@ -40,10 +52,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const municipioSelector = new TomSelect("#municipio-selector", {
         placeholder: "Selecciona hasta 2 municipios",
         maxItems: 2,
-        sortField: [
-            { field: "orden", direction: "asc" },
-            { field: "$text", direction: "asc" },
-        ],
         plugins: {
             clear_button: {
                 title: "Quitar todas los municipios seleccionados",
@@ -110,7 +118,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 Swal.fire({
                     icon: "warning",
                     title: "Región Unificada",
-                    text: MSJ_REGIONALIZACION,
+                    text: MENSAJE_REGIONALIZACION,
                     confirmButtonColor: "#246257",
                 });
                 return;
@@ -157,13 +165,11 @@ document.addEventListener("DOMContentLoaded", function () {
         closeAfterSelect: false,
         onChange: function (value) {
             const selection = value || [];
-            if (
-                JSON.stringify(selection.sort()) ===
-                JSON.stringify(appState.selectedYears.sort())
-            ) {
+            if (tienenMismosAnios(selection, appState.selectedYears)) {
                 return;
             }
-            appState.selectedYears = selection;
+            appState.selectedYears = [...selection];
+            actualizarResumenConsulta();
         },
     });
 
@@ -173,13 +179,11 @@ document.addEventListener("DOMContentLoaded", function () {
         closeAfterSelect: false,
         onChange: function (value) {
             const selection = value || [];
-            if (
-                JSON.stringify(selection.sort()) ===
-                JSON.stringify(appState.selectedYears.sort())
-            ) {
+            if (tienenMismosAnios(selection, appState.selectedYears)) {
                 return;
             }
-            appState.selectedYears = selection;
+            appState.selectedYears = [...selection];
+            actualizarResumenConsulta();
         },
     });
 
@@ -192,7 +196,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const macrorregionContainer = document.getElementById(
         "macrorregion-selector-container",
     );
-    const nivelTabs = document.querySelectorAll("#pills-tab-nivel .nav-link");
+    const nivelTabs = document.querySelectorAll(".level-switcher .nav-link");
     const accordionMunicipal = document.getElementById("accordionDimensions");
     const accordionRegionsContainer = document.getElementById(
         "accordionDimensionsRegions",
@@ -200,12 +204,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const chartContainer = document.getElementById("chart-container");
     const chartTitle = document.getElementById("chart-title");
+    const consultFeedback = document.getElementById("consult-feedback");
+    const viewSummary = document.getElementById("view-summary");
+    const viewGuidance = document.getElementById("view-guidance");
     const resumenBtn = document.getElementById("resumen-btn");
+    const resumenContainer = document.getElementById("resumen-container");
     const resumenUrlPrototype = resumenBtn ? resumenBtn.href : "";
     const chartContainerRegions = document.getElementById(
         "chart-container-regions",
     );
     const chartTitleRegions = document.getElementById("chart-title-regions");
+    const consultFeedbackRegions = document.getElementById(
+        "consult-feedback-regions",
+    );
+    const viewSummaryRegions = document.getElementById("view-summary-regions");
+    const viewGuidanceRegions = document.getElementById(
+        "view-guidance-regions",
+    );
 
     const mapContainer = document.getElementById("map-container");
     const mapLegend = document.getElementById("map-legend");
@@ -246,9 +261,13 @@ document.addEventListener("DOMContentLoaded", function () {
     );
     // Variables para boton de tamaño completo
     const fullscreenBtn = document.getElementById("fullscreen-btn");
+    const toggleMapBtn = document.getElementById("toggle-map-btn");
+    const toggleMapBtnRegions = document.getElementById(
+        "toggle-map-btn-regions",
+    );
     const fullscreenModal = document.getElementById("chart-fullscreen-modal");
     const fullscreenChartContainer = document.getElementById(
-        "fullscreen-chart-container",
+        "chart-fullscreen-container",
     );
     const fullscreenModalTitle = document.getElementById(
         "fullscreen-modal-title",
@@ -257,32 +276,201 @@ document.addEventListener("DOMContentLoaded", function () {
         "fullscreen-btn-regions",
     );
     let fullscreenChart = null;
-    let lastChartOptions = {};
-    let chart;
+    const chartInstances = {
+        municipio: null,
+        regional: null,
+    };
+    const lastChartOptionsByView = {
+        municipio: null,
+        regional: null,
+    };
 
     const PALETA_COLORES = [
-        "#264653",
-        "#2a9d8f",
-        "#e9c46a",
-        "#f4a261",
-        "#e76f51",
-        "#6a040f",
-        "#0077b6",
+        "#5f1b2d", // --color1 (Guinda oscuro)
+        "#0c312d", // --color5 (Verde oscuro)
+        "#c79b66", // --color4 (Dorado)
+        "#af1731", // --color3 (Guinda brillante)
+        "#609b84", // --color7 (Verde claro)
+        "#484747", // --color8 (Gris)
+        "#861e34", // --color2 (Guinda medio)
+        "#246257", // --color6 (Verde medio)
     ];
-    // --- 2. EL "CEREBRO" O ESTADO CENTRAL ---
-    const appState = {
-        nivelDeAgregacion: "municipio",
-        indicatorId: null,
-        indicatorEsComplejo: false,
-        municipioIds: [],
-        microrregionId: null,
-        macrorregionId: null,
-        selectedYears: [],
-        isLoading: false,
-    };
 
     // --- 3. INICIALIZACIÓN DE COMPONENTES ---
     // En tu script-ficha.js, dentro de DOMContentLoaded
+
+    function normalizarAnios(anios = []) {
+        return [...anios].map(String).sort();
+    }
+
+    function tienenMismosAnios(aniosA = [], aniosB = []) {
+        return (
+            JSON.stringify(normalizarAnios(aniosA)) ===
+            JSON.stringify(normalizarAnios(aniosB))
+        );
+    }
+
+    function getEmptyStateHtml(isMunicipal) {
+        const pasoDos = isMunicipal
+            ? "2. Selecciona uno o dos municipios."
+            : "2. Selecciona una microrregión o macrorregión.";
+
+        return `
+            <div class="d-flex flex-column align-items-center justify-content-center h-100 py-5">
+                <i class="fas ${isMunicipal ? "fa-chart-line" : "fa-chart-area"} fa-4x text-light mb-3"></i>
+                <p class="text-muted fw-semibold mb-2">Sigue estos pasos para comenzar</p>
+                <p class="text-muted mb-1">1. Elige un indicador del catálogo.</p>
+                <p class="text-muted mb-1">${pasoDos}</p>
+                <p class="text-muted mb-0">3. Presiona Consultar para cargar la gráfica.</p>
+            </div>
+        `;
+    }
+
+    function getTextoOpcion(options, id) {
+        if (!options || !options[id]) return null;
+        return options[id].text.replace(/\s+/g, " ").trim();
+    }
+
+    function getNombreIndicadorActivo() {
+        const indicadorActivo = document.querySelector(
+            `.indicador-link[data-indicador-id='${appState.indicatorId}']`,
+        );
+        return indicadorActivo
+            ? indicadorActivo.innerText.trim()
+            : "Sin indicador";
+    }
+
+    function getResumenSeleccionActual() {
+        if (appState.nivelDeAgregacion === "municipio") {
+            if (appState.municipioIds.length === 0) {
+                return "Sin municipios";
+            }
+            if (
+                appState.municipioIds.length === 1 &&
+                appState.municipioIds[0] === "estatal"
+            ) {
+                return "Total estatal";
+            }
+            return appState.municipioIds
+                .map(
+                    (id) =>
+                        getTextoOpcion(municipioSelector.options, id) ||
+                        `Municipio ${id}`,
+                )
+                .join(", ");
+        }
+
+        if (appState.nivelDeAgregacion === "microrregion") {
+            return (
+                getTextoOpcion(
+                    microrregionSelector.options,
+                    appState.microrregionId,
+                ) || "Sin microrregión"
+            );
+        }
+
+        return (
+            getTextoOpcion(
+                macrorregionSelector.options,
+                appState.macrorregionId,
+            ) || "Sin macrorregión"
+        );
+    }
+
+    function getResumenAniosActuales() {
+        if (!appState.selectedYears.length) {
+            return "Todos los disponibles";
+        }
+        return normalizarAnios(appState.selectedYears).join(", ");
+    }
+
+    function actualizarResumenConsulta() {
+        const isMunicipal = appState.nivelDeAgregacion === "municipio";
+        const target = isMunicipal ? viewSummary : viewSummaryRegions;
+        if (!target) return;
+
+        if (!appState.indicatorId) {
+            target.innerText = isMunicipal
+                ? "Consulta actual: Aún no has seleccionado un indicador."
+                : "Consulta actual: Aún no has seleccionado un indicador regional.";
+            return;
+        }
+
+        const nivelTexto =
+            appState.nivelDeAgregacion === "municipio"
+                ? "Municipio"
+                : appState.nivelDeAgregacion === "microrregion"
+                  ? "Microrregión"
+                  : "Macrorregión";
+
+        target.innerText =
+            `Consulta actual: Indicador: ${getNombreIndicadorActivo()} | ` +
+            `Nivel: ${nivelTexto} | ` +
+            `Selección: ${getResumenSeleccionActual()} | ` +
+            `Años: ${getResumenAniosActuales()}`;
+    }
+
+    function actualizarGuiaVista(mensajePersonalizado = null) {
+        const isMunicipal = appState.nivelDeAgregacion === "municipio";
+        const target = isMunicipal ? viewGuidance : viewGuidanceRegions;
+        if (!target) return;
+
+        if (mensajePersonalizado) {
+            target.innerText = mensajePersonalizado;
+            return;
+        }
+
+        if (isMunicipal) {
+            target.innerText =
+                "Puedes seleccionar hasta 2 municipios. El total estatal solo está disponible para indicadores absolutos.";
+            return;
+        }
+
+        if (appState.nivelDeAgregacion === "microrregion") {
+            target.innerText =
+                "Algunas microrregiones no se muestran por limitaciones de desagregación. El mapa se activa cuando la consulta regional aplica.";
+            return;
+        }
+
+        target.innerText =
+            "Estás consultando una macrorregión. El mapa se activa cuando la consulta regional aplica.";
+    }
+
+    function actualizarFeedbackConsulta() {
+        const isMunicipal = appState.nivelDeAgregacion === "municipio";
+        const target = isMunicipal ? consultFeedback : consultFeedbackRegions;
+        if (!target) return;
+
+        let message = "";
+
+        if (!appState.indicatorId) {
+            message = "Falta seleccionar un indicador.";
+        } else if (isMunicipal && appState.municipioIds.length === 0) {
+            message = "Falta elegir al menos un municipio.";
+        } else if (
+            appState.nivelDeAgregacion === "microrregion" &&
+            !appState.microrregionId
+        ) {
+            message = "Falta elegir una microrregión.";
+        } else if (
+            appState.nivelDeAgregacion === "macrorregion" &&
+            !appState.macrorregionId
+        ) {
+            message = "Falta elegir una macrorregión.";
+        } else {
+            message = "La consulta está lista para ejecutarse.";
+        }
+
+        target.innerText = message;
+        target.classList.toggle(
+            "text-success",
+            message === "La consulta está lista para ejecutarse.",
+        );
+        target.classList.toggle(
+            "text-muted",
+            message !== "La consulta está lista para ejecutarse.",
+        );
+    }
 
     if (accordionMunicipal && accordionRegionsContainer) {
         let clonedAccordionHTML = accordionMunicipal.innerHTML;
@@ -338,10 +526,86 @@ document.addEventListener("DOMContentLoaded", function () {
         // --- FIN DE LA CADENA ---
 
         accordionRegionsContainer.innerHTML = clonedAccordionHTML;
+
+        // --- 3.5. Inicializamos búsqueda en ambos acordeones ---
+        setupIndicatorSearch("indicador-search", "accordionDimensions");
         setupIndicatorSearch(
             "indicador-search-regions",
             "accordionDimensionsRegions",
         );
+    }
+
+    /**
+     * Configura la funcionalidad de búsqueda en tiempo real para los acordeones.
+     * @param {string} searchInputId ID del input de búsqueda.
+     * @param {string} accordionId ID del contenedor del acordeón.
+     */
+    function setupIndicatorSearch(searchInputId, accordionId) {
+        const searchInput = document.getElementById(searchInputId);
+        const accordion = document.getElementById(accordionId);
+
+        if (!searchInput || !accordion) return;
+
+        searchInput.addEventListener("input", function () {
+            const term = searchInput.value.toLowerCase().trim();
+            const dimensions = accordion.querySelectorAll(".dimension-item");
+
+            dimensions.forEach((dim) => {
+                let dimensionHasMatch = false;
+                const tematicas = dim.querySelectorAll(".tematica-item");
+
+                tematicas.forEach((tem) => {
+                    let tematicaHasMatch = false;
+                    const indicators = tem.querySelectorAll(".indicador-link");
+
+                    indicators.forEach((link) => {
+                        const text = link.innerText.toLowerCase();
+                        const isMatch = text.includes(term);
+                        link.parentElement.style.display = isMatch
+                            ? "block"
+                            : "none";
+                        if (isMatch) {
+                            tematicaHasMatch = true;
+                            dimensionHasMatch = true;
+                        }
+                    });
+
+                    tem.style.display = tematicaHasMatch ? "block" : "none";
+
+                    // Expandir la temática si tiene coincidencias
+                    if (term.length > 0 && tematicaHasMatch) {
+                        const collapseTematica = tem.querySelector(
+                            ".accordion-collapse",
+                        );
+                        if (
+                            collapseTematica &&
+                            !collapseTematica.classList.contains("show")
+                        ) {
+                            const bsCollapseTematica =
+                                bootstrap.Collapse.getOrCreateInstance(
+                                    collapseTematica,
+                                    { toggle: false },
+                                );
+                            bsCollapseTematica.show();
+                        }
+                    }
+                });
+
+                dim.style.display = dimensionHasMatch ? "block" : "none";
+
+                // Expandir la dimensión si tiene coincidencias
+                if (term.length > 0 && dimensionHasMatch) {
+                    const collapse = dim.querySelector(".accordion-collapse");
+                    if (collapse && !collapse.classList.contains("show")) {
+                        const bsCollapse =
+                            bootstrap.Collapse.getOrCreateInstance(collapse, {
+                                toggle: false,
+                            });
+                        bsCollapse.show();
+                    }
+                }
+            });
+        });
     }
 
     // --- 4. FUNCIONES DE AYUDA (DEFINIDAS UNA SOLA VEZ) ---
@@ -473,28 +737,89 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     function gestionarBotonResumen() {
-        // La condición: exactamente 1 municipio seleccionado y que NO sea 'estatal'
         if (
             appState.municipioIds.length === 1 &&
             appState.municipioIds[0] !== "estatal"
         ) {
             const municipioId = appState.municipioIds[0];
+            // Obtenemos el slug desde los datos cargados en TomSelect
+            const selectedOption = municipioSelector.options[municipioId];
+            const slug = selectedOption ? selectedOption.slug : municipioId;
 
-            // Habilitamos y mostramos el botón
-            resumenBtn.style.display = "inline-block";
-            resumenBtn.classList.remove("disabled");
+            if (resumenBtn && resumenContainer) {
+                resumenContainer.style.display = "block";
+                resumenBtn.classList.remove("disabled");
 
-            resumenBtn.href = resumenUrlPrototype.replace(
-                "ID_PLACEHOLDER",
-                municipioId,
-            );
+                resumenBtn.href = resumenUrlPrototype.replace(
+                    "ID_PLACEHOLDER",
+                    slug,
+                );
+            }
         } else {
-            resumenBtn.style.display = "none";
-            resumenBtn.classList.add("disabled");
+            if (resumenBtn && resumenContainer) {
+                resumenContainer.style.display = "none";
+                resumenBtn.classList.add("disabled");
+            }
         }
     }
-    shareBtn.addEventListener("click", handleShareView);
-    shareBtnRegions.addEventListener("click", handleShareView);
+    if (shareBtn) shareBtn.addEventListener("click", handleShareView);
+    if (shareBtnRegions)
+        shareBtnRegions.addEventListener("click", handleShareView);
+
+    if (toggleMapBtn) {
+        toggleMapBtn.addEventListener("click", () => {
+            if (mapContainer.style.display === "none") {
+                mapContainer.style.display = "block";
+                toggleMapBtn.classList.replace(
+                    "btn-outline-primary",
+                    "btn-primary",
+                );
+                if (mapMunicipal) mapMunicipal.invalidateSize();
+            } else {
+                mapContainer.style.display = "none";
+                toggleMapBtn.classList.replace(
+                    "btn-primary",
+                    "btn-outline-primary",
+                );
+            }
+        });
+    }
+
+    if (toggleMapBtnRegions) {
+        toggleMapBtnRegions.addEventListener("click", () => {
+            const container = document.getElementById("map-container-regions");
+            if (container.style.display === "none") {
+                container.style.display = "block";
+                toggleMapBtnRegions.classList.replace(
+                    "btn-outline-primary",
+                    "btn-primary",
+                );
+                if (mapRegional) mapRegional.invalidateSize();
+            } else {
+                container.style.display = "none";
+                toggleMapBtnRegions.classList.replace(
+                    "btn-primary",
+                    "btn-outline-primary",
+                );
+            }
+        });
+    }
+
+    if (compareStateSwitch) {
+        compareStateSwitch.addEventListener("change", () => {
+            const esConsultaMunicipal =
+                appState.nivelDeAgregacion === "municipio" &&
+                appState.indicatorId &&
+                appState.municipioIds.length > 0;
+            const esSeleccionEstatal =
+                appState.municipioIds.length === 1 &&
+                appState.municipioIds[0] === "estatal";
+
+            if (esConsultaMunicipal && !esSeleccionEstatal) {
+                updateDashboard();
+            }
+        });
+    }
 
     /**
      * Filtra la lista de indicadores para la vista regional.
@@ -576,39 +901,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function expandirAcordeonHacia(linkElemento) {
         if (!linkElemento) return;
-        const dimensionTargetId = linkElemento.dataset.dimensionTarget.replace(
-            "#",
-            "",
-        );
-        const tematicaTargetId = linkElemento.dataset.tematicaTarget.replace(
-            "#",
-            "",
-        );
 
-        // Usamos los IDs limpios para buscar en el documento y activar el colapsable
-        const dimensionEl =
-            document.getElementById(dimensionTargetId) ||
-            document.getElementById(
-                dimensionTargetId.replace("dimension", "dimension-region"),
-            );
-        const tematicaEl =
-            document.getElementById(tematicaTargetId) ||
-            document.getElementById(
-                tematicaTargetId.replace("tematica", "tematica-region"),
-            );
+        // Subimos por el DOM buscando los paneles colapsables padres
+        // en lugar de depender de atributos data- que pueden no existir
+        let el = linkElemento.parentElement;
+        const panelsToOpen = [];
 
-        if (dimensionEl) {
-            const bsCollapse = new bootstrap.Collapse(dimensionEl, {
+        while (el) {
+            if (el.classList && el.classList.contains("accordion-collapse")) {
+                panelsToOpen.push(el);
+            }
+            el = el.parentElement;
+        }
+
+        // Abrimos desde el más externo al más interno
+        panelsToOpen.reverse().forEach((panel) => {
+            const bsCollapse = bootstrap.Collapse.getOrCreateInstance(panel, {
                 toggle: false,
             });
             bsCollapse.show();
-        }
-        if (tematicaEl) {
-            const bsCollapse = new bootstrap.Collapse(tematicaEl, {
-                toggle: false,
-            });
-            bsCollapse.show();
-        }
+        });
     }
 
     function getColor(value, quintiles) {
@@ -662,24 +974,29 @@ document.addEventListener("DOMContentLoaded", function () {
     function initMapMunicipal() {
         if (mapMunicipal) return;
         if (!document.getElementById("map")) return;
-        mapMunicipal = L.map("map").setView([19.0414, -98.2063], 8);
+        // Se añade limitación de zoom (minZoom, maxZoom)
+        mapMunicipal = L.map("map", { minZoom: 6, maxZoom: 14 }).setView(
+            [19.0414, -98.2063],
+            8,
+        );
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             attribution:
                 '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         }).addTo(mapMunicipal);
-        // console.log("Mapa Municipal Inicializado.");
     }
 
     function initMapRegional() {
         if (mapRegional) return;
-        // ¡OJO! Usamos el ID del HTML de regiones
         if (!document.getElementById("map-regions")) return;
-        mapRegional = L.map("map-regions").setView([19.0414, -98.2063], 8);
+        // Se añade limitación de zoom (minZoom, maxZoom)
+        mapRegional = L.map("map-regions", { minZoom: 6, maxZoom: 14 }).setView(
+            [19.0414, -98.2063],
+            8,
+        );
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             attribution:
                 '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         }).addTo(mapRegional);
-        // console.log("Mapa Regional Inicializado.");
     }
     /**
      * Inicializa el objeto del mapa, carga el GeoJSON una sola vez
@@ -690,51 +1007,6 @@ document.addEventListener("DOMContentLoaded", function () {
         await loadAllGeoJSON();
         // Luego inicializamos SÓLO el mapa municipal (el único visible al inicio)
         initMapMunicipal();
-    }
-    async function initMapOLD() {
-        // Si el mapa ya fue creado, no hacemos nada más.
-        if (map) return;
-
-        // Si el contenedor del mapa no existe en la página, tampoco hacemos nada.
-        if (!document.getElementById("map")) return;
-
-        // Creamos el mapa y lo centramos en Puebla.
-        map = L.map("map").setView([19.0414, -98.2063], 8);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution:
-                '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        }).addTo(map);
-
-        // Intentamos cargar el archivo GeoJSON y lo guardamos en memoria.
-        try {
-            // Usamos Promise.all para cargar todos los archivos en paralelo
-            const [responseMun, responseMicro, responseMacro] =
-                await Promise.all([
-                    fetch(
-                        `${window.APP_URL}/geojson/municipios_puebla_slim.geojson`,
-                    ),
-                    fetch(
-                        `${window.APP_URL}/geojson/microrregiones_puebla_sin_adecuacion.geojson`,
-                    ),
-                    fetch(
-                        `${window.APP_URL}/geojson/macrorregiones_2025_slim.geojson`,
-                    ),
-                ]);
-
-            pueblaGeoJSON = await responseMun.json();
-            microGeoJSON = await responseMicro.json();
-            macroGeoJSON = await responseMacro.json();
-
-            console.log("Todos los archivos GeoJSON han sido cargados.");
-        } catch (error) {
-            console.error(
-                "Error crítico: No se pudo cargar el archivo GeoJSON.",
-                error,
-            );
-            if (mapContainer)
-                mapContainer.innerHTML =
-                    "<p class='text-danger'>No se pudo cargar la cartografía del mapa.</p>";
-        }
     }
 
     /**
@@ -993,7 +1265,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const esBloqueado = IDS_BLOQUEADOS.includes(idActual);
 
                 if (esBloqueado) {
-                    // Evento Clic
+                    // Evento Click
                     layer.on("click", function (e) {
                         L.DomEvent.stopPropagation(e);
                         Swal.fire({
@@ -1109,24 +1381,14 @@ document.addEventListener("DOMContentLoaded", function () {
             })
             .catch((err) => console.error("Error al exportar:", err));
     }
-
-    /**
-     * Renderiza el gráfico (MODIFICADA para aceptar el contenedor)
-     */
-    // function renderizarGrafico(datosParaGrafico) {
-    function renderizarGrafico(datosParaGrafico, container, titleElement) {
-        container.innerHTML = "";
+    function actualizarTextosUI(datosParaGrafico, titleElement) {
         titleElement.innerText = datosParaGrafico.titulo;
-
-        const activeExportBtn =
-            appState.nivelDeAgregacion === "municipio"
-                ? exportBtn
-                : exportBtnRegions;
+        const isMunicipal = appState.nivelDeAgregacion === "municipio";
+        const activeExportBtn = isMunicipal ? exportBtn : exportBtnRegions;
         exportBtn.style.display = "none";
         exportBtnRegions.style.display = "none";
 
-        // --- LÓGICA DE MODALES Y METADATOS (Se queda igual, funciona perfecto) ---
-        const isMunicipal = appState.nivelDeAgregacion === "municipio";
+        // --- MODAL DE MUNICIPIOS ---
         const verMunicipiosBtn = document.getElementById("ver-municipios-btn");
         const modalTitle = document.getElementById("municipios-modal-title");
         const modalBody = document.getElementById("municipios-modal-body");
@@ -1136,23 +1398,25 @@ document.addEventListener("DOMContentLoaded", function () {
             datosParaGrafico.municipios_incluidos &&
             datosParaGrafico.municipios_incluidos.length > 0
         ) {
-            verMunicipiosBtn.style.display = "block";
+            if (verMunicipiosBtn) verMunicipiosBtn.style.display = "block";
             let regionNombre = "la región";
             const tituloPartido = datosParaGrafico.titulo.split(" - ");
             if (tituloPartido.length > 1) {
                 regionNombre = tituloPartido[1].split(" (")[0];
             }
-            modalTitle.innerText = `Municipios en ${regionNombre}`;
+            if (modalTitle)
+                modalTitle.innerText = `Municipios en ${regionNombre}`;
             let listaHtml = '<ul class="list-group list-group-flush">';
             datosParaGrafico.municipios_incluidos.forEach((mun) => {
                 listaHtml += `<li class="list-group-item">${mun}</li>`;
             });
             listaHtml += "</ul>";
-            modalBody.innerHTML = listaHtml;
+            if (modalBody) modalBody.innerHTML = listaHtml;
         } else {
-            verMunicipiosBtn.style.display = "none";
+            if (verMunicipiosBtn) verMunicipiosBtn.style.display = "none";
         }
 
+        // --- METADATOS Y SELECTOR DE AÑOS ---
         const years = datosParaGrafico.available_years;
         const currentMetadata = isMunicipal
             ? metadataContainer
@@ -1179,39 +1443,56 @@ document.addEventListener("DOMContentLoaded", function () {
             ? availableYearsElement
             : availableYearsElementRegions;
 
-        currentMetadata.style.display = "block";
-        currentDescription.innerText =
-            datosParaGrafico.descripcion || "No disponible.";
-        currentSource.innerText = datosParaGrafico.fuente || "No disponible.";
+        if (currentMetadata) currentMetadata.style.display = "block";
+        if (currentDescription)
+            currentDescription.innerText =
+                datosParaGrafico.descripcion || "No disponible.";
+        if (currentSource)
+            currentSource.innerText =
+                datosParaGrafico.fuente || "No disponible.";
         if (currentMethod)
             currentMethod.innerText =
                 datosParaGrafico.metodo_calculo || "No disponible.";
 
         if (datosParaGrafico.series && datosParaGrafico.series.length > 0) {
-            fullscreenBtn.style.display = "block";
-            fullscreenBtnRegions.style.display = "block";
+            if (fullscreenBtn) fullscreenBtn.style.display = "block";
+            if (fullscreenBtnRegions)
+                fullscreenBtnRegions.style.display = "block";
         } else {
-            fullscreenBtn.style.display = "none";
-            fullscreenBtnRegions.style.display = "none";
+            if (fullscreenBtn) fullscreenBtn.style.display = "none";
+            if (fullscreenBtnRegions)
+                fullscreenBtnRegions.style.display = "none";
         }
 
         if (Array.isArray(years) && years.length > 0) {
-            currentAvailableYearsElement.innerText = years.sort().join(", ");
-            currentYearContainer.style.display = "block";
-            activeExportBtn.style.display = "block";
-            currentYearEl.clearOptions();
-            years.forEach((year) =>
-                currentYearEl.addOption({ value: year, text: year }),
-            );
-            if (datosParaGrafico.selected_years) {
-                currentYearEl.setValue(datosParaGrafico.selected_years, true);
+            if (currentAvailableYearsElement)
+                currentAvailableYearsElement.innerText = years
+                    .sort()
+                    .join(", ");
+            if (currentYearContainer)
+                currentYearContainer.style.display = "block";
+            if (activeExportBtn) activeExportBtn.style.display = "block";
+            if (currentYearEl) {
+                currentYearEl.clearOptions();
+                years.forEach((year) =>
+                    currentYearEl.addOption({ value: year, text: year }),
+                );
+                if (datosParaGrafico.selected_years) {
+                    currentYearEl.setValue(
+                        datosParaGrafico.selected_years,
+                        true,
+                    );
+                }
             }
         } else {
-            currentAvailableYearsElement.innerText = "No disponible";
-            currentYearContainer.style.display = "none";
-            activeExportBtn.style.display = "none";
+            if (currentAvailableYearsElement)
+                currentAvailableYearsElement.innerText = "No disponible";
+            if (currentYearContainer)
+                currentYearContainer.style.display = "none";
+            if (activeExportBtn) activeExportBtn.style.display = "none";
         }
 
+        // --- NOTAS EXPLICATIVAS ---
         let htmlNotas = "";
         if (
             datosParaGrafico.notas_explicativas &&
@@ -1229,35 +1510,36 @@ document.addEventListener("DOMContentLoaded", function () {
         if (datosParaGrafico.nota_explicativa) {
             htmlNotas += `<p class="mb-0 mt-2 text-muted small border-top pt-2"><i class="fas fa-comment-dots me-1"></i> ${datosParaGrafico.nota_explicativa}</p>`;
         }
-        if (htmlNotas) {
+
+        if (currentNote) {
             currentNote.innerHTML = htmlNotas;
-            currentNote.style.display = "block";
-        } else {
-            currentNote.innerHTML = "";
-            currentNote.style.display = "none";
+            currentNote.style.display = htmlNotas ? "block" : "none";
         }
-
-        // ====================================================================
-        // --- AQUÍ EMPIEZA LA MAGIA DE ECHARTS ---
-        // ====================================================================
+    }
+    function generarOpcionesEcharts(datosParaGrafico) {
         let options = {};
-
-        // Función auxiliar para formatear números
         const formatNum = (val) => new Intl.NumberFormat("es-MX").format(val);
 
         if (datosParaGrafico.tipo_grafico === "piramide") {
-            // --- GRÁFICO DE PIRÁMIDE POBLACIONAL ---
             options = {
                 color: ["#008FFB", "#FF4560"],
+                toolbox: {
+                    show: true,
+                    feature: {
+                        saveAsImage: { title: "Descargar" },
+                        dataView: { title: "Ver datos", readOnly: true },
+                        restore: { title: "Restaurar" },
+                    },
+                },
                 tooltip: {
                     trigger: "axis",
                     axisPointer: { type: "shadow" },
                     formatter: function (params) {
                         let html = `<strong>${params[0].axisValueLabel}</strong><br/>`;
-                        params.forEach((p) => {
-                            let val = Math.abs(p.value);
-                            html += `${p.marker} ${p.seriesName}: ${formatNum(val)} personas<br/>`;
-                        });
+                        params.forEach(
+                            (p) =>
+                                (html += `${p.marker} ${p.seriesName}: ${formatNum(Math.abs(p.value))} personas<br/>`),
+                        );
                         return html;
                     },
                 },
@@ -1273,9 +1555,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     name: "Número de Habitantes",
                     nameLocation: "middle",
                     nameGap: 30,
-                    axisLabel: {
-                        formatter: (value) => formatNum(Math.abs(value)),
-                    },
+                    axisLabel: { formatter: (v) => formatNum(Math.abs(v)) },
                 },
                 yAxis: {
                     type: "category",
@@ -1286,28 +1566,23 @@ document.addEventListener("DOMContentLoaded", function () {
                 series: datosParaGrafico.series.map((s) => ({
                     name: s.name,
                     type: "bar",
-                    stack: "Total", // Apilado horizontal
+                    stack: "Total",
                     data: s.data,
                 })),
             };
         } else {
-            // --- GRÁFICOS DE LÍNEAS Y BARRAS ---
             let xAxisData = [];
             let seriesData = [];
 
-            // Detectamos si es un arreglo de pares [año, valor] (Cultivos, Delitos, Población sin categorias)
             if (
                 datosParaGrafico.tipo_grafico === "line" &&
                 (!datosParaGrafico.eje_x.categorias ||
                     datosParaGrafico.eje_x.categorias.length === 0)
             ) {
-                // 1. Extraemos los años únicos y ordenados
                 const allYears = datosParaGrafico.series
                     .flatMap((s) => s.data.map((p) => p[0]))
                     .filter((y) => y != null);
                 xAxisData = [...new Set(allYears)].sort((a, b) => a - b);
-
-                // 2. Mapeamos limpiamente. ECharts ama los nulls, no necesitamos fantasmas.
                 seriesData = datosParaGrafico.series.map((serie) => {
                     const dataMap = new Map(serie.data);
                     return {
@@ -1316,16 +1591,14 @@ document.addEventListener("DOMContentLoaded", function () {
                         data: xAxisData.map((y) => dataMap.get(y) ?? null),
                         symbol: "circle",
                         symbolSize: 6,
-                        connectNulls: false, // Deja el hueco si no hay dato intermedio
-                        smooth: true, // En ECharts el smooth no desaparece los puntos únicos
+                        connectNulls: false,
+                        smooth: true,
                     };
                 });
             } else {
-                // Caso: Líneas o Barras que ya traen "categorias" desde el backend
                 xAxisData = datosParaGrafico.eje_x.categorias || [];
                 const tipoSeries =
                     datosParaGrafico.tipo_grafico === "bar" ? "bar" : "line";
-
                 seriesData = datosParaGrafico.series.map((serie) => ({
                     name: serie.name,
                     type: tipoSeries,
@@ -1338,107 +1611,260 @@ document.addEventListener("DOMContentLoaded", function () {
 
             options = {
                 color: PALETA_COLORES,
-                tooltip: {
-                    trigger: "item", // ESTA ES LA JOYA: Cruza todos los datos verticalmente
-                    axisPointer: {
-                        type: "cross",
-                        label: { backgroundColor: "#6a7985" },
+                toolbox: {
+                    show: true,
+                    right: "2%",
+                    top: 0,
+                    feature: {
+                        magicType: {
+                            type: ["bar", "line"],
+                            title: {
+                                bar: "Cambiar a Barras",
+                                line: "Cambiar a Líneas",
+                            },
+                        },
+                        dataZoom: {
+                            title: {
+                                zoom: "Área de Zoom",
+                                back: "Restaurar Zoom",
+                            },
+                        },
+                        saveAsImage: {
+                            title: "Descargar Imagen",
+                            pixelRatio: 2,
+                        },
+                        dataView: { title: "Ver Datos", readOnly: true },
+                        restore: { title: "Restaurar" },
                     },
-                    valueFormatter: (value) =>
-                        value == null || isNaN(value)
-                            ? "N/D"
-                            : formatNum(value),
+                },
+                tooltip: {
+                    trigger: "item",
                     formatter: function (params) {
-                        // Como ahora es 'item', params es un solo objeto, no un arreglo.
-                        // Si el valor es nulo (N/D), simplemente no mostramos el cuadro
                         if (params.value == null || isNaN(params.value))
                             return "";
 
-                        // Construimos el diseño compacto para un solo punto
-                        let html = `<div style="font-weight:bold; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">${params.name}</div>`;
+                        const prefijoX = datosParaGrafico.eje_x.titulo
+                            ? `${datosParaGrafico.eje_x.titulo}: `
+                            : "";
+
+                        let html = `<div style="font-weight:bold; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">${prefijoX}${params.name}</div>`;
 
                         html += `<div style="display: flex; justify-content: space-between; gap: 20px; font-size: 13px;">
                                     <span>${params.marker} ${params.seriesName}</span>
-                                    <span style="font-weight: bold;">${new Intl.NumberFormat("es-MX").format(params.value)}</span>
+                                    <span style="font-weight: bold;">${formatNum(params.value)}</span>
                                  </div>`;
 
                         return html;
                     },
                 },
-                legend: {
-                    show: seriesData.length > 1,
-                    type: "scroll",
-                    bottom: 0,
-                },
-                grid: {
-                    left: "3%",
-                    right: "4%",
-                    bottom: "15%",
-                    containLabel: true,
-                },
+                // --- LEYENDA: Vertical para complejos, horizontal para simples ---
+                legend: appState.indicatorEsComplejo
+                    ? {
+                          show: seriesData.length > 1,
+                          type: "scroll",
+                          orient: "vertical",
+                          right: 0,
+                          top: 30,
+                          bottom: 20,
+                          tooltip: { show: true },
+                          textStyle: {
+                              width: 180,
+                              overflow: "break",
+                              lineHeight: 14,
+                              fontSize: 11,
+                          },
+                          pageIconSize: 12,
+                          pageTextStyle: { fontSize: 10 },
+                          selector: [
+                              { type: "all", title: "Todos" },
+                              { type: "inverse", title: "Invertir" },
+                          ],
+                          selectorPosition: "start",
+                          selectorLabel: {
+                              color: "#246257",
+                              fontWeight: "bold",
+                              borderColor: "#246257",
+                              borderWidth: 1,
+                              padding: [3, 5],
+                              borderRadius: 3,
+                          },
+                      }
+                    : {
+                          show: seriesData.length > 1,
+                          type: "scroll",
+                          orient: "horizontal",
+                          bottom: 0,
+                          tooltip: { show: true },
+                          textStyle: {
+                              width: 250,
+                              overflow: "break",
+                              lineHeight: 14,
+                              fontSize: 11
+                          },
+                          selector: [
+                              { type: "all", title: "Todos" },
+                              { type: "inverse", title: "Invertir" },
+                          ],
+                          selectorPosition: "start",
+                          selectorLabel: {
+                              color: "#246257",
+                              fontWeight: "bold",
+                              borderColor: "#246257",
+                              borderWidth: 1,
+                              padding: [3, 5],
+                              borderRadius: 3,
+                          },
+                      },
+
+                // 3. GRID: Más espacio a la derecha para leyenda vertical en complejos
+                grid: appState.indicatorEsComplejo
+                    ? {
+                          left: "3%",
+                          right: "22%",
+                          bottom: "15%",
+                          top: "10%",
+                          containLabel: true,
+                      }
+                    : {
+                          left: "3%",
+                          right: "4%",
+                          bottom: "22%",
+                          top: "15%",
+                          containLabel: true,
+                      },
                 xAxis: {
                     type: "category",
                     data: xAxisData,
                     name: datosParaGrafico.eje_x.titulo || "",
                     nameLocation: "middle",
-                    nameGap: 30,
+                    nameGap:
+                        xAxisData.length > 10
+                            ? 80
+                            : xAxisData.length > 4
+                              ? 65
+                              : 40,
                     axisLabel: {
-                        formatter: function (value) {
-                            if (
-                                value === "N/A" ||
-                                value === null ||
-                                value === ""
-                            )
-                                return "Total Estatal";
-                            return value;
-                        },
+                        rotate:
+                            xAxisData.length > 10
+                                ? 45
+                                : xAxisData.length > 4
+                                  ? 30
+                                  : 0,
+                        overflow: "break",
+                        width: 140,
+                        fontSize: xAxisData.length > 15 ? 10 : 11,
+                        interval: 0,
+                        formatter: (v) =>
+                            v === "N/A" || v === null || v === ""
+                                ? "Total Estatal"
+                                : v,
                     },
+                    axisPointer: { show: true, type: "shadow" },
+                    triggerEvent: true,
                 },
                 yAxis: {
                     type: "value",
                     name: datosParaGrafico.eje_y.titulo,
-                    nameTextStyle: {
-                        align: "left",
-                        padding: [0, 0, 0, -30], // Opcional: Un pequeño empujón para alinearlo perfecto con los números
-                    },
-                    axisLabel: { formatter: (value) => formatNum(value) },
+                    nameTextStyle: { align: "left", padding: [0, 0, 0, -30] },
+                    axisLabel: { formatter: (v) => formatNum(v) },
                 },
-                series: seriesData,
+                series: seriesData.map((s, idx) => ({
+                    ...s,
+                    label: {
+                        show:
+                            (s.type === "bar" || s.type === "line") &&
+                            seriesData.length <= 3 &&
+                            xAxisData.length <= 15,
+                        position: "top",
+                        formatter: (params) => formatNum(params.value),
+                        fontSize: 10,
+                        color: "#444",
+                    },
+                    itemStyle: {
+                        color:
+                            seriesData.length === 1 && s.type === "bar"
+                                ? function (params) {
+                                      return PALETA_COLORES[
+                                          params.dataIndex %
+                                              PALETA_COLORES.length
+                                      ];
+                                  }
+                                : PALETA_COLORES[idx % PALETA_COLORES.length],
+                        borderRadius: [4, 4, 0, 0],
+                    },
+                    emphasis: {
+                        itemStyle: {
+                            filter: "brightness(1.1)",
+                        },
+                    },
+                })),
             };
         }
+        return options;
+    }
 
-        // ====================================================================
-        // --- RENDERIZADO EN PANTALLA ---
-        // ====================================================================
+    function getChartViewKey(nivel = appState.nivelDeAgregacion) {
+        return nivel === "municipio" ? "municipio" : "regional";
+    }
 
-        // Guardamos las opciones para la pantalla completa
-        lastChartOptions = options;
+    function getChartInstance(viewKey) {
+        return chartInstances[viewKey];
+    }
 
-        // IMPORTANTE: Aseguramos que el contenedor tenga dimensiones
+    function setChartInstance(viewKey, instance) {
+        chartInstances[viewKey] = instance;
+    }
+
+    function disposeChartInstance(viewKey) {
+        const instance = chartInstances[viewKey];
+        if (instance) {
+            if (instance.dispose) instance.dispose();
+            else if (instance.destroy) instance.destroy();
+            chartInstances[viewKey] = null;
+        }
+        lastChartOptionsByView[viewKey] = null;
+    }
+
+    function resizeAllCharts() {
+        Object.values(chartInstances).forEach((instance) => {
+            if (instance && instance.resize) {
+                instance.resize();
+            }
+        });
+    }
+
+    function renderizarGrafico(
+        datosParaGrafico,
+        container,
+        titleElement,
+        viewKey,
+    ) {
+        // 1. Delegamos el trabajo de los textos y modales a su propia función
+        actualizarTextosUI(datosParaGrafico, titleElement);
+
+        // 2. Delegamos el cálculo matemático y visual a su propia función
+        const options = generarOpcionesEcharts(datosParaGrafico);
+        lastChartOptionsByView[viewKey] = options;
+
+        // 3. Pintamos el lienzo (Esto es todo lo que hace esta función ahora)
         container.style.width = "100%";
         container.style.height = "500px";
 
-        // Destruimos la gráfica anterior si existe
-        if (chart) {
-            // Compatibilidad por si todavía hay un ApexChart vivo
-            if (chart.dispose) chart.dispose();
-            else if (chart.destroy) chart.destroy();
+        let chart = getChartInstance(viewKey);
+        if (!chart || chart.getDom() !== container) {
+            disposeChartInstance(viewKey);
+            chart = echarts.init(container);
+            setChartInstance(viewKey, chart);
         }
 
-        // Inicializamos ECharts
-        chart = echarts.init(container);
-        chart.setOption(options);
+        chart.setOption(options, true);
+        chart.hideLoading();
     }
 
     // --- 5. FUNCIÓN "DIRECTORA" PRINCIPAL ---
 
     function updateDashboard() {
-        if (
-            appState.isLoading ||
-            !appState.indicatorId ||
-            (appState.nivelDeAgregacion === "municipio" &&
-                appState.municipioIds.length === 0)
-        ) {
+        if (appState.isLoading || !appState.indicatorId) {
             return;
         }
         appState.isLoading = true;
@@ -1446,17 +1872,33 @@ document.addEventListener("DOMContentLoaded", function () {
         setUIInteractivity(true);
         // Reseteo de la interfaz
         const esMunicipio = appState.nivelDeAgregacion === "municipio";
+        const chartViewKey = getChartViewKey();
         const activeChartContainer = esMunicipio
             ? chartContainer
             : chartContainerRegions;
         const activeChartTitle = esMunicipio ? chartTitle : chartTitleRegions;
-
         activeChartTitle.innerText = "Cargando...";
-        activeChartContainer.innerHTML =
-            '<div class="text-center pt-5"><div class="spinner-border" role="status"></div></div>';
 
-        chartContainer.style.display = "none";
-        chartContainerRegions.style.display = "none";
+        // 1. Mantenemos el contenedor visible para que ECharts pueda trabajar
+        activeChartContainer.style.display = "block";
+
+        // 2. Si la gráfica aún no existe en este contenedor, la inicializamos vacía
+        let chart = getChartInstance(chartViewKey);
+        if (!chart || chart.getDom() !== activeChartContainer) {
+            disposeChartInstance(chartViewKey);
+            chart = echarts.init(activeChartContainer);
+            setChartInstance(chartViewKey, chart);
+        }
+
+        // 3. Encendemos el Loading nativo de ECharts
+        chart.showLoading({
+            text: "Cargando datos...",
+            color: "#246257",
+            textColor: "#333",
+            maskColor: "rgba(255, 255, 255, 0.8)",
+            spinnerRadius: 20,
+            lineWidth: 4,
+        });
 
         // Lógica de decisión
         const indicadorSeleccionado = document.querySelector(
@@ -1525,6 +1967,41 @@ document.addEventListener("DOMContentLoaded", function () {
         ) {
             showMap = true;
         }
+
+        // Mostrar u ocultar los botones del mapa según si la vista lo soporta
+        if (toggleMapBtn) {
+            toggleMapBtn.style.display =
+                esUnMunicipio || esCasoChoropleth ? "inline-block" : "none";
+            if (esUnMunicipio || esCasoChoropleth) {
+                toggleMapBtn.classList.replace(
+                    "btn-outline-primary",
+                    "btn-primary",
+                );
+            } else {
+                toggleMapBtn.classList.replace(
+                    "btn-primary",
+                    "btn-outline-primary",
+                );
+            }
+        }
+        if (toggleMapBtnRegions) {
+            toggleMapBtnRegions.style.display =
+                esUnaMicrorregion || esUnaMacrorregion
+                    ? "inline-block"
+                    : "none";
+            if (esUnaMicrorregion || esUnaMacrorregion) {
+                toggleMapBtnRegions.classList.replace(
+                    "btn-outline-primary",
+                    "btn-primary",
+                );
+            } else {
+                toggleMapBtnRegions.classList.replace(
+                    "btn-primary",
+                    "btn-outline-primary",
+                );
+            }
+        }
+
         if (showMap) {
             if (esUnMunicipio) {
                 mapContainerMunicipal.style.display = "block";
@@ -1591,7 +2068,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     ? appState.microrregionId
                     : appState.macrorregionId;
 
-            // CORRECCIÓN: Si es un array, tomamos el primero. Si no, enviamos el valor directo.
+            // Si es un array, tomamos el primero. Si no, enviamos el valor directo.
             // Esto asegura que el backend reciba un número (ej. 2) y no un array (ej. [2]).
             payload.region_id = Array.isArray(regionId)
                 ? regionId[0]
@@ -1611,10 +2088,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 response.ok ? response.json() : Promise.reject(response),
             )
             .then((data) => {
-                renderizarGrafico(data, activeChartContainer, activeChartTitle);
+                renderizarGrafico(
+                    data,
+                    activeChartContainer,
+                    activeChartTitle,
+                    chartViewKey,
+                );
                 if (esCasoChoropleth && data.mapData) {
                     if (mapMunicipal) {
-                        mapMunicipal.setView([19.0414, -98.2063], 7);
+                        mapMunicipal.setView([19.0414, -98.2063], 6);
                     }
                     displayChoroplethMap(data.mapData);
                 }
@@ -1634,22 +2116,37 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // --- 6. CARGA INICIAL Y LISTENERS ---
+    let mapsInitializationPromise = null;
 
-    /**
-     * Se ejecuta una sola vez al cargar la página. Espera a que el mapa se inicialice
-     * y luego decide el estado inicial de la aplicación (desde URL o por defecto).
-     */
-    async function CargaInicial() {
-        // --- PASO 1: ESPERAMOS a que el mapa se inicialice ---
-        await initMap();
+    function ensureMapsInitialized() {
+        if (!mapsInitializationPromise) {
+            mapsInitializationPromise = initMap();
+        }
+        return mapsInitializationPromise;
+    }
 
-        // --- PASO 2: Preparamos la opción 'estatal' ---
-        opcionEstatalElement = {
-            value: "estatal",
-            text: "-- Total Estatal --",
-            orden: 0,
-        };
+    function activarNivelProgramaticamente(nivel) {
+        const tabSelector = `#pills-tab-nivel .nav-link[data-nivel="${nivel}"]`;
+        const tabToActivate = document.querySelector(tabSelector);
 
+        if (tabToActivate && !tabToActivate.classList.contains("active")) {
+            tabToActivate.click();
+        }
+    }
+
+    function activarIndicadorEnUI(linkActivo) {
+        if (!linkActivo) return;
+
+        document
+            .querySelectorAll(".indicador-link")
+            .forEach((el) => el.classList.remove("fw-bold", "text-primary"));
+
+        linkActivo.classList.add("fw-bold", "text-primary");
+        expandirAcordeonHacia(linkActivo);
+        gestionarOpcionEstatal(linkActivo.dataset.tipoDato || "Absoluto");
+    }
+
+    function restaurarEstadoDesdeURL() {
         const urlParams = new URLSearchParams(window.location.search);
         const indicadorIdFromUrl = urlParams.get("indicador_id");
         const municipioIdsFromUrl = urlParams.get("municipio_ids");
@@ -1658,312 +2155,115 @@ document.addEventListener("DOMContentLoaded", function () {
         const aniosFromUrl = urlParams.getAll("anios[]");
 
         let linkActivo = null;
-        let mustCallUpdateDashboard = true;
 
-        if (aniosFromUrl.length > 0) {
-            appState.selectedYears = aniosFromUrl;
-            // console.log("-> Años de URL detectados:", aniosFromUrl);
-        }
+        appState.selectedYears = aniosFromUrl.length > 0 ? aniosFromUrl : [];
 
         if (indicadorIdFromUrl && nivelFromUrl && regionIdFromUrl) {
-            // --- CASO A: URL REGIONAL ---
-            // console.log("-> Parámetros de URL regionales detectados.");
+            activarNivelProgramaticamente(nivelFromUrl);
 
             appState.nivelDeAgregacion = nivelFromUrl;
             appState.indicatorId = indicadorIdFromUrl;
-
-            // --- INICIO DE CORRECCIÓN 1 ---
-            // Buscamos el link AHORA para saber si es complejo
-            const linkRegional = document.querySelector(
+            linkActivo = document.querySelector(
                 `.indicador-link[data-indicador-id='${indicadorIdFromUrl}']`,
             );
-            if (linkRegional) {
-                appState.indicatorEsComplejo =
-                    linkRegional.dataset.esComplejo === "true";
-                // console.log(
-                //   "-> Indicador detectado como complejo:",
-                //   appState.indicatorEsComplejo
-                // );
-            }
-            // --- FIN DE CORRECCIÓN 1 ---
-
-            const tabSelector = `#pills-tab-nivel .nav-link[data-nivel="${nivelFromUrl}"]`;
-            const tabToActivate = document.querySelector(tabSelector);
-
-            if (tabToActivate) {
-                mustCallUpdateDashboard = false;
-                const tab = new bootstrap.Tab(tabToActivate);
-
-                tabToActivate.addEventListener(
-                    "shown.bs.tab",
-                    () => {
-                        // console.log(
-                        //   "Pestaña regional terminó de mostrarse. Ahora sí, cargando datos..."
-                        // );
-
-                        // (Restauramos el estado que el listener 'show.bs.tab' borró)
-                        appState.indicatorId = indicadorIdFromUrl;
-                        if (nivelFromUrl === "microrregion") {
-                            appState.microrregionId = regionIdFromUrl;
-                        } else if (nivelFromUrl === "macrorregion") {
-                            appState.macrorregionId = regionIdFromUrl;
-                        }
-                        appState.selectedYears = aniosFromUrl;
-                        appState.indicatorEsComplejo = linkRegional
-                            ? linkRegional.dataset.esComplejo === "true"
-                            : false; // <-- Restaurar estado complejo
-
-                        // Activamos el indicador
-                        linkActivo = document.querySelector(
-                            `.indicador-link[data-indicador-id='${appState.indicatorId}']`,
-                        );
-                        if (linkActivo) {
-                            linkActivo.classList.add("fw-bold", "text-primary");
-                            expandirAcordeonHacia(linkActivo);
-                            const tipoDato =
-                                linkActivo.dataset.tipoDato || "Absoluto";
-                            gestionarOpcionEstatal(tipoDato);
-                        }
-                        updateDashboard();
-                        gestionarBotonResumen();
-                    },
-                    { once: true },
-                );
-
-                tab.show();
-            }
+            appState.indicatorEsComplejo = linkActivo
+                ? linkActivo.dataset.esComplejo === "true"
+                : false;
 
             if (nivelFromUrl === "microrregion") {
                 appState.microrregionId = regionIdFromUrl;
+                appState.macrorregionId = null;
                 microrregionSelector.setValue(regionIdFromUrl, true);
+                macrorregionSelector.clear(true);
             } else if (nivelFromUrl === "macrorregion") {
                 appState.macrorregionId = regionIdFromUrl;
+                appState.microrregionId = null;
                 macrorregionSelector.setValue(regionIdFromUrl, true);
+                microrregionSelector.clear(true);
             }
         } else if (indicadorIdFromUrl && municipioIdsFromUrl) {
-            // --- CASO B: VISTA MUNICIPAL ---
-            // console.log("-> Parámetros de URL de municipio detectados.");
+            activarNivelProgramaticamente("municipio");
+
+            appState.nivelDeAgregacion = "municipio";
             appState.indicatorId = indicadorIdFromUrl;
             appState.municipioIds = municipioIdsFromUrl.split(",");
             municipioSelector.setValue(appState.municipioIds, true);
             linkActivo = document.querySelector(
                 `.indicador-link[data-indicador-id='${appState.indicatorId}']`,
             );
-
-            // --- INICIO DE CORRECCIÓN 2 ---
-            if (linkActivo) {
-                appState.indicatorEsComplejo =
-                    linkActivo.dataset.esComplejo === "true";
-                // console.log(
-                //   "-> Indicador detectado como complejo:",
-                //   appState.indicatorEsComplejo
-                // );
-            }
-            // --- FIN DE CORRECCIÓN 2 ---
+            appState.indicatorEsComplejo = linkActivo
+                ? linkActivo.dataset.esComplejo === "true"
+                : false;
+            estatalBtn.classList.toggle(
+                "active",
+                appState.municipioIds.length === 1 &&
+                    appState.municipioIds[0] === "estatal",
+            );
         } else {
-            // --- CASO C: CARGA POR DEFECTO ---
-            // console.log("-> Sin parámetros de URL. Usando carga por defecto.");
+            activarNivelProgramaticamente("municipio");
+
             linkActivo = document.querySelector(".indicador-link");
             if (linkActivo) {
                 const tipoDato = linkActivo.dataset.tipoDato || "Absoluto";
-                gestionarOpcionEstatal(tipoDato);
-
                 let idSeleccionInicial = "estatal";
+
                 if (tipoDato.toLowerCase() !== "absoluto") {
                     const primerMunicipio = document.querySelector(
                         "#municipio-selector option:not([value='estatal'])",
                     );
-                    if (primerMunicipio)
+                    if (primerMunicipio) {
                         idSeleccionInicial = primerMunicipio.value;
+                    }
                 }
 
-                if (idSeleccionInicial === "estatal") {
-                    estatalBtn.classList.add("active");
-                }
+                appState.nivelDeAgregacion = "municipio";
                 appState.municipioIds = [idSeleccionInicial];
-                municipioSelector.setValue(appState.municipioIds, true);
                 appState.indicatorId = linkActivo.dataset.indicadorId;
-
-                // --- INICIO DE CORRECCIÓN 3 ---
                 appState.indicatorEsComplejo =
                     linkActivo.dataset.esComplejo === "true";
-                // console.log(
-                //   "-> Indicador por defecto complejo:",
-                //   appState.indicatorEsComplejo
-                // );
-                // --- FIN DE CORRECCIÓN 3 ---
+
+                municipioSelector.setValue(appState.municipioIds, true);
+                estatalBtn.classList.toggle(
+                    "active",
+                    idSeleccionInicial === "estatal",
+                );
             }
         }
 
-        if (linkActivo) {
-            linkActivo.classList.add("fw-bold", "text-primary");
-            expandirAcordeonHacia(linkActivo);
-            const tipoDato = linkActivo.dataset.tipoDato || "Absoluto";
-            gestionarOpcionEstatal(tipoDato);
-        }
+        activarIndicadorEnUI(linkActivo);
+        actualizarGuiaVista();
+        gestionarBotonResumen();
+        checkIfCanConsult();
 
-        if (mustCallUpdateDashboard) {
+        if (appState.indicatorId) {
             updateDashboard();
-            gestionarBotonResumen();
         }
     }
-    async function CargaInicialOLD() {
-        // --- PASO 1: ESPERAMOS a que el mapa se inicialice ---
-        await initMap();
 
-        // --- PASO 2: Preparamos la opción 'estatal' ---
+    /**
+     * Se ejecuta una sola vez al cargar la página. Inicializa los componentes
+     * pesados una vez y luego hidrata el estado desde la URL.
+     */
+    async function CargaInicial() {
+        await ensureMapsInitialized();
+
         opcionEstatalElement = {
             value: "estatal",
             text: "-- Total Estatal --",
             orden: 0,
         };
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const indicadorIdFromUrl = urlParams.get("indicador_id");
-        const municipioIdsFromUrl = urlParams.get("municipio_ids");
-        const regionIdFromUrl = urlParams.get("region_id");
-        const nivelFromUrl = urlParams.get("nivel");
+        chartContainer.innerHTML = getEmptyStateHtml(true);
+        chartContainerRegions.innerHTML = getEmptyStateHtml(false);
 
-        const aniosFromUrl = urlParams.getAll("anios[]");
-
-        let linkActivo = null;
-        let mustCallUpdateDashboard = true;
-
-        if (aniosFromUrl.length > 0) {
-            appState.selectedYears = aniosFromUrl;
-            console.log("-> Años de URL detectados:", aniosFromUrl);
-        }
-
-        if (indicadorIdFromUrl && nivelFromUrl && regionIdFromUrl) {
-            console.log("-> Parámetros de URL regionales detectados.");
-
-            appState.nivelDeAgregacion = nivelFromUrl;
-            appState.indicatorId = indicadorIdFromUrl;
-
-            // Activamos la pestaña correcta (Micro o Macro)
-            const tabSelector = `#pills-tab-nivel .nav-link[data-nivel="${nivelFromUrl}"]`;
-            const tabToActivate = document.querySelector(tabSelector);
-
-            if (tabToActivate) {
-                // Le decimos al script que NO llame a updateDashboard todavía
-                mustCallUpdateDashboard = false;
-                const tab = new bootstrap.Tab(tabToActivate);
-
-                // 1. Nos suscribimos al evento 'shown.bs.tab' UNA SOLA VEZ.
-                //    Este evento se dispara DESPUÉS de que la pestaña es visible
-                //    y el acordeón de regiones ya ha sido clonado y existe.
-                tabToActivate.addEventListener(
-                    "shown.bs.tab",
-                    () => {
-                        console.log(
-                            "Pestaña regional terminó de mostrarse. Ahora sí, cargando datos...",
-                        );
-
-                        appState.indicatorId = indicadorIdFromUrl;
-                        if (nivelFromUrl === "microrregion") {
-                            appState.microrregionId = regionIdFromUrl;
-                        } else if (nivelFromUrl === "macrorregion") {
-                            appState.macrorregionId = regionIdFromUrl;
-                        }
-
-                        appState.selectedYears = aniosFromUrl;
-                        // 2. Activamos el indicador (ahora sí existe)
-                        linkActivo = document.querySelector(
-                            `.indicador-link[data-indicador-id='${appState.indicatorId}']`,
-                        );
-                        if (linkActivo) {
-                            linkActivo.classList.add("fw-bold", "text-primary");
-                            expandirAcordeonHacia(linkActivo);
-                            const tipoDato =
-                                linkActivo.dataset.tipoDato || "Absoluto";
-                            gestionarOpcionEstatal(tipoDato);
-                        }
-
-                        // 3. Llamamos a updateDashboard AHORA
-                        updateDashboard();
-                        gestionarBotonResumen();
-                    },
-                    { once: true },
-                ); // {once: true} es clave, asegura que este listener solo corra 1 vez
-
-                // 4. Mostramos la pestaña
-                tab.show();
-                // --- FIN DE LA CORRECCIÓN ---
-            }
-
-            // Asignamos el ID y actualizamos el selector visual
-            if (nivelFromUrl === "microrregion") {
-                appState.microrregionId = regionIdFromUrl;
-                microrregionSelector.setValue(regionIdFromUrl, true);
-            } else if (nivelFromUrl === "macrorregion") {
-                appState.macrorregionId = regionIdFromUrl;
-                macrorregionSelector.setValue(regionIdFromUrl, true);
-            }
-        }
-        // CASO B: VISTA MUNICIPAL
-        else if (indicadorIdFromUrl && municipioIdsFromUrl) {
-            console.log("-> Parámetros de URL de municipio detectados.");
-            appState.indicatorId = indicadorIdFromUrl;
-            appState.municipioIds = municipioIdsFromUrl.split(",");
-            municipioSelector.setValue(appState.municipioIds, true);
-            linkActivo = document.querySelector(
-                `.indicador-link[data-indicador-id='${appState.indicatorId}']`,
-            );
-        }
-        // CASO C: CARGA POR DEFECTO
-        else {
-            // console.log("-> Sin parámetros de URL. Usando carga por defecto.");
-            linkActivo = document.querySelector(".indicador-link");
-            if (linkActivo) {
-                const tipoDato = linkActivo.dataset.tipoDato || "Absoluto";
-                gestionarOpcionEstatal(tipoDato);
-
-                let idSeleccionInicial = "estatal";
-                if (tipoDato.toLowerCase() !== "absoluto") {
-                    const primerMunicipio = document.querySelector(
-                        "#municipio-selector option:not([value='estatal'])",
-                    );
-                    if (primerMunicipio)
-                        idSeleccionInicial = primerMunicipio.value;
-                }
-
-                if (idSeleccionInicial === "estatal") {
-                    estatalBtn.classList.add("active");
-                }
-                appState.municipioIds = [idSeleccionInicial];
-                municipioSelector.setValue(appState.municipioIds, true);
-                appState.indicatorId = linkActivo.dataset.indicadorId;
-            }
-        }
-
-        if (linkActivo) {
-            linkActivo.classList.add("fw-bold", "text-primary");
-            expandirAcordeonHacia(linkActivo);
-            const tipoDato = linkActivo.dataset.tipoDato || "Absoluto";
-            gestionarOpcionEstatal(tipoDato);
-        }
-
-        // Llamamos a updateDashboard solo si no estamos esperando a que se muestre la pestaña regional
-        if (mustCallUpdateDashboard) {
-            updateDashboard();
-            gestionarBotonResumen();
-        }
+        restaurarEstadoDesdeURL();
     }
 
-    window.addEventListener("popstate", (event) => {
+    window.addEventListener("popstate", () => {
         console.log(
-            "Evento popstate detectado. Recargando estado desde la URL.",
+            "Evento popstate detectado. Restaurando estado desde la URL.",
         );
-
-        // Simplemente volvemos a ejecutar CargaInicial.
-        // CargaInicial ya está diseñada para leer la URL y
-        // configurar el dashboard, ¡así que no hay que escribir más código!
-
-        // (Opcional: resetea cosas si es necesario, pero CargaInicial debería bastar)
-        // location.reload(); // La forma "fácil" pero menos elegante (recarga toda la página)
-
-        // La forma "elegante" (reutiliza tu código existente)
-        CargaInicial();
+        restaurarEstadoDesdeURL();
     });
 
     // Aquí van TODOS tus listeners:
@@ -1972,9 +2272,42 @@ document.addEventListener("DOMContentLoaded", function () {
      * Se dispara cuando una nueva pestaña ha sido mostrada.
      */
     nivelTabs.forEach((tab) => {
-        tab.addEventListener("show.bs.tab", function (event) {
-            const nivel = event.currentTarget.dataset.nivel;
+        tab.addEventListener("click", function (event) {
+            const target = event.currentTarget;
+            const nivel = target.dataset.nivel;
+
+            // Si ya estamos en este nivel, no hacemos nada (opcional)
+            // if (appState.nivelDeAgregacion === nivel) return;
+
+            // Manejo manual de la activación visual de los botones
+            document
+                .querySelectorAll(".level-switcher .nav-link")
+                .forEach((el) => el.classList.remove("active"));
+            target.classList.add("active");
+
+            // Mostrar el pane principal correspondiente manualmente
+            const targetPaneId = target.getAttribute("data-bs-target");
+            const targetPane = document.querySelector(targetPaneId);
+            if (targetPane) {
+                document
+                    .querySelectorAll("#pills-main-content .tab-pane")
+                    .forEach((p) => p.classList.remove("show", "active"));
+                targetPane.classList.add("show", "active");
+            }
             // console.log(`Cambiando a nivel: ${nivel}`);
+
+            // Sincronizar sidebar manually since Bootstrap only handles one target
+            const sidebarTargetId =
+                nivel === "municipio"
+                    ? "#sidebar-pane-municipios"
+                    : "#sidebar-pane-regiones";
+            const sidebarPane = document.querySelector(sidebarTargetId);
+            if (sidebarPane) {
+                document
+                    .querySelectorAll("#pills-sidebar-content .tab-pane")
+                    .forEach((p) => p.classList.remove("show", "active"));
+                sidebarPane.classList.add("show", "active");
+            }
 
             // 1. Actualizamos el estado central
             appState.nivelDeAgregacion = nivel;
@@ -1997,15 +2330,11 @@ document.addEventListener("DOMContentLoaded", function () {
             yearSelectorElRegions.clear(); // Limpia la selección visible
             yearSelectorContainerRegions.style.display = "none";
 
-            if (chart) {
-                if (chart.dispose) chart.dispose();
-                else if (chart.destroy) chart.destroy();
-
-                chart = null;
-            }
+            disposeChartInstance("municipio");
+            disposeChartInstance("regional");
             // 4. Limpiamos el gráfico y deseleccionamos indicadores
-            chartContainer.innerHTML = `<p class="text-muted text-center pt-5">Selecciona un indicador y una ubicación para comenzar.</p>`;
-            chartContainerRegions.innerHTML = `<p class="text-muted text-center pt-5">Selecciona un indicador y una región para comenzar.</p>`;
+            chartContainer.innerHTML = getEmptyStateHtml(true);
+            chartContainerRegions.innerHTML = getEmptyStateHtml(false);
             chartTitle.innerText = "Gráfico";
             chartTitleRegions.innerText = "Gráfico";
             const mapContainerRegional = document.getElementById(
@@ -2035,7 +2364,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (metadataContainerRegions)
                 metadataContainerRegions.style.display = "none";
 
-            // 6. ¡CRUCIAL! Deshabilitamos los botones de consulta
+            // 6. Deshabilitamos los botones de consulta
             consultarBtn.disabled = true;
             consultarBtnRegions.disabled = true;
 
@@ -2115,12 +2444,16 @@ document.addEventListener("DOMContentLoaded", function () {
                     estatalBtn.classList.remove("active");
                 }
             }
-            const targetPaneId = event.target.getAttribute("data-bs-target");
-            const targetPane = document.querySelector(targetPaneId);
 
-            if (targetPane) {
-                // 2. Buscamos el acordeón que está DENTRO de ese panel.
-                const activeAccordion = targetPane.querySelector(".accordion");
+            actualizarGuiaVista(
+                `Cambiaste a ${nivel}. Se reiniciaron los filtros para evitar mezclar consultas de distintos niveles.`,
+            );
+            actualizarResumenConsulta();
+            actualizarFeedbackConsulta();
+
+            if (sidebarPane) {
+                // 2. Buscamos el acordeón en el sidebar correspondiente
+                const activeAccordion = sidebarPane.querySelector(".accordion");
                 // 3. Llamamos a nuestra nueva función para expandirlo.
                 resetearYExpandirPrimerAcordeon(activeAccordion);
             }
@@ -2136,10 +2469,10 @@ document.addEventListener("DOMContentLoaded", function () {
     todosLosIndicadores.forEach((link) => {
         link.addEventListener("click", (e) => {
             e.preventDefault();
+            const target = e.currentTarget;
 
-            const tipoDatoNuevo = e.target.dataset.tipoDato || "Absoluto";
-            appState.indicatorEsComplejo =
-                e.target.dataset.esComplejo === "true";
+            const tipoDatoNuevo = target.dataset.tipoDato || "Absoluto";
+            appState.indicatorEsComplejo = target.dataset.esComplejo === "true";
             gestionarOpcionEstatal(tipoDatoNuevo);
 
             if (
@@ -2160,7 +2493,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             // Actualizamos el estado
-            appState.indicatorId = e.target.dataset.indicadorId;
+            appState.indicatorId = target.dataset.indicadorId;
             checkIfCanConsult();
             appState.selectedYears = [];
 
@@ -2218,6 +2551,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const activeConsultarBtn = isMunicipal
             ? consultarBtn
             : consultarBtnRegions;
+        actualizarGuiaVista();
 
         // Verificamos si tenemos la información mínima necesaria
         if (appState.indicatorId) {
@@ -2238,12 +2572,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Habilitamos o deshabilitamos el botón
         activeConsultarBtn.disabled = !canConsult;
+        actualizarResumenConsulta();
+        actualizarFeedbackConsulta();
     }
 
     fullscreenModal.addEventListener("shown.bs.modal", () => {
         if (fullscreenChart) {
             if (fullscreenChart.dispose) fullscreenChart.dispose();
             else if (fullscreenChart.destroy) fullscreenChart.destroy();
+        }
+
+        const activeViewKey = getChartViewKey();
+        const lastChartOptions = lastChartOptionsByView[activeViewKey];
+        if (!lastChartOptions) {
+            return;
         }
 
         fullscreenModalTitle.innerText =
@@ -2267,10 +2609,21 @@ document.addEventListener("DOMContentLoaded", function () {
             fullscreenChart = null;
         }
     });
+    // --- PASO 3: RESIZE CON DEBOUNCE ---
+    let resizeTimer; // Variable para guardar nuestro temporizador
 
-    // (Opcional) Hacer que el gráfico normal se adapte si cambias el tamaño de la ventana
     window.addEventListener("resize", function () {
-        if (chart && chart.resize) chart.resize();
+        // 1. Si el usuario sigue moviendo la ventana, cancelamos el redibujado pendiente
+        clearTimeout(resizeTimer);
+
+        // 2. Programamos un nuevo redibujado para dentro de 250 milisegundos
+        resizeTimer = setTimeout(function () {
+            // Solo redibujamos si la gráfica existe y la ventana ya se quedó quieta
+            resizeAllCharts();
+            // Aprovechamos para ajustar también los mapas si están visibles
+            if (mapMunicipal) mapMunicipal.invalidateSize(true);
+            if (mapRegional) mapRegional.invalidateSize(true);
+        }, 250);
     });
     // --- 7. LÓGICA PARA OCULTAR/MOSTRAR EL CATÁLOGO ---
 
@@ -2302,7 +2655,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 // Devuelve la columna de contenido a su tamaño original
                 contentCol.classList.remove("col-lg-12", "col-md-12");
-                contentCol.classList.add("col-lg-9", "col-md-9"); // Asegúrate de que estas clases coincidan con tu HTML
+                contentCol.classList.add("col-lg-9", "col-md-9");
 
                 // Cambia el ícono y el tooltip
                 icon.classList.remove("fa-chevron-right");
@@ -2322,14 +2675,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 btn.setAttribute("title", "Mostrar catálogo");
             }
 
-            // 5. ¡¡EL PASO MÁS IMPORTANTE!!
-            // Forzar al gráfico y al mapa a redibujarse
+            // 5. Forzar al gráfico y al mapa a redibujarse
             // para que se ajusten al nuevo tamaño del contenedor.
             setTimeout(() => {
                 // --- ECHARTS RESIZE NATIVO ---
-                if (chart && chart.resize) {
-                    chart.resize(); // ECharts recalcula el ancho automáticamente
-                }
+                resizeAllCharts();
 
                 if (mapMunicipal) {
                     mapMunicipal.invalidateSize(true);
@@ -2343,6 +2693,45 @@ document.addEventListener("DOMContentLoaded", function () {
     exportBtn.addEventListener("click", handleExport);
     exportBtnRegions.addEventListener("click", handleExport);
 
+    // --- 8. PREPARAR GRÁFICAS PARA IMPRESIÓN ---
+    window.addEventListener("beforeprint", () => {
+        // A. Apagar los botones de ECharts
+        ["municipio", "regional"].forEach((viewKey) => {
+            const chart = chartInstances[viewKey];
+            if (chart) chart.setOption({ toolbox: { show: false } });
+        });
+        // B. Calcular la fecha a incrustar en el documento impreso
+        const fechaHoy = new Date().toLocaleDateString("es-MX", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        });
+        if (metadataContainer)
+            metadataContainer.setAttribute("data-fecha-impresion", fechaHoy);
+        if (metadataContainerRegions)
+            metadataContainerRegions.setAttribute(
+                "data-fecha-impresion",
+                fechaHoy,
+            );
+        // C. Redimensionar todo al tamaño del papel
+        resizeAllCharts();
+        if (mapMunicipal) mapMunicipal.invalidateSize(true);
+        if (mapRegional) mapRegional.invalidateSize(true);
+    });
+
+    // Cuando se cierra el diálogo de impresión (guarde o cancele)
+    window.addEventListener("afterprint", () => {
+        // C. Volver a encender los botones de ECharts en la web
+        ["municipio", "regional"].forEach((viewKey) => {
+            const chart = chartInstances[viewKey];
+            if (chart) chart.setOption({ toolbox: { show: true } });
+        });
+        setTimeout(() => {
+            resizeAllCharts();
+            if (mapMunicipal) mapMunicipal.invalidateSize(true);
+            if (mapRegional) mapRegional.invalidateSize(true);
+        }, 300);
+    });
     // Ejecución inicial
     CargaInicial();
 });

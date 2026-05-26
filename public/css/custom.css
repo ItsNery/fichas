@@ -805,3 +805,210 @@ h6 {
         border-left: 1px solid #e9ecef;
     }
 }
+
+:root {
+    --accent-color: var(--color2, #861e34);
+    --secondary-accent: var(--color4, #c79b66);
+}
+
+/* Tabs styling - Homologado con nav-tabs-clean si aplica, pero mantenemos Pills para el lateral */
+.nav-pills .nav-link {
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 10px;
+    font-weight: 600;
+    transition: all 0.3s;
+    border-radius: 10px;
+    background: white;
+}
+
+.nav-pills .nav-link:hover {
+    background-color: #f8fafc;
+    color: var(--color6);
+}
+
+.nav-pills .nav-link.active {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: white !important;
+    box-shadow: 0 4px 12px rgba(134, 30, 52, 0.2);
+}
+
+/* Visual Selector */
+.vis-option {
+    border: 2px solid #edf2f7;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 20px;
+    text-align: center;
+    height: 100%;
+    position: relative;
+    background: white;
+}
+
+.vis-option:hover {
+    border-color: var(--secondary-accent);
+    background: #fffcf8;
+    transform: translateY(-3px);
+}
+
+.vis-option.active {
+    border-color: var(--accent-color);
+    background: #fff5f6;
+    box-shadow: 0 8px 15px rgba(134, 30, 52, 0.08);
+}
+
+.vis-option i {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 12px;
+    color: var(--accent-color);
+}
+
+.vis-option span {
+    font-weight: 700;
+    display: block;
+    font-size: 0.8rem;
+    color: #334155;
+    text-transform: uppercase;
+}
+
+.vis-option .check-mark {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: var(--accent-color);
+    display: none;
+}
+
+.vis-option.active .check-mark {
+    display: block;
+}
+
+/* Preview Panel */
+.preview-sticky {
+    position: sticky;
+    top: 2rem;
+}
+
+.preview-card {
+    border: 2px dashed #cbd5e0;
+    border-radius: 20px;
+    padding: 25px;
+    background: #f8fafc;
+}
+
+.mock-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    border: 1px solid #edf2f7;
+}
+
+.mock-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.mock-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--accent-color);
+    color: #fff;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+    font-size: 1.1rem;
+}
+
+.mock-title {
+    font-weight: 800;
+    color: var(--accent-color);
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.2;
+}
+
+.mock-year {
+    background: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #64748b;
+    margin-left: auto;
+}
+
+.mock-body {
+    font-size: 0.85rem;
+    color: #475569;
+    line-height: 1.5;
+    margin-bottom: 15px;
+    border-left: 3px solid var(--secondary-accent);
+    padding-left: 12px;
+}
+
+.mock-chart {
+    height: 100px;
+    background: #f8fafc;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-style: italic;
+    font-size: 0.75rem;
+    border: 1px solid #e2e8f0;
+}
+
+/* Tags */
+.placeholder-helper {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin-top: 0.5rem;
+    background: #f1f5f9;
+    padding: 12px;
+    border-radius: 10px;
+}
+
+.placeholder-tag {
+    background: #fff;
+    border: 1px solid #cbd5e0;
+    padding: 3px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 700;
+    display: inline-block;
+    margin-bottom: 5px;
+    font-size: 0.75rem;
+    color: var(--accent-color);
+}
+
+.placeholder-tag:hover {
+    background: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.form-label {
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-section-title {
+    font-weight: 800;
+    color: var(--color1);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f1f5f9;
+}

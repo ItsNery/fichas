@@ -27,14 +27,18 @@ class DatosHistoricosExport implements FromQuery, WithHeadings, WithMapping
         $query = DatoHistorico::query();
 
         // CASO 1: Si se pasaron los filtros de "Datos Abiertos"...
-        if ($this->dimension && $this->anio) {
+        if ($this->dimension) {
             $dimensionId = $this->dimension->id;
             $anio = $this->anio;
 
             $query->whereHas('variable.indicador.tematica', function ($q) use ($dimensionId) {
                 $q->where('dimension_id', $dimensionId);
-            })
-                ->where('anio', $anio);
+            });
+
+            // Si el año es específico (no es "todos"), filtramos por él
+            if ($anio && $anio !== 'todos') {
+                $query->where('anio', $anio);
+            }
         }
         // CASO 2: Si NO se pasaron filtros (es el botón "Exportar Todo" del admin)...
         // ... no se añade ningún 'where', por lo que la consulta traerá TODO.
