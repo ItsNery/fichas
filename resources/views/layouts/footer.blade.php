@@ -118,20 +118,19 @@
                 </h5>
                 <p>
                     <i class="fa fa-map-marker-alt mr-2"></i>
-                    Avenida 11 Oriente 2224 Tercer Piso,
-                    72501 Puebla, Puebla
+                    Av. Cúmulo de Virgo 1358, Reserva Territorial Atlixcáyotl, Puebla, Pue.
                 </p>
                 <p>
                     <i class="fa fa-phone-alt mr-2"></i>
                     <a class="no_s text-inherit" href="tel:2222297000">
                         222 229
-                        7000 Ext. 5012
+                        7000 Ext. 7137
                     </a>
                 </p>
                 <p>
                     <i class="fa fa-envelope mr-2"></i>
                     <a class="no_s text-inherit" href="mailto:planeacion@puebla.gob.mx">
-                        planeacion@puebla.gob.mx
+                        estadistica@puebla.gob.mx
                     </a>
                 </p>
                 <h6 class="text-white text-uppercase mt-4 mb-3 h6_planeader sm-d-none">
