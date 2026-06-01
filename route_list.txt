@@ -1,0 +1,123 @@
+
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37m/[39m[38;2;108;114;128m ..................................... HomeController@index[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/catalogos[39m[38;2;108;114;128m admin.catalogos.index › Admin\CatalogoContr…[39m
+  [33mPOST[39m            [37madmin/catalogos/dimensions[39m[38;2;108;114;128m admin.catalogos.dimensions.store…[39m
+  [33mPUT[39m             [37madmin/catalogos/dimensions/[39m[33m{dimension}[39m[38;2;108;114;128m admin.catalogos.dime…[39m
+  [31mDELETE[39m          [37madmin/catalogos/dimensions/[39m[33m{dimension}[39m[38;2;108;114;128m admin.catalogos.dime…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/catalogos/exportar[39m[38;2;108;114;128m admin.catalogos.export › Admin\Cat…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/catalogos/exportar/dimensiones[39m[38;2;108;114;128m admin.catalogos.export…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/catalogos/exportar/indicadores[39m[38;2;108;114;128m admin.catalogos.export…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/catalogos/exportar/tematicas[39m[38;2;108;114;128m admin.catalogos.export.t…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/catalogos/exportar/variables[39m[38;2;108;114;128m admin.catalogos.export.v…[39m
+  [33mPOST[39m            [37madmin/catalogos/indicadores[39m[38;2;108;114;128m admin.catalogos.indicadores.sto…[39m
+  [33mPUT[39m             [37madmin/catalogos/indicadores/[39m[33m{indicador}[39m[38;2;108;114;128m admin.catalogos.ind…[39m
+  [31mDELETE[39m          [37madmin/catalogos/indicadores/[39m[33m{indicador}[39m[38;2;108;114;128m admin.catalogos.ind…[39m
+  [33mPOST[39m            [37madmin/catalogos/tematicas[39m[38;2;108;114;128m admin.catalogos.tematicas.store  …[39m
+  [33mPUT[39m             [37madmin/catalogos/tematicas/[39m[33m{tematica}[39m[38;2;108;114;128m admin.catalogos.temati…[39m
+  [31mDELETE[39m          [37madmin/catalogos/tematicas/[39m[33m{tematica}[39m[38;2;108;114;128m admin.catalogos.temati…[39m
+  [33mPOST[39m            [37madmin/catalogos/variables[39m[38;2;108;114;128m admin.catalogos.variables.store  …[39m
+  [33mPUT[39m             [37madmin/catalogos/variables/[39m[33m{variable}[39m[38;2;108;114;128m admin.catalogos.variab…[39m
+  [31mDELETE[39m          [37madmin/catalogos/variables/[39m[33m{variable}[39m[38;2;108;114;128m admin.catalogos.variab…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/configuracion-fichas[39m[38;2;108;114;128m admin.configuracion-fichas.index…[39m
+  [33mPOST[39m            [37madmin/configuracion-fichas[39m[38;2;108;114;128m admin.configuracion-fichas.store…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/configuracion-fichas/api/variables-por-indicador/[39m[33m{indicador}[39m[38;2;108;114;128m admin.configuracion-fichas.api-variables › Admin\ConfiguracionFichaController@getVariablesPorI…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/configuracion-fichas/create[39m[38;2;108;114;128m admin.configuracion-ficha…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/configuracion-fichas/[39m[33m{configuracion_ficha}[39m[38;2;108;114;128m admin.conf…[39m
+  [33mPUT[39m[38;2;108;114;128m|[39m[33mPATCH[39m       [37madmin/configuracion-fichas/[39m[33m{configuracion_ficha}[39m[38;2;108;114;128m admin.conf…[39m
+  [31mDELETE[39m          [37madmin/configuracion-fichas/[39m[33m{configuracion_ficha}[39m[38;2;108;114;128m admin.conf…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/configuracion-fichas/[39m[33m{configuracion_ficha}[39m[37m/edit[39m[38;2;108;114;128m admin…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/dashboard[39m[38;2;108;114;128m admin.dashboard › Admin\DashboardController…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/datos[39m[38;2;108;114;128m admin.datos.index › Admin\DatoHistoricoControll…[39m
+  [33mPOST[39m            [37madmin/datos[39m[38;2;108;114;128m admin.datos.store › Admin\DatoHistoricoControll…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/datos/create[39m[38;2;108;114;128m admin.datos.create › Admin\DatoHistorico…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/datos/exportar[39m[38;2;108;114;128m admin.datos.export › Admin\DatoHistori…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/datos/[39m[33m{dato}[39m[38;2;108;114;128m admin.datos.show › Admin\DatoHistoricoCo…[39m
+  [33mPUT[39m[38;2;108;114;128m|[39m[33mPATCH[39m       [37madmin/datos/[39m[33m{dato}[39m[38;2;108;114;128m admin.datos.update › Admin\DatoHistorico…[39m
+  [31mDELETE[39m          [37madmin/datos/[39m[33m{dato}[39m[38;2;108;114;128m admin.datos.destroy › Admin\DatoHistoric…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/datos/[39m[33m{dato}[39m[37m/edit[39m[38;2;108;114;128m admin.datos.edit › Admin\DatoHistor…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/importar[39m[38;2;108;114;128m admin.import.index › Admin\ImportController@…[39m
+  [33mPOST[39m            [37madmin/importar/datos-complejos[39m[38;2;108;114;128m admin.import.datos_complejos…[39m
+  [33mPOST[39m            [37madmin/importar/datos/ejecutar[39m[38;2;108;114;128m admin.import.datos.perform › …[39m
+  [33mPOST[39m            [37madmin/importar/datos/validar[39m[38;2;108;114;128m admin.import.datos.validate › …[39m
+  [33mPOST[39m            [37madmin/importar/dimensiones[39m[38;2;108;114;128m admin.import.dimensiones › Admin…[39m
+  [33mPOST[39m            [37madmin/importar/indicadores[39m[38;2;108;114;128m admin.import.indicadores › Admin…[39m
+  [33mPOST[39m            [37madmin/importar/instrumentos[39m[38;2;108;114;128m admin.import.instrumentos › Adm…[39m
+  [33mPOST[39m            [37madmin/importar/instrumentos-asignacion[39m[38;2;108;114;128m admin.import.instrum…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/importar/plantilla/[39m[33m{tipo}[39m[38;2;108;114;128m admin.import.plantilla › Ad…[39m
+  [33mPOST[39m            [37madmin/importar/tematicas[39m[38;2;108;114;128m admin.import.tematicas › Admin\Imp…[39m
+  [33mPOST[39m            [37madmin/importar/variables[39m[38;2;108;114;128m admin.import.variables › Admin\Imp…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/instrumentos[39m[38;2;108;114;128m admin.instrumentos.index › Admin\Instrum…[39m
+  [33mPOST[39m            [37madmin/instrumentos[39m[38;2;108;114;128m admin.instrumentos.store › Admin\Instrum…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/instrumentos/create[39m[38;2;108;114;128m admin.instrumentos.create › Admin…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/instrumentos/[39m[33m{instrumento}[39m[38;2;108;114;128m admin.instrumentos.show › …[39m
+  [33mPUT[39m[38;2;108;114;128m|[39m[33mPATCH[39m       [37madmin/instrumentos/[39m[33m{instrumento}[39m[38;2;108;114;128m admin.instrumentos.update …[39m
+  [31mDELETE[39m          [37madmin/instrumentos/[39m[33m{instrumento}[39m[38;2;108;114;128m admin.instrumentos.destroy…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/instrumentos/[39m[33m{instrumento}[39m[37m/edit[39m[38;2;108;114;128m admin.instrumentos.ed…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/municipios[39m[38;2;108;114;128m admin.municipios.index › Admin\MunicipioCo…[39m
+  [33mPOST[39m            [37madmin/municipios[39m[38;2;108;114;128m admin.municipios.store › Admin\MunicipioCo…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/municipios/create[39m[38;2;108;114;128m admin.municipios.create › Admin\Mun…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/municipios/[39m[33m{municipio}[39m[38;2;108;114;128m admin.municipios.show › Admin\…[39m
+  [33mPUT[39m[38;2;108;114;128m|[39m[33mPATCH[39m       [37madmin/municipios/[39m[33m{municipio}[39m[38;2;108;114;128m admin.municipios.update › Admi…[39m
+  [31mDELETE[39m          [37madmin/municipios/[39m[33m{municipio}[39m[38;2;108;114;128m admin.municipios.destroy › Adm…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/municipios/[39m[33m{municipio}[39m[37m/edit[39m[38;2;108;114;128m admin.municipios.edit › A…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/municipios/[39m[33m{municipio}[39m[37m/instrumentos[39m[38;2;108;114;128m admin.municipios.…[39m
+  [33mPOST[39m            [37madmin/municipios/[39m[33m{municipio}[39m[37m/instrumentos[39m[38;2;108;114;128m admin.municipios.…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/salud-datos[39m[38;2;108;114;128m admin.salud-datos › Admin\DashboardContro…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/users[39m[38;2;108;114;128m . admin.users.index › Admin\UserController@index[39m
+  [33mPOST[39m            [37madmin/users[39m[38;2;108;114;128m . admin.users.store › Admin\UserController@store[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/users/create[39m[38;2;108;114;128m admin.users.create › Admin\UserControlle…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/users/[39m[33m{user}[39m[38;2;108;114;128m admin.users.show › Admin\UserController@…[39m
+  [33mPUT[39m[38;2;108;114;128m|[39m[33mPATCH[39m       [37madmin/users/[39m[33m{user}[39m[38;2;108;114;128m admin.users.update › Admin\UserControlle…[39m
+  [31mDELETE[39m          [37madmin/users/[39m[33m{user}[39m[38;2;108;114;128m admin.users.destroy › Admin\UserControll…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37madmin/users/[39m[33m{user}[39m[37m/edit[39m[38;2;108;114;128m admin.users.edit › Admin\UserContro…[39m
+  [33mPOST[39m            [37mapi/datos-historicos[39m[38;2;108;114;128m .... api.data › FichaController@getData[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mapi/dimension/[39m[33m{dimension}[39m[37m/anios-disponibles[39m[38;2;108;114;128m api.dimension.a…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mapi/docs[39m[38;2;108;114;128m ....... api.docs › ApiDocumentationController@index[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mapi/indicador-complejo/[39m[33m{indicador}[39m[37m/anios-disponibles[39m[38;2;108;114;128m api.in…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mapi/municipios/search[39m[38;2;108;114;128m api.municipios.search › MunicipioCont…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mapi/openapi.json[39m[38;2;108;114;128m api.openapi › ApiDocumentationController@o…[39m
+  [33mPOST[39m            [37mapi/site-evaluation[39m[38;2;108;114;128m ......... SiteEvaluationController@store[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mapi/user[39m[38;2;108;114;128m ................................................... [39m
+  [33mPOST[39m            [37mapi/v1/consulta[39m[38;2;108;114;128m api.public.consulta › PublicApiController@c…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[33mPOST[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m   [37mapi/v1/data[39m[38;2;108;114;128m ..... api.public.data › PublicApiController@data[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mapi/v1/debug[39m[38;2;108;114;128m ............................................... [39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mapi/v1/debug-controller[39m[38;2;108;114;128m api.public.debug › PublicApiControl…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mapi/v1/indicadores[39m[38;2;108;114;128m api.public.indicadores › PublicApiContro…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mapi/v1/indicadores/[39m[33m{id}[39m[38;2;108;114;128m api.public.indicador › PublicApiCon…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mapi/v1/macrorregiones[39m[38;2;108;114;128m api.public.macrorregiones › PublicApi…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mapi/v1/metadata[39m[38;2;108;114;128m api.public.metadata › PublicApiController@m…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mapi/v1/microrregiones[39m[38;2;108;114;128m api.public.microrregiones › PublicApi…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mapi/v1/municipios[39m[38;2;108;114;128m api.public.municipios › PublicApiControll…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mbanco-indicadores[39m[38;2;108;114;128m banco-indicadores.index › FichaController…[39m
+  [33mPOST[39m            [37mbanco-indicadores/api/data[39m[38;2;108;114;128m banco-indicadores.api.data › Fic…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mbanco-indicadores/api/indicador-anios/[39m[33m{indicador}[39m[38;2;108;114;128m banco-ind…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mbanco-indicadores/api/mapa-datos/[39m[33m{indicador}[39m[37m/[39m[33m{anio}[39m[38;2;108;114;128m banco-i…[39m
+  [33mPOST[39m            [37mbanco-indicadores/exportar[39m[38;2;108;114;128m banco-indicadores.exportar › Fic…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mconfirm-password[39m[38;2;108;114;128m password.confirm › Auth\ConfirmablePasswor…[39m
+  [33mPOST[39m            [37mconfirm-password[39m[38;2;108;114;128m .. Auth\ConfirmablePasswordController@store[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mdashboard[39m[38;2;108;114;128m .................................................. [39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mdatos-abiertos[39m[38;2;108;114;128m datos-abiertos.index › HomeController@datosA…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mdatos-abiertos/exportar-datos-complejos/[39m[33m{indicador}[39m[37m/[39m[33m{anio}[39m[38;2;108;114;128m …[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mdatos-abiertos/exportar-datos-historicos/[39m[33m{dimension}[39m[37m/[39m[33m{anio}[39m[38;2;108;114;128m datos-abiertos.export-historicos › Admin\DatoHistoricoController@exportPorDimensionAni…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mdatos-abiertos/exportar/[39m[33m{tipo}[39m[38;2;108;114;128m datos-abiertos.export › Admi…[39m
+  [33mPOST[39m            [37memail/verification-notification[39m[38;2;108;114;128m verification.send › Auth\Em…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mficha-municipal[39m[38;2;108;114;128m ficha-municipal.index › FichaController@dir…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mficha-municipal/[39m[33m{municipio}[39m[38;2;108;114;128m ficha-municipal.show › FichaCon…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mficha-municipal/[39m[33m{municipio}[39m[37m/pdf[39m[38;2;108;114;128m ficha-municipal.pdf › Ficha…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mficha-municipal/[39m[33m{municipio}[39m[37m/perfil[39m[38;2;108;114;128m ficha-municipal.perfil  …[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mficha-municipal/[39m[33m{municipio}[39m[37m/test[39m[38;2;108;114;128m ficha-municipal.test › Fic…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mficha-municipal/[39m[33m{municipio}[39m[37m/v3[39m[38;2;108;114;128m ficha-municipal.v3 › FichaCo…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mforgot-password[39m[38;2;108;114;128m password.request › Auth\PasswordResetLinkCo…[39m
+  [33mPOST[39m            [37mforgot-password[39m[38;2;108;114;128m password.email › Auth\PasswordResetLinkCont…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mlogin[39m[38;2;108;114;128m ... login › Auth\AuthenticatedSessionController@create[39m
+  [33mPOST[39m            [37mlogin[39m[38;2;108;114;128m ............ Auth\AuthenticatedSessionController@store[39m
+  [33mPOST[39m            [37mlogout[39m[38;2;108;114;128m logout › Auth\AuthenticatedSessionController@destroy[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mprueba-header[39m[38;2;108;114;128m .............................................. [39m
+  [33mPOST[39m            [37mreset-password[39m[38;2;108;114;128m password.update › Auth\NewPasswordController…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mreset-password/[39m[33m{token}[39m[38;2;108;114;128m password.reset › Auth\NewPasswordCon…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37msanctum/csrf-cookie[39m[38;2;108;114;128m sanctum.csrf-cookie › Laravel\Sanctum  …[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mverify-email[39m[38;2;108;114;128m verification.notice › Auth\EmailVerificationPr…[39m
+  [34mGET[39m[38;2;108;114;128m|[39m[38;2;108;114;128mHEAD[39m        [37mverify-email/[39m[33m{id}[39m[37m/[39m[33m{hash}[39m[38;2;108;114;128m verification.verify › Auth\VerifyE…[39m
+
+                                                          [34;1mShowing [119] routes[39;22m
+

@@ -71,7 +71,7 @@
                         <div class="tarjeta-municipio__capa">
                             <h3 class="tarjeta-municipio__nombre">{{ $mun->nombre }}</h3>
                             <p class="tarjeta-municipio__info">Microrregión: {{ $micro->nombre }}</p>
-                            <a href="{{ route('ficha-municipal.test', $mun) }}" class="tarjeta-municipio__boton">Ver Ficha</a>
+                            <a href="{{ route('ficha-municipal.perfil', $mun) }}" class="tarjeta-municipio__boton">Ver Ficha</a>
                         </div>
                     </article>
 

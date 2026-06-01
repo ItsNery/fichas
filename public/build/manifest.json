@@ -1,13 +1,88 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-B_uC6pn_.css",
+    "file": "assets/app-fwOc9nKf.css",
     "src": "resources/css/app.css",
     "isEntry": true
+  },
+  "resources/css/estilos.css": {
+    "file": "assets/estilos-BdRcHXex.css",
+    "src": "resources/css/estilos.css",
+    "isEntry": true
+  },
+  "resources/css/fuentes/Gilroy/Gilroy-Black.ttf": {
+    "file": "assets/Gilroy-Black-CUfVRAQt.ttf",
+    "src": "resources/css/fuentes/Gilroy/Gilroy-Black.ttf"
+  },
+  "resources/css/fuentes/Gilroy/Gilroy-BlackItalic.ttf": {
+    "file": "assets/Gilroy-BlackItalic-cjNLRx1R.ttf",
+    "src": "resources/css/fuentes/Gilroy/Gilroy-BlackItalic.ttf"
+  },
+  "resources/css/fuentes/Gilroy/Gilroy-Bold.ttf": {
+    "file": "assets/Gilroy-Bold-yXpx-Icw.ttf",
+    "src": "resources/css/fuentes/Gilroy/Gilroy-Bold.ttf"
+  },
+  "resources/css/fuentes/Gilroy/Gilroy-BoldItalic.ttf": {
+    "file": "assets/Gilroy-BoldItalic-Coca13HG.ttf",
+    "src": "resources/css/fuentes/Gilroy/Gilroy-BoldItalic.ttf"
+  },
+  "resources/css/fuentes/Gilroy/Gilroy-ExtraBold.ttf": {
+    "file": "assets/Gilroy-ExtraBold-C3mOj7sV.ttf",
+    "src": "resources/css/fuentes/Gilroy/Gilroy-ExtraBold.ttf"
+  },
+  "resources/css/fuentes/Gilroy/Gilroy-Light.ttf": {
+    "file": "assets/Gilroy-Light-DVwvzZ-0.ttf",
+    "src": "resources/css/fuentes/Gilroy/Gilroy-Light.ttf"
+  },
+  "resources/css/fuentes/Gilroy/Gilroy-Medium.ttf": {
+    "file": "assets/Gilroy-Medium-D7PbV1sv.ttf",
+    "src": "resources/css/fuentes/Gilroy/Gilroy-Medium.ttf"
+  },
+  "resources/css/fuentes/Gilroy/Gilroy-Regular.ttf": {
+    "file": "assets/Gilroy-Regular-D-tpQJef.ttf",
+    "src": "resources/css/fuentes/Gilroy/Gilroy-Regular.ttf"
+  },
+  "resources/css/fuentes/Gilroy/Gilroy-Thin.ttf": {
+    "file": "assets/Gilroy-Thin-DG3iQGn8.ttf",
+    "src": "resources/css/fuentes/Gilroy/Gilroy-Thin.ttf"
+  },
+  "resources/css/fuentes/corra-montserra/TTF/Corra-Montserra-Black.ttf": {
+    "file": "assets/Corra-Montserra-Black-DNHXr5Q0.ttf",
+    "src": "resources/css/fuentes/corra-montserra/TTF/Corra-Montserra-Black.ttf"
+  },
+  "resources/css/fuentes/corra-montserra/TTF/Corra-Montserra-Bold.ttf": {
+    "file": "assets/Corra-Montserra-Bold-D1bRlym-.ttf",
+    "src": "resources/css/fuentes/corra-montserra/TTF/Corra-Montserra-Bold.ttf"
+  },
+  "resources/css/fuentes/corra-montserra/TTF/Corra-Montserra-Light.ttf": {
+    "file": "assets/Corra-Montserra-Light-DU2fV8Bf.ttf",
+    "src": "resources/css/fuentes/corra-montserra/TTF/Corra-Montserra-Light.ttf"
+  },
+  "resources/css/fuentes/corra-montserra/TTF/Corra-Montserra-Regular.ttf": {
+    "file": "assets/Corra-Montserra-Regular-Dr1g3tgw.ttf",
+    "src": "resources/css/fuentes/corra-montserra/TTF/Corra-Montserra-Regular.ttf"
+  },
+  "resources/css/fuentes/corra-montserra/TTF/Corra-Montserra-Semibold.ttf": {
+    "file": "assets/Corra-Montserra-Semibold-xJkyrldz.ttf",
+    "src": "resources/css/fuentes/corra-montserra/TTF/Corra-Montserra-Semibold.ttf"
+  },
+  "resources/img/fondos/1.png": {
+    "file": "assets/1-DxzFGSTc.png",
+    "src": "resources/img/fondos/1.png"
+  },
+  "resources/img/fondos/Fondo-hero.webp": {
+    "file": "assets/Fondo-hero-CCx97vAC.webp",
+    "src": "resources/img/fondos/Fondo-hero.webp"
   },
   "resources/js/app.js": {
     "file": "assets/app-CqMTjJhC.js",
     "name": "app",
     "src": "resources/js/app.js",
+    "isEntry": true
+  },
+  "resources/js/scripts.js": {
+    "file": "assets/scripts-CZMFIsl6.js",
+    "name": "scripts",
+    "src": "resources/js/scripts.js",
     "isEntry": true
   }
 }

@@ -1264,7 +1264,10 @@ footer {
 .bg-color-7 {
     background-color: var(--color7);
 }
-.nav-pills .nav-link.active, .nav-pills .show > .nav-link, inicio{
+
+.nav-pills .nav-link.active,
+.nav-pills .show>.nav-link,
+inicio {
     background-color: var(--color7);
 
 }
@@ -1973,10 +1976,11 @@ footer {
 /* --- Elementos del Mapa --- */
 .hero-ficha__mapa-contenedor {
     height: 500px;
-    margin-top: -50px;
     overflow: visible !important;
     perspective: 1500px;
-    display: block;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     transition: all 0.5s ease;
 }
 
@@ -1984,14 +1988,14 @@ footer {
     width: 100%;
     height: 100%;
     transform-style: preserve-3d;
-    transform: rotateX(25deg) rotateY(-15deg) rotateZ(5deg);
+    /* transform: rotateX(25deg) rotateY(-15deg) rotateZ(5deg); */
     filter: drop-shadow(0 40px 70px rgba(0, 0, 0, 0.6));
     /* animation: flotarMapa 6s ease-in-out infinite; */
     transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .hero-ficha__mapa-visual:hover {
-    transform: rotateX(15deg) rotateY(-5deg) rotateZ(2deg) scale(1.05);
+    /* transform: rotateX(15deg) rotateY(-5deg) rotateZ(2deg) scale(1.05); */
     filter: drop-shadow(0 50px 80px rgba(0, 0, 0, 0.7));
 }
 
@@ -2567,16 +2571,25 @@ footer {
     display: inline-block;
     vertical-align: middle;
 }
+
 /* ==========================================================================
-   ESTILOS PERFIL MUNICIPAL (MIGRADO DE VISTA)
+   ESTILOS PERFIL MUNICIPAL (SISTEMA UNIFICADO BEM)
    ========================================================================== */
+
+/* Bloque Hero Ficha (Refuerzos y agregados) */
 .hero-ficha__mapa-visual {
     height: 450px;
     width: 100%;
     min-height: 400px;
 }
 
-.sticky-nav-horizontal {
+.hero-ficha__badge {
+    background-color: var(--color4) !important;
+    color: white !important;
+}
+
+/* Bloque Sticky Nav (Barra de Dimensiones) */
+.sticky-nav {
     position: sticky;
     top: 65px;
     z-index: 1000;
@@ -2585,8 +2598,8 @@ footer {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-.nav-premium-link {
-    color: var(--color8);
+.sticky-nav__link {
+    color: var(--color8) !important;
     font-weight: 700;
     text-transform: uppercase;
     font-size: 0.8rem;
@@ -2597,38 +2610,521 @@ footer {
     text-decoration: none;
 }
 
-.nav-premium-link:hover,
-.nav-premium-link.active {
-    color: var(--color1);
-    border-bottom-color: var(--color4);
-    background: rgba(199, 155, 102, 0.05);
+.sticky-nav__link:hover,
+.sticky-nav__link.active {
+    color: var(--color1) !important;
+    border-bottom-color: var(--color4) !important;
+    background: rgba(199, 155, 102, 0.05) !important;
 }
 
+/* Bloque Sección de Perfil */
 .section-perfil {
-    padding-top: 100px;
-    margin-top: -60px;
     border-bottom: 1px solid #f0f0f0;
 }
 
+/* Encabezado de Dimensión */
 .dimension-header {
     background: linear-gradient(90deg, var(--color1) 0%, var(--color2) 100%);
     color: white;
     padding: 2rem;
     border-radius: 15px;
-    margin-bottom: 3rem;
+    margin-bottom: 1rem;
 }
 
-.chart-box-premium {
-    background: #fff;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-    border: 1px solid #f0f0f0;
-    padding: 2rem;
-    height: 500px;
+/* Bloque Tarjeta de Perfil (BEM) */
+.perfil-tarjeta {
+    background: white;
+    border-radius: 12px;
+    border: 0;
+    box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075) !important;
+    /* shadow-sm */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
-.narrativa-box {
+.perfil-tarjeta__body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+.perfil-tarjeta__watermark {
+    position: absolute;
+    bottom: -15px;
+    right: -15px;
+    font-size: 8rem;
+    color: var(--color1);
+    opacity: 0.04;
+    transform: rotate(-15deg);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.perfil-tarjeta__titulo {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0;
+    color: var(--color1);
+    position: relative;
+    z-index: 2;
+}
+
+.perfil-tarjeta__anio-badge {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+    margin-left: 0.5rem;
+    font-size: 0.7rem;
+    vertical-align: middle;
+    padding: 0.25em 0.5em;
+    border-radius: 0.25rem;
+}
+
+.perfil-tarjeta__info-icon {
+    position: relative;
+    z-index: 2;
+    cursor: pointer;
+    color: #ccc;
+    transition: color 0.3s;
+    font-size: 0.9rem;
+}
+
+.perfil-tarjeta__info-icon:hover {
+    color: var(--color2);
+}
+
+.perfil-tarjeta__insight-wrapper {
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 2;
+}
+
+.perfil-tarjeta__narrativa-wrapper {
+    margin-bottom: 1.5rem;
+    position: relative;
+    z-index: 2;
     border-left: 5px solid var(--color4);
     padding-left: 2rem;
-    margin-bottom: 2rem;
+}
+
+.perfil-tarjeta__narrativa-texto {
+    color: #6c757d;
+    margin-bottom: 0;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.perfil-tarjeta__kpi-wrapper {
+    background: transparent;
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: auto;
+    position: relative;
+    z-index: 2;
+    backdrop-filter: blur(2px);
+}
+
+.perfil-tarjeta__kpi-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--color1);
+    margin-bottom: 0;
+}
+
+.perfil-tarjeta__kpi-unit {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-bottom: 0;
+}
+
+.perfil-tarjeta__sparkline {
+    height: 30px;
+    width: 120px;
+    margin: 10px auto 0 auto;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.perfil-tarjeta__chart-wrapper {
+    position: relative;
+    width: 100%;
+    margin-top: auto;
+}
+
+.perfil-tarjeta__chart-wrapper--full {
+    min-height: 400px;
+}
+
+.perfil-tarjeta__chart-wrapper--half {
+    min-height: 300px;
+}
+
+.perfil-tarjeta__chart-box {
+    width: 100%;
+    position: relative;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.perfil-tarjeta__chart-box--full {
+    height: 400px;
+}
+
+.perfil-tarjeta__chart-box--half {
+    height: 300px;
+}
+
+/* Skeleton Loader BEM */
+.perfil-tarjeta__skeleton {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(90deg, #f8f9fa 25%, #e9ecef 50%, #f8f9fa 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading-pulse 1.5s ease-in-out infinite;
+    border-radius: 12px;
+    z-index: 3;
+}
+
+.perfil-tarjeta__spinner {
+    color: var(--color4) !important;
+}
+
+.perfil-tarjeta__footer {
+    background: transparent;
+    border-top: 1px solid #f0f0f0;
+    padding: 0.75rem 1.5rem;
+}
+
+/* Variables Globales y Utilidades Reutilizables de Perfil */
+:root {
+    --premium-navy: #0a192f;
+    --premium-gold: #c79b66;
+    --premium-accent: #861e34;
+    --premium-bg: #f8f9fa;
+    --premium-text: #333;
+}
+
+.letter-spacing-1 {
+    letter-spacing: 1px;
+}
+
+.letter-spacing-2 {
+    letter-spacing: 2px;
+}
+
+/* Reubicado de perfil_editorial.css */
+.hero-info-item {
+    transition: transform 0.3s ease;
+    padding-left: 1.5rem !important;
+
+    &::before {
+        border-left: 1px solid rgba(255, 255, 255, 0.2);
+    }
+}
+
+@media (max-width: 600px) {
+
+    .hero-info-item {
+        padding-left: 0 !important;
+
+        &::before {
+            border-left: none;
+        }
+    }
+}
+
+.hover-gold:hover {
+    color: var(--color4) !important;
+}
+
+.bg-gold {
+    background-color: var(--color4);
+    color: white;
+}
+
+/* Benchmarking Macrorregional y Estatal */
+.perfil-tarjeta__benchmarks {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f0f0f0;
+    flex-wrap: wrap;
+}
+
+.perfil-tarjeta__benchmark-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 95px;
+}
+
+.perfil-tarjeta__benchmark-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #999;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.15rem;
+}
+
+.perfil-tarjeta__benchmark-value {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color8);
+}
+
+.perfil-tarjeta__benchmark-indicator {
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 0.15rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    border-radius: 4px;
+    padding: 0.1rem 0.35rem;
+}
+
+.perfil-tarjeta__benchmark-indicator--positivo {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+}
+
+.perfil-tarjeta__benchmark-indicator--negativo {
+    background-color: #ffebee;
+    color: #c62828;
+}
+
+.perfil-tarjeta__benchmark-indicator--neutral {
+    background-color: #f5f5f5;
+    color: #757575;
+}
+
+/* ==========================================================================
+   ESTILOS COMPARADOR MUNICIPAL (SISTEMA BEM)
+   ========================================================================== */
+
+.hero-comparar {
+    position: relative;
+    padding: 4rem 0;
+    background-color: var(--color1);
+    background-size: cover;
+    background-position: center;
+    overflow: hidden;
+}
+
+.hero-comparar__gradient {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(95, 27, 45, 0.95) 0%, rgba(12, 49, 45, 0.95) 100%);
+    z-index: 1;
+}
+
+.hero-comparar__container {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-comparar__card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+}
+
+.hero-comparar__card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    border-color: var(--color4);
+}
+
+.hero-comparar__card--left {
+    border-left: 5px solid var(--color4);
+}
+
+.hero-comparar__card--right {
+    border-left: 5px solid var(--color7);
+}
+
+.hero-comparar__vs-circle {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: var(--color4);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 20px rgba(199, 155, 102, 0.4);
+    border: 3px solid white;
+    z-index: 3;
+    animation: pulse-vs 2s infinite;
+}
+
+@keyframes pulse-vs {
+    0% {
+        box-shadow: 0 0 0 0 rgba(199, 155, 102, 0.6);
+    }
+
+    70% {
+        box-shadow: 0 0 0 15px rgba(199, 155, 102, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(199, 155, 102, 0);
+    }
+}
+
+.barra-comparar {
+    background-color: #f8f9fa !important;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.select-muni {
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    font-weight: 600;
+    color: #495057;
+}
+
+.select-muni:focus {
+    border-color: var(--color1);
+    box-shadow: 0 0 0 0.25rem rgba(95, 27, 45, 0.25);
+}
+
+.comparar-kpi__diff-badge {
+    display: inline-block;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    font-weight: bold;
+}
+
+.comparar-kpi__vs-mid {
+    font-weight: bold;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn-vino {
+    background-color: var(--color1) !important;
+    border-color: var(--color1) !important;
+    color: white !important;
+    transition: all 0.3s ease;
+}
+
+.btn-vino:hover {
+    background-color: var(--color2) !important;
+    border-color: var(--color2) !important;
+    color: white !important;
+}
+
+.bg-vino {
+    background-color: var(--color1) !important;
+}
+
+/* --- WIDGET MUNICIPIOS SIMILARES (FASE 4) --- */
+.similares-seccion {
+    background-color: #f8f9fa !important;
+}
+
+.similares-seccion__col-card {
+    border-radius: 16px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+}
+
+.similar-card {
+    background-color: #fcfcfc;
+    border: 1px solid #dee2e6 !important;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.similar-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.05);
+    border-color: var(--color1) !important;
+    background-color: white;
+}
+
+.similar-card h4 {
+    margin: 0;
+    font-size: 1.05rem;
+}
+
+/* Botón de similitud por tarjeta */
+.similarity-popover-trigger {
+    color: #c79b66 !important;
+    /* Gold */
+    font-size: 1.1rem;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    border: none;
+    background: none;
+}
+
+.similarity-popover-trigger:hover {
+    transform: scale(1.2);
+    opacity: 0.85;
+}
+
+/* Estilos de botones XS */
+.btn-xs {
+    padding: 0.15rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    border-radius: 30px;
+}
+
+.btn-outline-secondary.btn-xs {
+    color: #6c757d;
+    border-color: #ced4da;
+}
+
+.btn-outline-secondary.btn-xs:hover {
+    background-color: #6c757d;
+    color: white;
+    border-color: #6c757d;
+}
+
+.btn-vino.btn-xs {
+    background-color: #861e34 !important;
+    border-color: #861e34 !important;
+    color: white !important;
+}
+
+.btn-vino.btn-xs:hover {
+    background-color: #6a1325 !important;
+    border-color: #6a1325 !important;
+}
+
+/* Estilos popover de similitud */
+.similarity-popover ul li {
+    padding-bottom: 0.4rem;
+}
+
+.similarity-popover ul li:last-child {
+    border-bottom: none !important;
+    padding-bottom: 0;
 }

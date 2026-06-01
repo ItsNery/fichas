@@ -1,0 +1,288 @@
+=========================================
+       RESUMEN DE INDICADORES EN BD      
+=========================================
+
+DIMENSIÓN: Demográfica y Social
+--------------------------------
+  ├─ Temática: Población
+  │    └─ ID 1: Población total según sexo [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (3): Población total (Habitantes), Población mujeres (Habitantes), Población hombres (Habitantes)
+  │    └─ ID 2: Población por grupos de edad según sexo [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (44): Población de mujeres de 0 a 4 años (Habitantes), Población de hombres de 0 a 4 años (Habitantes), Población de mujeres de 5 a 9 años (Habitantes) and 41 more
+  │    └─ ID 3: Relación hombres-mujeres [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Relación hombres-mujeres (Hombres por cada cien mujeres)
+  │    └─ ID 4: Concentración de población por localidad [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (2): Población en localidades urbanas  (Habitantes), Población en localidades rurales (Habitantes)
+  ├─ Temática: Fecundidad
+  │    └─ ID 5: Nacimientos registrados por sexo [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (3): Nacimientos registrados total (Habitantes), Nacimientos hombres (Habitantes), Nacimientos mujeres (Habitantes)
+  │    └─ ID 6: Tasa de natalidad [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Tasa de natalidad (Nacimientos registrados por cada mil habitantes)
+  │    └─ ID 7: Tasa de fecundidad general [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Tasa de fecundidad general (Nacimientos por cada mil mujeres de entre 15 y 49 años)
+  ├─ Temática: Nupcial
+  │    └─ ID 8: Matrimonios [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Matrimonios registrados (Matrimonios)
+  │    └─ ID 9: Divorcios [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Divorcios registrados (Divorcios)
+  │    └─ ID 10: Tasa de nupcialidad [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Tasa de nupcialidad (Matrimonios por cada mil habitantes)
+  │    └─ ID 11: Tasa de divorcialidad [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Tasa de divorcialidad (Divorcios por cada mil habitantes )
+  ├─ Temática: Estructura de los hogares
+  │    └─ ID 12: Población en hogares censales [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Población en hogares censales (Habitantes)
+  │    └─ ID 13: Hogares censales [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Hogares censales (Hogares)
+  │    └─ ID 14: Porcentaje de hogares con personas de referencia mujer [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de hogares con personas de referencia mujer (Porcentaje)
+  ├─ Temática: Educación
+  │    └─ ID 15: Porcentaje de personas de 15 años y más alfabetas [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de personas de 15 años y más alfabetas (Porcentaje)
+  │    └─ ID 16: Grado promedio de escolaridad de la población de 15 y más años [ESTÁNDAR] [Polaridad: asendente]
+  │         Variables (1): Grado promedio de escolaridad de la población de 15 y más años (Grado)
+  │    └─ ID 17: Porcentaje de población con rezago educativo [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de personas con rezago educativo (Porcentaje)
+  │    └─ ID 52: Promedio de alumnos inscritos por escuela según nivel educativo de educación básica [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (3): Promedio de alumnos inscritos por escuela de nivel preescolar (Promedio), Promedio de alumnos inscritos por escuela de nivel primaria (Promedio), Promedio de alumnos inscritos por escuela de nivel secundaria (Promedio)
+  │    └─ ID 53: Promedio de alumnos atendidos por grupo según nivel educativo de educación básica [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (3): Promedio de alumnos atendidos por grupo de nivel preescolar (Promedio), Promedio de alumnos atendidos por grupo de nivel primaria (Promedio), Promedio de alumnos atendidos por grupo de nivel secundaria (Promedio)
+  │    └─ ID 54: Promedio de alumnos atendidos por un maestro según nivel educativo de educación básica [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (3): Promedio de alumnos atendidos por un maestro en el nivel preescolar (Promedio), Promedio de alumnos atendidos por un maestro en el nivel primaria (Promedio), Promedio de alumnos atendidos por un maestro en el nivel secundaria (Promedio)
+  ├─ Temática: Salud
+  │    └─ ID 18: Población derechohabiente a servicios de salud [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Población derechohabiente a los servicios de salud (Habitantes)
+  │    └─ ID 19: Defunciones registradas por sexo [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (4): Defunciones registradas total (Defunciones), Defunciones registradas hombres (Defunciones), Defunciones registradas mujeres (Defunciones) and 1 more
+  │    └─ ID 20: Tasas de mortalidad [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Tasa de mortalidad  (Defunciones registradas por cada mil habitantes.)
+  │    └─ ID 21: Defunciones registradas de menores de un año [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Defunciones registradas de menores de un año (Defunciones)
+  │    └─ ID 22: Tasa de mortalidad infantil por edad de la madre [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Tasa de mortalidad infantil por edad de la madre (Defunciones de infantes menores de un año por cada mil nacidos vivos)
+  │    └─ ID 23: Personal médico [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Personal médico (Personas)
+  │    └─ ID 24: Tasa de personal médico [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Tasa de personal médico (Personal médico por cada mil personas)
+  │    └─ ID 25: Razón de mortalidad materna [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Razón de mortalidad materna (Porcentaje)
+  ├─ Temática: Vivienda
+  │    └─ ID 26: Total de viviendas particulares habitadas [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Total de viviendas particulares habitadas (Viviendas)
+  │    └─ ID 27: Promedio de ocupantes en viviendas particulares habitadas [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Promedio de ocupantes en viviendas particulares habitadas (Personas por vivienda)
+  │    └─ ID 28: Viviendas particulares habitadas que disponen de drenaje [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Viviendas particulares habitadas que disponen de drenaje (Viviendas)
+  │    └─ ID 29: Viviendas particulares habitadas que disponen de energía eléctrica [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Viviendas particulares habitadas que disponen de energía eléctrica (Viviendas)
+  │    └─ ID 30: Viviendas particulares habitadas que disponen de excusado o sanitario [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Viviendas particulares habitadas que disponen de excusado o sanitario (Viviendas)
+  │    └─ ID 31: Viviendas particulares habitadas que disponen de computadora [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Viviendas particulares habitadas que disponen de computadora (Viviendas)
+  │    └─ ID 32: Índice de hacinamiento [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Índice de hacinamiento (Promedio)
+  ├─ Temática: Pobreza
+  │    └─ ID 33: Porcentaje de población en situación de pobreza [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de población en situación de pobreza (Porcentaje)
+  │    └─ ID 34: Porcentaje de población en situación de pobreza extrema [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de población en situación de pobreza extrema (Porcentaje)
+  │    └─ ID 35: Porcentaje de población en situación de pobreza moderada [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de población en situación de pobreza moderada (Porcentaje)
+  │    └─ ID 36: Porcentaje de población vulnerable por carencias sociales [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de población vulnerable por carencias sociales (Porcentaje)
+  │    └─ ID 37: Porcentaje de población vulnerable por ingresos [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de población vulnerable por ingresos (Porcentaje)
+  │    └─ ID 38: Porcentaje de población no pobre y no vulnerable [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de población no pobre y no vulnerable (Porcentaje)
+  │    └─ ID 39: Porcentaje de población con carencia por acceso a los servicios de salud [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de población con carencia por acceso a los servicios de salud (Porcentaje)
+  │    └─ ID 40: Porcentaje de población con carencia por acceso a la seguridad social [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de población con carencia por acceso a la seguridad social (Porcentaje)
+  │    └─ ID 41: Porcentaje de población con carencia por calidad y espacios de la vivienda [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de población con carencia por calidad y espacios de la vivienda (Porcentaje)
+  │    └─ ID 42: Porcentaje de población con carencia por acceso a los servicios básicos en la vivienda [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de población con carencia por acceso a los servicios básicos en la vivienda (Porcentaje)
+  │    └─ ID 43: Porcentaje de población con carencia por acceso a la alimentación [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de población con carencia por acceso a la alimentación (Porcentaje)
+  │    └─ ID 44: Porcentaje de población con al menos una carencia social [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de población con al menos una carencia social (Porcentaje)
+  │    └─ ID 45: Porcentaje de población con tres o más carencias sociales [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de población con tres o más carencias sociales (Porcentaje)
+  ├─ Temática: Distribución del ingreso
+  │    └─ ID 46: Población con ingreso inferior a la línea de pobreza por ingresos [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de población con ingreso inferior a la línea de pobreza por ingresos (Porcentaje)
+  │    └─ ID 47: Población con ingreso inferior a la línea de pobreza extrema por ingresos [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de población con ingreso inferior a la línea de pobreza extrema por ingresos (Porcentaje)
+  │    └─ ID 48: Índice de marginación [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Grado de Marginación (Grado)
+  │    └─ ID 49: Rezago social [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Rezago social (Grado)
+  │    └─ ID 50: Razón de ingreso [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Razón de ingreso (Porcentaje)
+  │    └─ ID 51: Coeficiente de Gini [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Coeficiente de Gini (Índice)
+
+DIMENSIÓN: Económico
+---------------------
+  ├─ Temática: Sistema de Cuentas Nacionales
+  │    └─ ID 55: Producción bruta total (Millones de pesos) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Producción bruta total (Millones de pesos) (Millones de pesos)
+  │    └─ ID 56: Valor Agregado Censal Bruto por sector económico (Millones de pesos) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (4): Valor agregado censal bruto total (Millones de pesos) (Millones de pesos), Valor agregado censal bruto del sector primario (Millones de pesos) (Millones de pesos), Valor agregado censal bruto del sector secundario (Millones de pesos) (Millones de pesos) and 1 more
+  │    └─ ID 57: Ingresos por remesas (Millones de dólares) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Ingresos por remesas (Millones de dólares) (Millones de dólares)
+  ├─ Temática: Empleo
+  │    └─ ID 58: Población de 12 años y más por condición de actividad económica [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (3): Población Económicamente Activa (PEA) (Población), Población No Económicamente Activa (PNEA) (Población), No especificado (Población)
+  │    └─ ID 59: Población Económicamente Activa por grupo (ocupada y desocupada) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (2): PEA - Ocupada (Población), PEA - Desocupada (Población)
+  │    └─ ID 60: Tasa de participación económica [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Tasa de participación económica (Porcentaje)
+  │    └─ ID 61: Personal ocupado por sexo [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (3): Personal ocupado total (Personal), Personal ocupado hombres (Personal), Personal ocupado mujeres (Personal)
+  │    └─ ID 62: Porcentaje de personal ocupado por sector [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (3): Porcentaje de población ocupada en el sector primario (Porcentaje), Porcentaje de población ocupada en el sector secundario (Porcentaje), Porcentaje de población ocupada en el sector terciario (Porcentaje)
+  │    └─ ID 63: Puestos de trabajo registrados en el IMSS según relación laboral [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (5): Total de puestos de trabajo registrados en el IMSS (Puestos), Trabajadores permanentes urbanos (Puestos), Trabajadores permanentes del campo (Puestos) and 2 more
+  │    └─ ID 64: Tasa de crecimiento anual de los puestos de trabajo registrados en el IMSS [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Tasa de cremiento anual de los puestos de trabajo registrados en el IMSS (Tasa)
+  │    └─ ID 65: Unidades Económicas [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Unidades Económicas (Unidades Económicas)
+  │    └─ ID 66: Tasa de crecimiento anual de las unidades económicas [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Tasa de crecimiento anual de las unidades económicas (Tasa)
+  ├─ Temática: Agropecuaria
+  │    └─ ID 67: Valor de la producción agrícola (Miles de pesos) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Valor de la producción agrícola (Miles de pesos) (Miles de pesos)
+  │    └─ ID 68: Participación al valor de la producción agrícola estatal [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Participación al valor de la producción agrícola estatal (Porcentaje)
+  │    └─ ID 69: Volumen de producción agrícola (Toneladas) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Volumen de producción agrícola (Toneladas) (Toneladas)
+  │    └─ ID 70: Superficie (Hectáreas) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (2): Superficie sembrada (Hectáreas) (Hectáreas), Superficie cosechada (Hectáreas) (Hectáreas)
+  │    └─ ID 71: Valor de la producción pecuaria (Miles de pesos) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (4): Valor de la producción pecuaria total (Miles de pesos), Valor en carne en canal (bovino, porcino, ovino, caprino, ave y guajolote) (Miles de pesos), Valor de producción de Leche (bovino y porcino) (Miles de pesos) and 1 more
+  │    └─ ID 72: Participación al valor de la producción pecuaria estatal [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Participación al valor de la producción pecuaria estatal (Porcentaje)
+  │    └─ ID 73: Producción pecuaria excepto leche (Toneladas) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (3): Producción pecuaria excepto leche (Toneladas) (Toneladas), Producción en carne en canal (bovino, porcino, ovino, caprino, ave y guajolote) (Toneladas), Producción en otros productos (Leche, Huevo de plato, Miel, Cera y Lana) (Toneladas)
+  │    └─ ID 74: Volumen de producción de leche (Litros) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Producción de leche (Litros) (Litros)
+  │    └─ ID 91: Volumen de producción agrícola por cultivo (Toneladas) [COMPLEJO] [Polaridad: neutro]
+  │         Variables (0): 
+  ├─ Temática: Turismo
+  │    └─ ID 75: Ingresos por Servicios de alojamiento temporal y de preparación de alimentos y bebidas (Millones de pesos) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Ingresos por servicio de alojamiento y de preparación de alimentos y bebidas (Millones de pesos) (Millones de pesos)
+  │    └─ ID 76: Llegada de Turistas [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Total de llegadas de turistas (Llegadas)
+  │    └─ ID 77: Cuartos disponibles [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Total de cuartos disponibles (Cuartos)
+  │    └─ ID 78: Cuartos ocupados [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Total de cuartos ocupados (Cuartos)
+  │    └─ ID 79: Estadía promedio [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Estadía promedio (Estadía promedio)
+  │    └─ ID 80: PIB Turístico [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Producto Interno Bruto Turístico (Miles de pesos) (Miles de pesos)
+  │    └─ ID 81: Participación del PIB turismo al PIB municipal [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Participación del PIB turísmo al PIB municipal (Porcentaje)
+  │    └─ ID 82: Pueblo Mágico [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Pueblo mágico (No aplica)
+  ├─ Temática: Inclusión financiera
+  │    └─ ID 83: Sucursales bancarias por cada 10 mil adultos [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Sucursales bancarias por cada 10 mil adultos (Sucursales bancarias por cada 10 mil adultos)
+  │    └─ ID 84: Cajeros automáticos por cada 10 mil adultos [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Cajeros automáticos por cada 10 mil adultos (Cajeros autómaticos por cada 10 mil adultos)
+  │    └─ ID 85: Proporción de adultos que tienen una cuenta en un banco [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Proporción de adultos que tienen una cuenta en un banco (Razón)
+  │    └─ ID 86: Distribución de cuentas bancarias por sector financiero [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (4): Cuentas de Banca de Desarrollo (Porcentaje), Cuentas en Banca Múltiple (Porcentaje), Cuentas en Sociedades Cooperativas de Ahorro y Préstamo (SOCAP) (Porcentaje) and 1 more
+  ├─ Temática: Transporte y comunicaciones 
+  │    └─ ID 87: Vehículos de motor registrados en circulación según tipo [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (4): Total de vehículos motorizados registrados en circulación (Vehículos), Total de vehículos particulares (Vehículos), Total de vehículos de transporte público (Vehículos) and 1 more
+  │    └─ ID 88: Porcentaje de vialidades que disponen de paradas de transporte colectivo [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de vialidades con paradas de transporte colectivo (Porcentaje)
+  │    └─ ID 89: Grado de accesibilidad a carretera pavimentada [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de población con accesibilidad baja a carretera pavimentada (Grado)
+  │    └─ ID 90: Infraestructura carretera según tipo (cuota y libre) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (3): Total de kilómetros de carretera (Kilómetros), Kilómetros de carretera de couta (Kilómetros), Kilómetros de carretera libre (Kilómetros)
+
+DIMENSIÓN: Geográfica y Medio Ambiente
+---------------------------------------
+  ├─ Temática: Agua
+  │    └─ ID 92: Plantas de tratamiento de aguas residuales por tipo de servicio [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (3): Total  (Plantas de tratamiento de aguas residuales), Servicio público (Plantas de tratamiento de aguas residuales), Servicio privado (Plantas de tratamiento de aguas residuales)
+  │    └─ ID 93: Plantas de tratamiento de aguas residuales públicas (capacidad y volumen) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (2): Capacidad instalada (Litros por segundo) (Litros por segundo ), Volumen sumistrado (Millones de metros cúbicos) (Millones de metros cúbicos)
+  │    └─ ID 94: Plantas potabilizadoras en operación (capacidad y volumen) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (3): Plantas de potabilizadoras en operación total (Plantas potabilizadoras), Capacidad instalada  (Litros por segundo) (Litros por segundo ), Volumen suministrado (Millones de metros cúbicos) (Millones de metros cúbicos)
+  ├─ Temática: Residuos
+  │    └─ ID 95: Promedio diario de residuos sólidos urbanos recolectados (kilogramos) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Promedio diario de residuos sólidos urbanos de recolectados (Kilogramos) (Kilogramos )
+  │    └─ ID 96: Promedio diario de residuos recolectados de manera selectiva (kilogramos) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Promedio diario de residuos recolectados de manera selectiva (Kilogramos) (Kilogramos )
+  │    └─ ID 97: Viviendas particulares habitadas que desechan sus residuos de forma inadecuada (porcentaje) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Viviendas particulares habitadas que desechan sus residuos de forma inadecuada (Porcentaje) (Porcentaje )
+  │    └─ ID 98: Contaminantes atmosféricos por tipo de emisión (toneladas) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (4): Contaminantes atmosféricos Total (Toneladas ), Compuestos orgánicos volátiles (Toneladas ), Monóxido de carbono (Toneladas ) and 1 more
+  │    └─ ID 99: Población con acceso al servicio de recolección (porcentaje) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Población con acceso al servicio de recolección (Porcentaje) (Porcentaje )
+  │    └─ ID 100: Viviendas particulares habitadas que queman los residuos sólidos (porcentaje) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Viviendas particulares habitadas que queman los residuos sólidos (Porcentaje) (Porcentaje )
+  │    └─ ID 101: Lugares de disposición final de residuos por tipo de régimen [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (4): Lugares de disposición final de residuos por tipo de régimen (Lugar de disposición final), Público   (Lugar de disposición final), Privado    (Lugar de disposición final) and 1 more
+  ├─ Temática: Forestal
+  │    └─ ID 102: Superficie de Áreas Naturales Protegidas (metros cuadrados) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Superficie de Áreas Naturales Protegidas (Metros Cuadrados) (Metros cuadrados )
+  │    └─ ID 103: Áreas afectadas por incendios (hectáreas) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Áreas afectadas por incendios (Hectáreas) (Hectáreas )
+  ├─ Temática: Suelo y tipo de vegetación
+  │    └─ ID 110: Usos de suelo y vegetación (hectáreas) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (7): Agricultura (Hectáreas ), Asentamientos Humanos (Hectáreas ), Bosques (Hectáreas ) and 4 more
+  ├─ Temática: Ordenamiento Territorial
+  │    └─ ID 104: Superficie territorial (hectáreas) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Superficie territorial (Hectáreas) (Hectáreas )
+  │    └─ ID 105: Instrumentos de planeación en materia territorial (número) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Instrumentos de planeación en materia territorial  (Instrumento)
+  │    └─ ID 106: Población en asentamientos humanos irregulares [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Población en asentamientos humanos irregulares (Población)
+  │    └─ ID 107: Superficie de asentamientos humanos irregulares (Hectárias) [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Superficie de asentamientos humanos irregulares (Hectáreas) (Hectáreas )
+  │    └─ ID 111: Tipo de instrumentos de planeación en materia territorial [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (0): 
+  ├─ Temática: Movilidad
+  │    └─ ID 108: Porcentaje de población según el tiempo promedio de traslado a la escuela  [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (5): Hasta 15 minutos (Porcentaje ), De 16 a 30 minutos (Porcentaje ), De 31 minutos a 1 hora (Porcentaje ) and 2 more
+  │    └─ ID 109: Porcentaje de población según el tiempo promedio de traslado a su lugar de trabajo [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (6): Hasta 15 minutos (Porcentaje ), De 16 a 30 minutos (Porcentaje ), De 31 minutos a 1 hora (Porcentaje ) and 3 more
+
+DIMENSIÓN: Gobierno, Seguridad e Impartición de Justicia
+---------------------------------------------------------
+  ├─ Temática: Gobierno
+  │    └─ ID 137: Recursos federales transferidos al municipio (FORTAMUN y FAISMUN) en miles de pesos [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (4): FORTAMUN DEVENGADO (Miles de pesos), FAISMUN DEVENGADO (Miles de pesos), FORTAMUN APROBADO (Miles de pesos) and 1 more
+  │    └─ ID 138: Porcentaje de personas de 18 y más con percepción de corrupción por tipo de autoridad [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (9): Policía de tránsito (Porcentaje), Policía preventiva (Porcentaje), Policía estatal (Porcentaje) and 6 more
+  │    └─ ID 139: Porcentaje de personas de 18 y más con percepción de inseguridad [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Percepción de inseguridad (Porcentaje)
+  ├─ Temática: Seguridad Pública
+  │    └─ ID 141: Número de elementos o policías capacitados [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (28): Técnicas de investigación del delito (Elementos o policias), Criminalística (Elementos o policias), Criminología (Elementos o policias) and 25 more
+  │    └─ ID 142: Parque vehícular la administración pública municipal por tipo [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (9): Automóviles (Unidades), Aviones (Unidades), Bicicletas (Unidades) and 6 more
+  │    └─ ID 143: Accidentes de tránsito terrestre según causa [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (6): Sin evento (Accidentes), Conductor (Accidentes), Peatón o pasajero (Accidentes) and 3 more
+  │    └─ ID 144: Número de llamadas recibidas que fueron atendidas [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (3): Llamadas al 911 (Llamadas), Llamadas al 089 (Llamadas), Llamadas atendidas por otro sistema (Llamadas)
+  │    └─ ID 145: Incidencia delictiva por tipo de delito [COMPLEJO] [Polaridad: neutro]
+  │         Variables (0): 
+  │    └─ ID 146: Tasa anual de incidencia delictiva por cada 100 mil habitantes [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Incidencia delictiva (Habitantes)
+  │    └─ ID 147: Tasa anual de homicidios por cada 100 mil habitantes [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Homicidios (Habitantes)
+  │    └─ ID 148: Porcentaje de hogares víctimas de delito [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Porcentaje de hogares (Hogares)
+  │    └─ ID 150: Número de elementos o policías que conforman la corporación policial [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (12): Policía preventiva (Elementos o policias), Policía de tránsito (Elementos o policias), Policía bancaria, comercial y/o auxiliar (Elementos o policias) and 9 more
+  ├─ Temática: Impartición de Justicia
+  │    └─ ID 149: Celdas para ejecutar arrestos [ESTÁNDAR] [Polaridad: neutro]
+  │         Variables (1): Celdas (Unidades)
+

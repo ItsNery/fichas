@@ -27,7 +27,6 @@ class ConfiguracionFichaController extends Controller
         $indicadores = Indicador::where('es_complejo', false)->orderBy('nombre_amigable')->get();
         $total_indicadores= $indicadores->count();
         $secciones = [
-            'general' => 'General',
             'demografia' => 'Demografía',
             'economia' => 'Economía',
             'salud' => 'Salud',
@@ -62,7 +61,10 @@ class ConfiguracionFichaController extends Controller
         
         if ($request->filled('ajustes_visuales')) {
             $validated['ajustes_visuales'] = json_decode($request->ajustes_visuales, true);
+        } else {
+            $validated['ajustes_visuales'] = [];
         }
+        $validated['ajustes_visuales']['benchmark_mode'] = $request->input('benchmark_mode', 'avg');
 
         $configuracion = ConfiguracionFicha::create($validated);
 
@@ -80,7 +82,6 @@ class ConfiguracionFichaController extends Controller
         $variablesIndicador = $configuracion->indicador->variables()->orderBy('orden')->get();
         $indicadores = Indicador::where('es_complejo', false)->orderBy('nombre_amigable')->get();
         $secciones = [
-            'general' => 'General',
             'demografia' => 'Demografía',
             'economia' => 'Economía',
             'salud' => 'Salud',
@@ -118,8 +119,9 @@ class ConfiguracionFichaController extends Controller
         if ($request->filled('ajustes_visuales')) {
             $validated['ajustes_visuales'] = json_decode($request->ajustes_visuales, true);
         } else {
-            $validated['ajustes_visuales'] = null;
+            $validated['ajustes_visuales'] = [];
         }
+        $validated['ajustes_visuales']['benchmark_mode'] = $request->input('benchmark_mode', 'avg');
 
         $configuracion->update($validated);
 

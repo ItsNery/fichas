@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom shadow-sm">
     <div class="container">
-        <a class="navbar-brand" href="{{ route('admin.dashboard') }}">
+        <a class="navbar-brand" href="{{ route('inicio') }}">
             <img src="{{ asset('img/logo-sei.png') }}" alt="Logo" style="height: 40px; width: auto;">
         </a>
 
@@ -24,7 +24,8 @@
                         href="{{ route('admin.datos.index') }}">{{ __('Datos') }}</a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('admin.configuracion-fichas.index') }}" class="nav-link {{ request()->routeIs('admin.configuracion-fichas.*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.configuracion-fichas.index') }}"
+                        class="nav-link {{ request()->routeIs('admin.configuracion-fichas.*') ? 'active' : '' }}">
                         {{ __('Configuración Fichas') }}
                     </a>
                 </li>

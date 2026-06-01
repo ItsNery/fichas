@@ -21,6 +21,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\DatosComplejosExport;
+use App\Services\FichaDataStore;
+use App\Services\FichaProfilerService;
+use App\Services\FichaNarratorService;
 
 class FichaController extends Controller
 {
@@ -424,15 +427,25 @@ class FichaController extends Controller
         }
 
         // 3. Iteramos y consultamos los datos usando ESE AÑO específico.
+        $varIds = collect();
+        foreach ($mapaPiramide as $grupo) {
+            $varHom = $variables->get($grupo['hom']);
+            $varMuj = $variables->get($grupo['muj']);
+            if ($varHom) $varIds->push($varHom->id);
+            if ($varMuj) $varIds->push($varMuj->id);
+        }
+
+        $queryDatos = DatoHistorico::whereIn('variable_id', $varIds)->where('anio', $anioConsulta);
+        if (!in_array('estatal', $municipioIds)) {
+            $queryDatos->whereIn('municipio_id', $municipioIds);
+        }
+        $datosAgregados = $queryDatos->get()->groupBy('variable_id');
+
         foreach ($mapaPiramide as $grupo) {
             // Hombres
             $varHom = $variables->get($grupo['hom']);
             if ($varHom && (!$variableIds || in_array($varHom->id, $variableIds))) {
-                $query = DatoHistorico::where('variable_id', $varHom->id)->where('anio', $anioConsulta);
-                if (!in_array('estatal', $municipioIds)) {
-                    $query->whereIn('municipio_id', $municipioIds);
-                }
-                $hombresData[] = -$query->sum('valor');
+                $hombresData[] = -$datosAgregados->get($varHom->id, collect())->sum('valor');
             } else {
                 $hombresData[] = 0;
             }
@@ -440,11 +453,7 @@ class FichaController extends Controller
             // Mujeres
             $varMuj = $variables->get($grupo['muj']);
             if ($varMuj && (!$variableIds || in_array($varMuj->id, $variableIds))) {
-                $query = DatoHistorico::where('variable_id', $varMuj->id)->where('anio', $anioConsulta);
-                if (!in_array('estatal', $municipioIds)) {
-                    $query->whereIn('municipio_id', $municipioIds);
-                }
-                $mujeresData[] = (float) $query->sum('valor');
+                $mujeresData[] = (float) $datosAgregados->get($varMuj->id, collect())->sum('valor');
             } else {
                 $mujeresData[] = 0;
             }
@@ -1602,60 +1611,14 @@ class FichaController extends Controller
         $municipio->load('microrregion.macrorregion');
 
         // --- CÁLCULO DE DATOS PARA EL HERO (Igual que en resumen-test) ---
-        $poblacionTotal = 0;
-        $varPob = Variable::where('nombre_amigable', 'Población total')
-            ->whereHas('indicador', fn($q) => $q->where('nombre_amigable', 'Población total según sexo'))
-            ->first();
-        if ($varPob) {
-            $datoPob = DatoHistorico::where('variable_id', $varPob->id)->where('municipio_id', $municipio->id)->orderBy('anio', 'desc')->first();
-            $poblacionTotal = $datoPob->valor ?? 0;
-        }
-
-        $gradoMarginacion = 'N/D';
-        $varMarg = Variable::where('nombre_amigable', 'Grado de Marginación')->first();
-        if ($varMarg) {
-            $datoMarg = DatoHistorico::where('variable_id', $varMarg->id)->where('municipio_id', $municipio->id)->orderBy('anio', 'desc')->first();
-            $gradoMarginacion = $datoMarg->valor_display ?? 'N/D';
-        }
-
-        $superficieKm2 = 0;
-        $varSup = Variable::where('nombre_amigable', 'Superficie territorial (Hectáreas)')->first();
-        if ($varSup) {
-            $datoSup = DatoHistorico::where('variable_id', $varSup->id)->where('municipio_id', $municipio->id)->orderBy('anio', 'desc')->first();
-            if ($datoSup && $datoSup->valor > 0) {
-                $superficieKm2 = $datoSup->valor / 100;
-            }
-        }
-        $varsPresupuestoIds = Variable::whereIn('nombre_amigable', ['FORTAMUN APROBADO', 'FAISMUN APROBADO'])
-            ->pluck('id');
-
-        $ultimoAnioPres = DatoHistorico::whereIn('variable_id', $varsPresupuestoIds)->where('municipio_id', $municipio->id)->max('anio');
-
-        $presupuesto = 0;
-
-        if ($ultimoAnioPres) {
-            $presupuesto = DatoHistorico::whereIn('variable_id', $varsPresupuestoIds)
-                ->where('municipio_id', $municipio->id)
-                ->where('anio', $ultimoAnioPres)
-                ->sum('valor');
-        }
-
-        // --- Nuevas variables para Hero estilo Data USA ---
-        $porcentajePobreza = 'N/D';
-        $varPobreza = Variable::where('nombre_amigable', 'Porcentaje de población en situación de pobreza')->first();
-        if ($varPobreza) {
-            $datoPobreza = DatoHistorico::where('variable_id', $varPobreza->id)->where('municipio_id', $municipio->id)->orderBy('anio', 'desc')->first();
-            if ($datoPobreza && $datoPobreza->valor) {
-                $porcentajePobreza = number_format($datoPobreza->valor, 1) . '%';
-            }
-        }
-
-        $pea = 0;
-        $varPea = Variable::where('nombre_amigable', 'Población Económicamente Activa (PEA)')->first();
-        if ($varPea) {
-            $datoPea = DatoHistorico::where('variable_id', $varPea->id)->where('municipio_id', $municipio->id)->orderBy('anio', 'desc')->first();
-            $pea = $datoPea->valor ?? 0;
-        }
+        $hero = $this->getHeroStats($municipio);
+        $poblacionTotal = $hero['poblacionTotal'];
+        $gradoMarginacion = $hero['gradoMarginacion'];
+        $superficieKm2 = $hero['superficieKm2'];
+        $presupuesto = $hero['presupuesto'];
+        $ultimoAnioPres = $hero['ultimoAnioPres'];
+        $porcentajePobreza = $hero['porcentajePobreza'];
+        $pea = $hero['pea'];
 
         $configuraciones = ConfiguracionFicha::with(['indicador.variables', 'indicador.tematica.dimension', 'variables'])
             ->where('activo', true)
@@ -1663,10 +1626,13 @@ class FichaController extends Controller
             ->orderBy('orden')
             ->get();
 
+        $allVariableIds = FichaDataStore::extractVariableIds($configuraciones);
+        $dataStore = new FichaDataStore($municipio, $allVariableIds);
+
         $perfil = [];
 
         foreach ($configuraciones as $config) {
-            $datos = $this->obtenerDatosParaConfig($config, $municipio);
+            $datos = $this->obtenerDatosParaConfig($config, $municipio, $dataStore);
 
             $narrativa = $this->procesarNarrativa($config->plantilla_narrativa, $municipio, $datos);
 
@@ -1677,10 +1643,248 @@ class FichaController extends Controller
             ];
         }
 
-        return view('municipios.perfil', compact('municipio', 'perfil', 'poblacionTotal', 'gradoMarginacion', 'superficieKm2', 'presupuesto', 'ultimoAnioPres', 'porcentajePobreza', 'pea'));
+        // --- CÁLCULO DE MUNICIPIOS SIMILARES ---
+        $varPob = Variable::where('nombre_amigable', 'Poblacion total')->whereHas('indicador', fn($q) => $q->where('nombre_amigable','Población total segun sexo'))->first();
+        $similaresPoblacion = collect();
+        if ($varPob && $poblacionTotal > 0) {
+            $macrorregionId = $municipio->microrregion?->macrorregion_id;
+
+            $query = Municipio::where('municipios.id', '!=', $municipio->id)
+                ->join('dato_historicos', 'municipios.id', '=', 'dato_historicos.municipio_id')
+                ->where('dato_historicos.variable_id', $varPob->id)
+                ->where('dato_historicos.anio', function($query) use ($varPob) {
+                    $query->selectRaw('max(d2.anio)')
+                        ->from('dato_historicos as d2')
+                        ->whereColumn('d2.municipio_id', 'municipios.id')
+                        ->where('d2.variable_id', $varPob->id);
+                });
+
+            if ($macrorregionId) {
+                $query->join('microrregions', 'municipios.microrregion_id', '=', 'microrregions.id')
+                    ->where('microrregions.macrorregion_id', $macrorregionId);
+            }
+
+            $similaresPoblacion = $query->select('municipios.*', 'dato_historicos.valor as poblacion_valor')
+                ->orderByRaw('ABS(dato_historicos.valor - ?) ASC', [$poblacionTotal])
+                ->limit(4)
+                ->get();
+        }
+
+        $similaresRegion = collect();
+        if ($municipio->microrregion_id) {
+            $similaresRegion = Municipio::with('microrregion')
+                ->where('id', '!=', $municipio->id)
+                ->where('microrregion_id', $municipio->microrregion_id)
+                ->limit(4)
+                ->get();
+        }
+
+        return view('municipios.perfil', compact(
+            'municipio', 'perfil', 'poblacionTotal', 'gradoMarginacion', 
+            'superficieKm2', 'presupuesto', 'ultimoAnioPres', 'porcentajePobreza', 
+            'pea', 'similaresPoblacion', 'similaresRegion'
+        ));
     }
 
-    private function obtenerDatosParaConfig($config, $municipio)
+    public function getSimilitudIndicador(Municipio $municipio, $configKeyOrId)
+    {
+        $variable = null;
+        $isPresupuesto = false;
+
+        if (is_numeric($configKeyOrId)) {
+            $config = ConfiguracionFicha::with(['variables', 'indicador.variables'])->find($configKeyOrId);
+            if ($config) {
+                $variable = $config->variables->first() ?? $config->indicador->variables->first();
+            }
+        } else {
+            // Claves estáticas para los indicadores del Hero
+            $key = strtolower($configKeyOrId);
+            switch ($key) {
+                case 'poblacion':
+                    $variable = Variable::where('nombre_amigable', 'Población total')
+                        ->whereHas('indicador', fn($q) => $q->where('nombre_amigable', 'Población total según sexo'))
+                        ->first();
+                    break;
+                case 'pea':
+                    $variable = Variable::where('nombre_amigable', 'Población Económicamente Activa (PEA)')->first();
+                    break;
+                case 'pobreza':
+                    $variable = Variable::where('nombre_amigable', 'Porcentaje de población en situación de pobreza')->first();
+                    break;
+                case 'marginacion':
+                    $variable = Variable::where('nombre_amigable', 'Grado de Marginación')->first();
+                    break;
+                case 'superficie':
+                    $variable = Variable::where('nombre_amigable', 'Superficie territorial (Hectáreas)')->first();
+                    break;
+                case 'presupuesto':
+                    $isPresupuesto = true;
+                    break;
+            }
+        }
+
+        if (!$variable && !$isPresupuesto) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No se encontró la variable asociada a esta métrica.'
+            ]);
+        }
+
+        // Lógica especial para presupuesto (que es la suma de FORTAMUN y FAISMUN)
+        if ($isPresupuesto) {
+            $varsPresupuestoIds = Variable::whereIn('nombre_amigable', ['FORTAMUN APROBADO', 'FAISMUN APROBADO'])->pluck('id');
+            $anio = DatoHistorico::whereIn('variable_id', $varsPresupuestoIds)->where('municipio_id', $municipio->id)->max('anio');
+            
+            if (!$anio) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No hay datos históricos disponibles para el presupuesto.'
+                ]);
+            }
+
+            $valorActual = DatoHistorico::whereIn('variable_id', $varsPresupuestoIds)
+                ->where('municipio_id', $municipio->id)
+                ->where('anio', $anio)
+                ->sum('valor');
+
+            $macrorregionId = $municipio->microrregion?->macrorregion_id;
+
+            $query = Municipio::where('municipios.id', '!=', $municipio->id)
+                ->join('dato_historicos', 'municipios.id', '=', 'dato_historicos.municipio_id')
+                ->whereIn('dato_historicos.variable_id', $varsPresupuestoIds)
+                ->where('dato_historicos.anio', $anio);
+
+            if ($macrorregionId) {
+                $query->join('microrregions', 'municipios.microrregion_id', '=', 'microrregions.id')
+                    ->where('microrregions.macrorregion_id', $macrorregionId);
+            }
+
+            $similares = $query->select('municipios.nombre', 'municipios.slug', DB::raw('SUM(dato_historicos.valor) as total_valor'))
+                ->groupBy('municipios.id', 'municipios.nombre', 'municipios.slug')
+                ->orderByRaw('ABS(SUM(dato_historicos.valor) - ?) ASC', [$valorActual])
+                ->limit(4)
+                ->get();
+
+            $similaresFormateados = $similares->map(function ($s) {
+                return [
+                    'nombre' => $s->nombre,
+                    'slug' => $s->slug,
+                    'valor' => '$' . number_format((float)$s->total_valor, 0)
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'indicador' => 'Presupuesto de Egresos',
+                'variable' => 'FORTAMUN + FAISMUN',
+                'anio' => $anio,
+                'valor_actual' => '$' . number_format((float)$valorActual, 0),
+                'similares' => $similaresFormateados
+            ]);
+        }
+
+        // Obtener el valor más reciente del municipio actual para esta variable
+        $ultimoDato = DatoHistorico::where('variable_id', $variable->id)
+            ->where('municipio_id', $municipio->id)
+            ->orderBy('anio', 'desc')
+            ->first();
+
+        if (!$ultimoDato) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay datos históricos disponibles para la variable seleccionada.'
+            ]);
+        }
+
+        $valorActual = $ultimoDato->valor;
+        $anio = $ultimoDato->anio;
+
+        $macrorregionId = $municipio->microrregion?->macrorregion_id;
+
+        $query = Municipio::where('municipios.id', '!=', $municipio->id)
+            ->join('dato_historicos', 'municipios.id', '=', 'dato_historicos.municipio_id')
+            ->where('dato_historicos.variable_id', $variable->id)
+            ->where('dato_historicos.anio', $anio);
+
+        if ($macrorregionId) {
+            $query->join('microrregions', 'municipios.microrregion_id', '=', 'microrregions.id')
+                ->where('microrregions.macrorregion_id', $macrorregionId);
+        }
+
+        if (is_numeric($valorActual)) {
+            // Similitud numérica (valores más cercanos)
+            $similares = $query->select('municipios.nombre', 'municipios.slug', 'dato_historicos.valor')
+                ->orderByRaw('ABS(dato_historicos.valor - ?) ASC', [(float)$valorActual])
+                ->limit(4)
+                ->get();
+        } else {
+            // Similitud categórica (mismo valor textual)
+            $similares = $query->select('municipios.nombre', 'municipios.slug', 'dato_historicos.valor')
+                ->where('dato_historicos.valor', $valorActual)
+                ->limit(4)
+                ->get();
+        }
+
+        // Formatear los valores para la respuesta
+        $similaresFormateados = $similares->map(function ($s) use ($variable, $configKeyOrId) {
+            $val = $s->valor;
+            if (is_numeric($val)) {
+                $valFloat = (float)$val;
+                if (strtolower($configKeyOrId) === 'superficie') {
+                    $valFloat = $valFloat / 100;
+                    $valFormated = number_format($valFloat, 2) . ' km²';
+                } else {
+                    $unidad = strtolower($variable->unidad ?? '');
+                    if (str_contains($unidad, '%') || str_contains($unidad, 'porcentaje')) {
+                        $valFormated = number_format($valFloat, 1) . '%';
+                    } elseif (str_contains($unidad, '$') || str_contains($unidad, 'pesos') || str_contains($unidad, 'monto')) {
+                        $valFormated = '$' . number_format($valFloat, 0);
+                    } else {
+                        $valFormated = number_format($valFloat, 0) . ' ' . $variable->unidad;
+                    }
+                }
+            } else {
+                $valFormated = $val;
+            }
+
+            return [
+                'nombre' => $s->nombre,
+                'slug' => $s->slug,
+                'valor' => $valFormated
+            ];
+        });
+
+        // Formatear también el valor del municipio actual
+        if (is_numeric($valorActual)) {
+            $valFloat = (float)$valorActual;
+            if (strtolower($configKeyOrId) === 'superficie') {
+                $valFloat = $valFloat / 100;
+                $valActualFormated = number_format($valFloat, 2) . ' km²';
+            } else {
+                $unidad = strtolower($variable->unidad ?? '');
+                if (str_contains($unidad, '%') || str_contains($unidad, 'porcentaje')) {
+                    $valActualFormated = number_format($valFloat, 1) . '%';
+                } elseif (str_contains($unidad, '$') || str_contains($unidad, 'pesos') || str_contains($unidad, 'monto')) {
+                    $valActualFormated = '$' . number_format($valFloat, 0);
+                } else {
+                    $valActualFormated = number_format($valFloat, 0) . ' ' . $variable->unidad;
+                }
+            }
+        } else {
+            $valActualFormated = $valorActual;
+        }
+
+        return response()->json([
+            'success' => true,
+            'indicador' => is_numeric($configKeyOrId) ? ($config->titulo_reporte ?? $config->indicador->nombre_amigable) : ucwords(str_replace('marginacion', 'marginación', $configKeyOrId)),
+            'variable' => $variable->nombre_amigable,
+            'anio' => $anio,
+            'valor_actual' => $valActualFormated,
+            'similares' => $similaresFormateados
+        ]);
+    }
+
+    private function obtenerDatosParaConfig($config, $municipio, FichaDataStore $dataStore = null)
     {
         $indicador = $config->indicador;
         $variablesConfig = $config->variables;
@@ -1689,11 +1893,151 @@ class FichaController extends Controller
             ? $variablesConfig->pluck('id')
             : $indicador->variables->pluck('id');
 
-        $anioMax = DatoHistorico::whereIn('variable_id', $variableIds)
-            ->where('municipio_id', $municipio->id)
-            ->max('anio');
+        if ($dataStore) {
+            $anioMax = $dataStore->muniData->whereIn('variable_id', $variableIds)->max('anio');
+        } else {
+            $anioMax = DatoHistorico::whereIn('variable_id', $variableIds)
+                ->where('municipio_id', $municipio->id)
+                ->max('anio');
+        }
 
         if (!$anioMax) return null;
+
+        // Caso Scatter (Dispersión)
+        if ($config->tipo_visualizacion === 'scatter') {
+            $varXId = $variableIds->first();
+            $varYId = $variableIds->skip(1)->first();
+
+            if ($varXId && $varYId) {
+                if ($dataStore) {
+                    $varX = $dataStore->allVariables->get($varXId);
+                    $varY = $dataStore->allVariables->get($varYId);
+                } else {
+                    $varX = Variable::find($varXId);
+                    $varY = Variable::find($varYId);
+                }
+
+                // Obtener años máximos independientes
+                if ($dataStore) {
+                    $anioX = $dataStore->globalData->where('variable_id', $varXId)->max('anio');
+                    $anioY = $dataStore->globalData->where('variable_id', $varYId)->max('anio');
+                } else {
+                    $anioX = DatoHistorico::where('variable_id', $varXId)->max('anio');
+                    $anioY = DatoHistorico::where('variable_id', $varYId)->max('anio');
+                }
+
+                // Obtener datos históricos de todos los municipios para esas dos variables
+                if ($dataStore) {
+                    $datosX = $dataStore->globalData->where('variable_id', $varXId)->where('anio', $anioX)->keyBy('municipio_id');
+                    $datosY = $dataStore->globalData->where('variable_id', $varYId)->where('anio', $anioY)->keyBy('municipio_id');
+                } else {
+                    $datosX = DatoHistorico::where('variable_id', $varXId)->where('anio', $anioX)->get()->keyBy('municipio_id');
+                    $datosY = DatoHistorico::where('variable_id', $varYId)->where('anio', $anioY)->get()->keyBy('municipio_id');
+                }
+
+                // Obtener poblaciones totales del 2020 para calcular el per cápita
+                $varPob = Variable::where('nombre_amigable', 'Población total')->first();
+                $poblaciones = [];
+                if ($varPob) {
+                    if ($dataStore) {
+                        $poblaciones = $dataStore->globalData->where('variable_id', $varPob->id)->where('anio', 2020)->keyBy('municipio_id');
+                    } else {
+                        $poblaciones = DatoHistorico::where('variable_id', $varPob->id)->where('anio', 2020)->get()->keyBy('municipio_id');
+                    }
+                }
+
+                $municipios = Municipio::all()->keyBy('id');
+
+                $seriesNormal = [];
+                $seriesHighlight = [];
+
+                foreach ($municipios as $munId => $mun) {
+                    $datoX = $datosX->get($munId);
+                    $datoY = $datosY->get($munId);
+                    $pob = $poblaciones->get($munId);
+
+                    if ($datoX && $datoY) {
+                        $xVal = (float)$datoX->valor;
+                        
+                        // Si la unidad es pesos y tenemos población, calculamos per cápita
+                        if ($pob && $pob->valor > 0 && str_contains(mb_strtolower($varX->unidad_medida, 'UTF-8'), 'pesos')) {
+                            $factor = str_contains(mb_strtolower($varX->unidad_medida, 'UTF-8'), 'miles') ? 1000 : 1;
+                            $xVal = ($datoX->valor * $factor) / $pob->valor;
+                        }
+
+                        $yVal = (float)$datoY->valor;
+
+                        $punto = [
+                            round($xVal, 2),
+                            round($yVal, 2),
+                            $mun->nombre
+                        ];
+
+                        if ($munId == $municipio->id) {
+                            $seriesHighlight[] = $punto;
+                        } else {
+                            $seriesNormal[] = $punto;
+                        }
+                    }
+                }
+
+                $xValSelected = !empty($seriesHighlight) ? $seriesHighlight[0][0] : 0;
+                $yValSelected = !empty($seriesHighlight) ? $seriesHighlight[0][1] : 0;
+
+                return [
+                    'anio'             => $anioY,
+                    'total'            => null,
+                    'variables'        => [
+                        [
+                            'nombre' => $varX->nombre_amigable, 
+                            'unidad' => '$ por hab.',
+                            'valor'  => $xValSelected
+                        ],
+                        [
+                            'nombre' => $varY->nombre_amigable, 
+                            'unidad' => $varY->unidad_medida,
+                            'valor'  => $yValSelected
+                        ]
+                    ],
+                    'echarts'          => [
+                        'type' => 'scatter',
+                        'series' => [
+                            [
+                                'name' => 'Otros Municipios',
+                                'type' => 'scatter',
+                                'data' => $seriesNormal,
+                                'itemStyle' => [
+                                    'color' => 'rgba(122, 122, 122, 0.4)', 
+                                    'borderColor' => 'rgba(122, 122, 122, 0.6)'
+                                ]
+                            ],
+                            [
+                                'name' => $municipio->nombre,
+                                'type' => 'scatter',
+                                'data' => $seriesHighlight,
+                                'symbolSize' => 16,
+                                'itemStyle' => [
+                                    'color' => '#861e34',
+                                    'borderColor' => '#c79b66',
+                                    'borderWidth' => 2,
+                                    'shadowBlur' => 10,
+                                    'shadowColor' => 'rgba(134, 30, 52, 0.8)'
+                                ]
+                            ]
+                        ],
+                        'eje_x' => [
+                            'titulo' => $varX->nombre_amigable . ' per cápita ($/hab)'
+                        ],
+                        'eje_y' => [
+                            'titulo' => $varY->nombre_amigable
+                        ]
+                    ],
+                    'descripcion'    => "Este gráfico compara la inversión de {$varX->nombre_amigable} per cápita (año {$anioX}) contra el indicador {$varY->nombre_amigable} (año {$anioY}) para todos los municipios de Puebla. El punto resaltado representa a {$municipio->nombre}.",
+                    'fuente'         => "CONEVAL / SHCP",
+                    'metodo_calculo' => "Inversión per cápita = ({$varX->nombre_amigable} / Población total)."
+                ];
+            }
+        }
 
         // Caso Pirámide
         if ($config->tipo_visualizacion === 'piramide') {
@@ -1710,80 +2054,180 @@ class FichaController extends Controller
         }
 
         // Caso Estándar (Variables sumadas o listadas)
-        $datos = DatoHistorico::with('variable')
-            ->whereIn('variable_id', $variableIds)
-            ->where('municipio_id', $municipio->id)
-            ->where('anio', $anioMax)
-            ->get();
+        if ($dataStore) {
+            $datos = $dataStore->muniData
+                ->whereIn('variable_id', $variableIds)
+                ->where('anio', $anioMax);
+        } else {
+            $datos = DatoHistorico::with('variable')
+                ->whereIn('variable_id', $variableIds)
+                ->where('municipio_id', $municipio->id)
+                ->where('anio', $anioMax)
+                ->get();
+        }
 
         $valorTotal = $datos->sum('valor');
 
         // --- Sparkline Data (Tendencia últimos años) ---
         $aniosLimite = $config->anios_historial ?? 5;
-        $tendencia = DatoHistorico::whereIn('variable_id', $variableIds)
-            ->where('municipio_id', $municipio->id)
-            ->select('anio', \DB::raw('SUM(valor) as total'))
-            ->groupBy('anio')
-            ->orderBy('anio', 'desc')
-            ->limit($aniosLimite)
-            ->get()
-            ->sortBy('anio')
-            ->values()
-            ->map(fn($t) => ['anio' => $t->anio, 'valor' => (float)$t->total])
-            ->toArray();
-
-        // --- Benchmarking (Promedio Estatal) ---
-        $esAbsoluto = true;
-        foreach ($datos as $d) {
-            $u = mb_strtolower($d->variable->unidad_medida ?? '', 'UTF-8');
-            if (str_contains($u, '%') || str_contains($u, 'porcentaje') || str_contains($u, 'tasa') || str_contains($u, 'proporción')) {
-                $esAbsoluto = false;
-                break;
-            }
+        if ($dataStore) {
+            $tendencia = $dataStore->muniData
+                ->whereIn('variable_id', $variableIds)
+                ->groupBy('anio')
+                ->map(fn($group) => [
+                    'anio' => $group->first()->anio,
+                    'total' => (float)$group->sum('valor')
+                ])
+                ->sortByDesc('anio')
+                ->take($aniosLimite)
+                ->sortBy('anio')
+                ->values()
+                ->map(fn($t) => ['anio' => $t['anio'], 'valor' => $t['total']])
+                ->toArray();
+        } else {
+            $tendencia = DatoHistorico::whereIn('variable_id', $variableIds)
+                ->where('municipio_id', $municipio->id)
+                ->select('anio', \DB::raw('SUM(valor) as total'))
+                ->groupBy('anio')
+                ->orderBy('anio', 'desc')
+                ->limit($aniosLimite)
+                ->get()
+                ->sortBy('anio')
+                ->values()
+                ->map(fn($t) => ['anio' => $t->anio, 'valor' => (float)$t->total])
+                ->toArray();
         }
 
+        // --- Benchmarking (Promedio Estatal y Macrorregional) ---
         $promediosEstado = [];
+        $promediosMacrorregion = [];
         $tendenciaEstado = [];
+        $tendenciaMacrorregion = [];
 
-        if ($esAbsoluto) {
+        $macrorregionId = $municipio->microrregion->macrorregion_id ?? null;
+        $municipiosMacrorregionIds = $dataStore ? $dataStore->macrorregionIds : collect();
+
+        $ajustes = $config->ajustes_visuales ?? [];
+        $benchmarkMode = $ajustes['benchmark_mode'] ?? 'avg';
+        $method = $benchmarkMode === 'sum' ? 'sum' : 'avg';
+
+        if ($config->mostrar_comparativa) {
+            if (!$dataStore && $macrorregionId) {
+                $municipiosMacrorregionIds = Municipio::whereHas('microrregion', function($q) use ($macrorregionId) {
+                    $q->where('macrorregion_id', $macrorregionId);
+                })->pluck('id');
+            }
+
             foreach ($datos as $d) {
-                $promediosEstado[$d->variable_id] = DatoHistorico::where('variable_id', $d->variable_id)
-                    ->where('anio', $anioMax)
-                    ->avg('valor');
+                if ($dataStore) {
+                    $stateData = $dataStore->globalData
+                        ->where('variable_id', $d->variable_id)
+                        ->where('anio', $anioMax);
+                    $promediosEstado[$d->variable_id] = $benchmarkMode === 'sum' ? $stateData->sum('valor') : $stateData->avg('valor');
+
+                    if ($municipiosMacrorregionIds->isNotEmpty()) {
+                        $regionData = $stateData->whereIn('municipio_id', $municipiosMacrorregionIds);
+                        $promediosMacrorregion[$d->variable_id] = $benchmarkMode === 'sum' ? $regionData->sum('valor') : $regionData->avg('valor');
+                    } else {
+                        $promediosMacrorregion[$d->variable_id] = 0;
+                    }
+                } else {
+                    $promediosEstado[$d->variable_id] = DatoHistorico::where('variable_id', $d->variable_id)
+                        ->where('anio', $anioMax)
+                        ->$method('valor') ?? 0;
+
+                    if ($municipiosMacrorregionIds->isNotEmpty()) {
+                        $promediosMacrorregion[$d->variable_id] = DatoHistorico::where('variable_id', $d->variable_id)
+                            ->whereIn('municipio_id', $municipiosMacrorregionIds)
+                            ->where('anio', $anioMax)
+                            ->$method('valor') ?? 0;
+                    } else {
+                        $promediosMacrorregion[$d->variable_id] = 0;
+                    }
+                }
             }
 
             if (!empty($tendencia)) {
                 $anios = collect($tendencia)->pluck('anio')->toArray();
-                $tendenciaEstado = DatoHistorico::whereIn('variable_id', $variableIds)
-                    ->select('anio', DB::raw('AVG(valor) as total'))
-                    ->whereIn('anio', $anios)
-                    ->groupBy('anio')
-                    ->get()
-                    ->keyBy('anio')
-                    ->map(fn($t) => (float)$t->total)
-                    ->toArray();
+                
+                if ($dataStore) {
+                    $tendenciaEstado = $dataStore->globalData
+                        ->whereIn('variable_id', $variableIds)
+                        ->whereIn('anio', $anios)
+                        ->groupBy('anio')
+                        ->mapWithKeys(function($group, $yr) use ($benchmarkMode) {
+                            $total = $benchmarkMode === 'sum' ? $group->sum('valor') : $group->avg('valor');
+                            return [$yr => (float)$total];
+                        })
+                        ->toArray();
+
+                    if ($municipiosMacrorregionIds->isNotEmpty()) {
+                        $tendenciaMacrorregion = $dataStore->globalData
+                            ->whereIn('variable_id', $variableIds)
+                            ->whereIn('municipio_id', $municipiosMacrorregionIds)
+                            ->whereIn('anio', $anios)
+                            ->groupBy('anio')
+                            ->mapWithKeys(function($group, $yr) use ($benchmarkMode) {
+                                $total = $benchmarkMode === 'sum' ? $group->sum('valor') : $group->avg('valor');
+                                return [$yr => (float)$total];
+                            })
+                            ->toArray();
+                    }
+                } else {
+                    $aggSql = $benchmarkMode === 'sum' ? 'SUM(valor) as total' : 'AVG(valor) as total';
+                    
+                    $tendenciaEstado = DatoHistorico::whereIn('variable_id', $variableIds)
+                        ->select('anio', DB::raw($aggSql))
+                        ->whereIn('anio', $anios)
+                        ->groupBy('anio')
+                        ->get()
+                        ->keyBy('anio')
+                        ->map(fn($t) => (float)$t->total)
+                        ->toArray();
+
+                    if ($municipiosMacrorregionIds->isNotEmpty()) {
+                        $tendenciaMacrorregion = DatoHistorico::whereIn('variable_id', $variableIds)
+                            ->whereIn('municipio_id', $municipiosMacrorregionIds)
+                            ->select('anio', DB::raw($aggSql))
+                            ->whereIn('anio', $anios)
+                            ->groupBy('anio')
+                            ->get()
+                            ->keyBy('anio')
+                            ->map(fn($t) => (float)$t->total)
+                            ->toArray();
+                    }
+                }
             }
         }
 
         $res = [
-            'anio'             => $anioMax,
-            'total'            => $valorTotal,
-            'valor_actual'     => number_format($valorTotal),
-            'ranking'          => $this->getMunicipalityRanking($variableIds, $municipio->id, $anioMax),
-            'promedio_estatal' => $this->getStateAverage($variableIds, $anioMax),
-            'variables'        => $datos->map(fn($d) => [
-                'nombre'           => $d->variable->nombre_amigable,
-                'valor'            => $d->valor,
-                'unidad'           => $d->variable->unidad_medida,
-                'mapeo'            => $d->variable->mapeo_valores,
-                'promedio_estatal' => $promediosEstado[$d->variable_id] ?? null
+            'anio'                    => $anioMax,
+            'total'                   => $valorTotal,
+            'valor_actual'            => number_format($valorTotal),
+            'ranking'                 => $dataStore 
+                ? $this->getMunicipalityRankingInMemory($dataStore, $variableIds, $municipio->id, $anioMax)
+                : $this->getMunicipalityRanking($variableIds, $municipio->id, $anioMax),
+            'promedio_estatal'        => $config->mostrar_comparativa 
+                ? ($dataStore ? $this->getStateAverageInMemory($dataStore, $variableIds, $anioMax, $method) : $this->getStateAverage($variableIds, $anioMax, $method)) 
+                : null,
+            'promedio_macrorregional' => ($config->mostrar_comparativa && $macrorregionId) 
+                ? ($dataStore ? $this->getMacrorregionalAverageInMemory($dataStore, $variableIds, $municipiosMacrorregionIds, $anioMax, $method) : $this->getMacrorregionalAverage($variableIds, $municipio, $anioMax, $method)) 
+                : null,
+            'variables'               => $datos->map(fn($d) => [
+                'nombre'                  => $d->variable->nombre_amigable,
+                'valor'                   => $d->valor,
+                'unidad'                  => $d->variable->unidad_medida,
+                'mapeo'                   => $d->variable->mapeo_valores,
+                'promedio_estatal'        => $promediosEstado[$d->variable_id] ?? null,
+                'promedio_macrorregional' => $promediosMacrorregion[$d->variable_id] ?? null
             ])->toArray(),
-            'polaridad'      => $indicador->polaridad,
-            'descripcion'    => $indicador->descripcion,
-            'fuente'         => $indicador->fuente,
-            'metodo_calculo' => $indicador->metodo_calculo,
-            'tendencia'      => $tendencia,
-            'tendencia_estado' => $tendenciaEstado,
+            'polaridad'               => $indicador->polaridad,
+            'descripcion'             => $indicador->descripcion,
+            'fuente'                  => $indicador->fuente,
+            'metodo_calculo'          => $indicador->metodo_calculo,
+            'tendencia'               => $tendencia,
+            'tendencia_estado'        => $tendenciaEstado,
+            'tendencia_macrorregion'  => $tendenciaMacrorregion,
         ];
 
         // --- Aplicar Mapeo Categórico (Prioridad: JSON Config > Variable DB) ---
@@ -1803,8 +2247,116 @@ class FichaController extends Controller
             }
 
             // Soporte opcional para cambio de icono vía mapeo
+            // Soporte opcional para cambio de icono vía mapeo
             if (isset($ajustes['icons'][$valorOriginal])) {
                 $res['icono_actual'] = $ajustes['icons'][$valorOriginal];
+            }
+        }
+
+        // Caso especial: Gráfico de Barras de Ranking de Vecinos Regionales (Variable Única)
+        $esBarrasVariableUnica = ($config->tipo_visualizacion === 'barras' || $config->tipo_visualizacion === 'bar') && $variableIds->count() === 1;
+
+        if ($esBarrasVariableUnica && $macrorregionId) {
+            if ($municipiosMacrorregionIds->isEmpty()) {
+                if ($dataStore) {
+                    $municipiosMacrorregionIds = $dataStore->macrorregionIds;
+                } else {
+                    $municipiosMacrorregionIds = Municipio::whereHas('microrregion', function($q) use ($macrorregionId) {
+                        $q->where('macrorregion_id', $macrorregionId);
+                    })->pluck('id');
+                }
+            }
+
+            if ($municipiosMacrorregionIds->isNotEmpty()) {
+                $variableId = $variableIds->first();
+                $variableObj = $dataStore ? $dataStore->allVariables->get($variableId) : Variable::find($variableId);
+                $unidadMedida = $variableObj ? $variableObj->unidad_medida : '';
+
+                // Obtener datos de la macrorregión
+                if ($dataStore) {
+                    $datosMacrorregion = $dataStore->globalData
+                        ->where('variable_id', $variableId)
+                        ->where('anio', $anioMax)
+                        ->whereIn('municipio_id', $municipiosMacrorregionIds);
+                } else {
+                    $datosMacrorregion = DatoHistorico::where('variable_id', $variableId)
+                        ->where('anio', $anioMax)
+                        ->whereIn('municipio_id', $municipiosMacrorregionIds)
+                        ->get();
+                }
+
+                // Obtener nombres de municipios
+                $municipios = Municipio::whereIn('id', $municipiosMacrorregionIds)->get()->keyBy('id');
+                
+                $listaOrdenada = $datosMacrorregion->map(function($d) use ($municipios) {
+                    $mun = $municipios->get($d->municipio_id);
+                    return [
+                        'municipio_id' => $d->municipio_id,
+                        'nombre' => $mun ? $mun->nombre : 'Desconocido',
+                        'valor' => (float)$d->valor
+                    ];
+                })
+                ->sortByDesc('valor')
+                ->values();
+
+                $indexActual = $listaOrdenada->search(fn($item) => $item['municipio_id'] == $municipio->id);
+
+                if ($indexActual !== false) {
+                    $total = $listaOrdenada->count();
+                    $countToTake = min(5, $total);
+                    $startIndex = $indexActual - 2;
+
+                    if ($startIndex < 0) {
+                        $startIndex = 0;
+                    }
+                    if ($startIndex + $countToTake > $total) {
+                        $startIndex = max(0, $total - $countToTake);
+                    }
+
+                    $vecinos = $listaOrdenada->slice($startIndex, $countToTake)->values();
+
+                    $dataSerie = [];
+                    $categoriasY = [];
+
+                    foreach ($vecinos as $v) {
+                        $posRank = $listaOrdenada->search(fn($item) => $item['municipio_id'] == $v['municipio_id']) + 1;
+                        $categoriasY[] = $v['nombre'] . " ({$posRank}°)";
+
+                        if ($v['municipio_id'] == $municipio->id) {
+                            $dataSerie[] = [
+                                'value' => $v['valor'],
+                                'itemStyle' => [
+                                    'color' => '#861e34',
+                                    'borderColor' => '#c79b66',
+                                    'borderWidth' => 2
+                                ]
+                            ];
+                        } else {
+                            $dataSerie[] = [
+                                'value' => $v['valor'],
+                                'itemStyle' => [
+                                    'color' => '#d1d5db'
+                                ]
+                            ];
+                        }
+                    }
+
+                    $res['echarts'] = [
+                        'type' => 'bar-horizontal',
+                        'eje_y' => [
+                            'categorias' => $categoriasY
+                        ],
+                        'series' => [
+                            [
+                                'name' => $variableObj ? $variableObj->nombre_amigable : 'Valor',
+                                'data' => $dataSerie
+                            ]
+                        ],
+                        'unidad' => $unidadMedida
+                    ];
+                    
+                    return $res;
+                }
             }
         }
 
@@ -1814,16 +2366,24 @@ class FichaController extends Controller
             $variableIds,
             $anioMax,
             $tendencia,
-            $tendenciaEstado
+            $tendenciaEstado,
+            $tendenciaMacrorregion
         );
 
         return $res;
     }
 
-    private function formatearDatosParaECharts(array $variablesArray, string $tipo_visualizacion, $variableIds = null, $anio = null, $tendencia = null, $tendenciaEstado = null)
+    private function formatearDatosParaECharts(array $variablesArray, string $tipo_visualizacion, $variableIds = null, $anio = null, $tendencia = null, $tendenciaEstado = null, $tendenciaMacrorregion = null)
     {
         $tipoLower = strtolower($tipo_visualizacion);
-        if (($tipoLower === 'line' || $tipoLower === 'lineas' || $tipoLower === 'líneas') && $tendencia) {
+        $tipoNorm = $tipoLower;
+        if ($tipoLower === 'barras') {
+            $tipoNorm = 'bar';
+        } elseif ($tipoLower === 'lineas' || $tipoLower === 'líneas') {
+            $tipoNorm = 'line';
+        }
+
+        if (($tipoNorm === 'line') && $tendencia) {
             $series = [
                 [
                     'name' => 'Municipio',
@@ -1834,6 +2394,17 @@ class FichaController extends Controller
                     'symbolSize' => 8,
                 ]
             ];
+
+            if ($tendenciaMacrorregion) {
+                $series[] = [
+                    'name' => 'Promedio Macrorregional',
+                    'type' => 'line',
+                    'data' => collect($tendencia)->map(fn($t) => $tendenciaMacrorregion[$t['anio']] ?? null)->toArray(),
+                    'smooth' => true,
+                    'lineStyle' => ['type' => 'dotted', 'width' => 2, 'opacity' => 0.7],
+                    'itemStyle' => ['opacity' => 0.7]
+                ];
+            }
 
             if ($tendenciaEstado) {
                 $series[] = [
@@ -1895,31 +2466,44 @@ class FichaController extends Controller
             ];
         }
 
-        if ($tipo_visualizacion === 'bar' || $tipo_visualizacion === 'line' || $tipo_visualizacion === 'area') {
+        if ($tipoNorm === 'bar' || $tipoNorm === 'line' || $tipoNorm === 'area') {
             $categorias = [];
             $valores = [];
+            $valoresMacrorregion = [];
             $valoresEstado = [];
             foreach ($variablesArray as $v) {
                 $categorias[] = $v['nombre'];
                 $valores[] = (float) $v['valor'];
+                if (isset($v['promedio_macrorregional']) && $v['promedio_macrorregional'] !== null) {
+                    $valoresMacrorregion[] = (float) $v['promedio_macrorregional'];
+                }
                 if (isset($v['promedio_estatal']) && $v['promedio_estatal'] !== null) {
                     $valoresEstado[] = (float) $v['promedio_estatal'];
                 }
             }
 
-            $series = [['name' => 'Municipio', 'type' => $tipo_visualizacion, 'data' => $valores]];
+            $series = [['name' => 'Municipio', 'type' => $tipoNorm, 'data' => $valores]];
+            if (!empty($valoresMacrorregion)) {
+                $series[] = [
+                    'name' => 'Promedio Macrorregional',
+                    'type' => $tipoNorm,
+                    'data' => $valoresMacrorregion,
+                    'itemStyle' => ['opacity' => 0.7],
+                    'barGap' => '10%'
+                ];
+            }
             if (!empty($valoresEstado)) {
                 $series[] = [
                     'name' => 'Promedio Estatal',
-                    'type' => $tipo_visualizacion,
+                    'type' => $tipoNorm,
                     'data' => $valoresEstado,
-                    'itemStyle' => ['opacity' => 0.5],
+                    'itemStyle' => ['opacity' => 0.4],
                     'barGap' => '10%'
                 ];
             }
 
             return [
-                'type' => $tipo_visualizacion,
+                'type' => $tipoNorm,
                 'series' => $series,
                 'eje_x' => ['categorias' => $categorias]
             ];
@@ -1947,44 +2531,72 @@ class FichaController extends Controller
         ];
     }
 
-    private function getStateAverage($variableIds, $anio)
+    private function getStateAverage($variableIds, $anio, $method = 'avg')
     {
+        $method = in_array($method, ['avg', 'sum']) ? $method : 'avg';
         return DatoHistorico::whereIn('variable_id', $variableIds)
             ->where('anio', $anio)
-            ->avg('valor') ?? 0;
+            ->$method('valor') ?? 0;
+    }
+
+    private function getMacrorregionalAverage($variableIds, $municipio, $anio, $method = 'avg')
+    {
+        $macrorregionId = $municipio->microrregion->macrorregion_id ?? null;
+        if (!$macrorregionId) return 0;
+
+        $municipiosIds = Municipio::whereHas('microrregion', function($q) use ($macrorregionId) {
+            $q->where('macrorregion_id', $macrorregionId);
+        })->pluck('id');
+
+        $method = in_array($method, ['avg', 'sum']) ? $method : 'avg';
+        return DatoHistorico::whereIn('variable_id', $variableIds)
+            ->whereIn('municipio_id', $municipiosIds)
+            ->where('anio', $anio)
+            ->$method('valor') ?? 0;
+    }
+
+    private function getMunicipalityRankingInMemory($dataStore, $variableIds, $municipio_id, $anio)
+    {
+        $rankings = $dataStore->globalData
+            ->whereIn('variable_id', $variableIds)
+            ->where('anio', $anio)
+            ->groupBy('municipio_id')
+            ->map(fn($group) => $group->sum('valor'))
+            ->sortDesc()
+            ->keys();
+
+        $posicion = $rankings->search($municipio_id);
+
+        return [
+            'posicion' => $posicion !== false ? $posicion + 1 : 'N/D',
+            'total_municipios' => $rankings->count()
+        ];
+    }
+
+    private function getStateAverageInMemory($dataStore, $variableIds, $anio, $method = 'avg')
+    {
+        $filtered = $dataStore->globalData
+            ->whereIn('variable_id', $variableIds)
+            ->where('anio', $anio);
+        
+        return $method === 'sum' ? $filtered->sum('valor') : $filtered->avg('valor');
+    }
+
+    private function getMacrorregionalAverageInMemory($dataStore, $variableIds, $municipiosIds, $anio, $method = 'avg')
+    {
+        if ($municipiosIds->isEmpty()) return 0;
+        
+        $filtered = $dataStore->globalData
+            ->whereIn('variable_id', $variableIds)
+            ->whereIn('municipio_id', $municipiosIds)
+            ->where('anio', $anio);
+        
+        return $method === 'sum' ? $filtered->sum('valor') : $filtered->avg('valor');
     }
 
     private function procesarNarrativa($plantilla, $municipio, $datos)
     {
-        if (!$plantilla || !$datos) return "";
-
-        $rankingText = isset($datos['ranking'])
-            ? "ocupa el lugar <strong>{$datos['ranking']['posicion']}</strong> de {$datos['ranking']['total_municipios']} a nivel estatal"
-            : "";
-
-        $promedioText = isset($datos['promedio_estatal'])
-            ? "comparado con un promedio estatal de <strong>" . number_format($datos['promedio_estatal']) . "</strong>"
-            : "";
-
-        $reemplazos = [
-            '{municipio}'        => $municipio->nombre,
-            '{anio}'             => $datos['anio'] ?? '',
-            '{valor}'            => is_numeric($datos['total'] ?? null) ? "<strong>" . number_format($datos['total']) . "</strong>" : '',
-            '{unidad}'           => $datos['variables'][0]['unidad'] ?? '',
-            '{ranking}'          => $rankingText,
-            '{promedio_estatal}' => $promedioText,
-        ];
-
-        // Tags dinámicos por variable
-        if (isset($datos['variables']) && is_array($datos['variables'])) {
-            foreach ($datos['variables'] as $var) {
-                $slug = Str::slug($var['nombre'], '_');
-                $reemplazos["{{$slug}_valor}"] = "<strong>" . number_format($var['valor']) . "</strong>";
-                $reemplazos["{{$slug}_nombre}"] = $var['nombre'];
-            }
-        }
-
-        return str_replace(array_keys($reemplazos), array_values($reemplazos), $plantilla);
+        return FichaNarratorService::procesar($plantilla, $municipio, $datos);
     }
 
     /**
@@ -2038,5 +2650,201 @@ class FichaController extends Controller
         return Http::timeout(5)->withHeaders([
             'User-Agent' => 'PortalMunicipalPuebla/1.0 (nery.pozos@puebla.gob.mx)'
         ]);
+    }
+
+    private function getHeroStats(Municipio $municipio)
+    {
+        return FichaProfilerService::getHeroStats($municipio);
+    }
+
+    public function compararMunicipal($slug1, $slug2)
+    {
+        $municipio1 = Municipio::where('slug', $slug1)->firstOrFail();
+        $municipio2 = Municipio::where('slug', $slug2)->firstOrFail();
+
+        $municipio1->load('microrregion.macrorregion');
+        $municipio2->load('microrregion.macrorregion');
+
+        $hero1 = $this->getHeroStats($municipio1);
+        $hero2 = $this->getHeroStats($municipio2);
+
+        $configuraciones = ConfiguracionFicha::with(['indicador.variables', 'indicador.tematica.dimension', 'variables'])
+            ->where('activo', true)
+            ->orderBy('seccion')
+            ->orderBy('orden')
+            ->get();
+
+        $allVariableIds = FichaDataStore::extractVariableIds($configuraciones);
+        $globalData = DatoHistorico::whereIn('variable_id', $allVariableIds)
+            ->select('municipio_id', 'variable_id', 'anio', 'valor')
+            ->get();
+
+        $dataStore1 = new FichaDataStore($municipio1, $allVariableIds, $globalData);
+        $dataStore2 = new FichaDataStore($municipio2, $allVariableIds, $globalData);
+
+        $comparativa = [];
+
+        foreach ($configuraciones as $config) {
+            $datos1 = $this->obtenerDatosParaConfig($config, $municipio1, $dataStore1);
+            $datos2 = $this->obtenerDatosParaConfig($config, $municipio2, $dataStore2);
+
+            $combinadoECharts = $this->combinarDatosParaECharts($config, $datos1, $datos2, $municipio1, $municipio2);
+
+            $comparativa[$config->seccion][] = [
+                'config' => $config,
+                'datos1' => $datos1,
+                'datos2' => $datos2,
+                'echarts_combinado' => $combinadoECharts
+            ];
+        }
+
+        $todosMunicipios = Municipio::orderBy('nombre', 'asc')->get();
+
+        return view('municipios.comparar', compact(
+            'municipio1', 'municipio2',
+            'hero1', 'hero2',
+            'comparativa',
+            'todosMunicipios'
+        ));
+    }
+
+    private function combinarDatosParaECharts($config, $datos1, $datos2, $municipio1, $municipio2)
+    {
+        if (!$datos1 || !$datos2) return null;
+
+        $tipo_visualizacion = $config->tipo_visualizacion;
+        $tipoLower = strtolower($tipo_visualizacion);
+        $tipoNorm = $tipoLower;
+        if ($tipoLower === 'barras') {
+            $tipoNorm = 'bar';
+        } elseif ($tipoLower === 'lineas' || $tipoLower === 'líneas') {
+            $tipoNorm = 'line';
+        }
+
+        if (($tipoNorm === 'line') && isset($datos1['tendencia']) && !empty($datos1['tendencia'])) {
+            $tendencia1 = $datos1['tendencia'];
+            $tendencia2 = $datos2['tendencia'];
+
+            $anios = collect(array_merge($tendencia1, $tendencia2))->pluck('anio')->unique()->sort()->values()->toArray();
+
+            $valores1 = [];
+            $valores2 = [];
+            foreach ($anios as $anio) {
+                $item1 = collect($tendencia1)->firstWhere('anio', $anio);
+                $item2 = collect($tendencia2)->firstWhere('anio', $anio);
+                $valores1[] = $item1 ? (float)$item1['valor'] : null;
+                $valores2[] = $item2 ? (float)$item2['valor'] : null;
+            }
+
+            return [
+                'type' => 'line',
+                'eje_x' => ['categorias' => $anios],
+                'series' => [
+                    [
+                        'name' => $municipio1->nombre,
+                        'type' => 'line',
+                        'data' => $valores1,
+                        'smooth' => true,
+                        'symbol' => 'circle',
+                        'symbolSize' => 8,
+                    ],
+                    [
+                        'name' => $municipio2->nombre,
+                        'type' => 'line',
+                        'data' => $valores2,
+                        'smooth' => true,
+                        'symbol' => 'circle',
+                        'symbolSize' => 8,
+                    ]
+                ]
+            ];
+        }
+
+        if ($tipoNorm === 'bar' || $tipoNorm === 'line' || $tipoNorm === 'area') {
+            $vars1 = $datos1['variables'] ?? [];
+            $vars2 = $datos2['variables'] ?? [];
+
+            $categorias = [];
+            $valores1 = [];
+            $valores2 = [];
+
+            foreach ($vars1 as $v1) {
+                $categorias[] = $v1['nombre'];
+                $valores1[] = (float)$v1['valor'];
+
+                $v2 = collect($vars2)->firstWhere('nombre', $v1['nombre']);
+                $valores2[] = $v2 ? (float)$v2['valor'] : 0;
+            }
+
+            return [
+                'type' => $tipoNorm,
+                'eje_x' => ['categorias' => $categorias],
+                'series' => [
+                    [
+                        'name' => $municipio1->nombre,
+                        'type' => $tipoNorm,
+                        'data' => $valores1,
+                        'barGap' => '10%'
+                    ],
+                    [
+                        'name' => $municipio2->nombre,
+                        'type' => $tipoNorm,
+                        'data' => $valores2,
+                        'barGap' => '10%'
+                    ]
+                ]
+            ];
+        }
+
+        return null;
+    }
+
+    public function exportarComparativaPDF($slug1, $slug2)
+    {
+        $municipio1 = Municipio::where('slug', $slug1)->firstOrFail();
+        $municipio2 = Municipio::where('slug', $slug2)->firstOrFail();
+
+        $municipio1->load('microrregion.macrorregion');
+        $municipio2->load('microrregion.macrorregion');
+
+        $hero1 = $this->getHeroStats($municipio1);
+        $hero2 = $this->getHeroStats($municipio2);
+
+        $configuraciones = ConfiguracionFicha::with(['indicador.variables', 'indicador.tematica.dimension', 'variables'])
+            ->where('activo', true)
+            ->orderBy('seccion')
+            ->orderBy('orden')
+            ->get();
+
+        $allVariableIds = FichaDataStore::extractVariableIds($configuraciones);
+        $globalData = DatoHistorico::whereIn('variable_id', $allVariableIds)
+            ->select('municipio_id', 'variable_id', 'anio', 'valor')
+            ->get();
+
+        $dataStore1 = new FichaDataStore($municipio1, $allVariableIds, $globalData);
+        $dataStore2 = new FichaDataStore($municipio2, $allVariableIds, $globalData);
+
+        $comparativa = [];
+
+        foreach ($configuraciones as $config) {
+            $datos1 = $this->obtenerDatosParaConfig($config, $municipio1, $dataStore1);
+            $datos2 = $this->obtenerDatosParaConfig($config, $municipio2, $dataStore2);
+
+            $comparativa[$config->seccion][] = [
+                'config' => $config,
+                'datos1' => $datos1,
+                'datos2' => $datos2
+            ];
+        }
+
+        $pdf = PDF::loadView('municipios.comparar_pdf', compact(
+            'municipio1', 'municipio2',
+            'hero1', 'hero2',
+            'comparativa',
+            'configuraciones'
+        ));
+
+        $fileName = 'comparativa-' . Str::slug($municipio1->nombre) . '-vs-' . Str::slug($municipio2->nombre) . '.pdf';
+        return $pdf->download($fileName);
     }
 }

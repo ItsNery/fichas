@@ -24,7 +24,7 @@ use App\Http\Controllers\Admin\ConfiguracionFichaController;
 Route::get('/prueba-header', function () {
      return view('prueba-header');
 });
-Route::get('/', [HomeController::class, 'index']);
+Route::get('/', [HomeController::class, 'index'])->name('inicio');
 Route::get('/api/municipios/search', [MunicipioController::class, 'search'])->name('api.municipios.search');
 
 // --- Módulo 1: Banco de Indicadores ---
@@ -39,6 +39,9 @@ Route::prefix('banco-indicadores')->name('banco-indicadores.')->group(function (
 // --- Módulo 2: Fichas Municipales ---
 Route::prefix('ficha-municipal')->name('ficha-municipal.')->group(function () {
     Route::get('/', [FichaController::class, 'directorioVisual'])->name('index');
+    Route::get('/comparar/{slug1}/{slug2}', [FichaController::class, 'compararMunicipal'])->name('comparar');
+    Route::get('/comparar/{slug1}/{slug2}/pdf', [FichaController::class, 'exportarComparativaPDF'])->name('comparar.pdf');
+    Route::get('/api/similitud-indicador/{municipio}/{config}', [FichaController::class, 'getSimilitudIndicador'])->name('api.indicador.similitud');
     Route::get('/{municipio:slug}', [FichaController::class, 'resumenMunicipal'])->name('show');
     Route::get('/{municipio:slug}/test', [FichaController::class, 'resumenMunicipalTest'])->name('test');
     Route::get('/{municipio:slug}/v3', [FichaController::class, 'resumenMunicipalV3'])->name('v3');
@@ -73,6 +76,9 @@ Route::get('/api/indicador-complejo/{indicador}/anios-disponibles', [FichaContro
 // 2. Ruta de descarga para datos complejos (filtrada por indicador y año)
 Route::get('/datos-abiertos/exportar-datos-complejos/{indicador}/{anio}', [FichaController::class, 'exportDatosComplejos'])
     ->name('datos-abiertos.export-complejos');
+
+Route::get('/api/docs', [App\Http\Controllers\ApiDocumentationController::class, 'index'])
+    ->name('api.docs');
 
 /*
 |--------------------------------------------------------------------------

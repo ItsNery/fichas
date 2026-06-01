@@ -3,6 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\FichaController;
+use App\Models\Dimension;
+use App\Models\Indicador;
+use App\Models\Macrorregion;
+use App\Models\Microrregion;
+use App\Models\Municipio;
+use App\Models\Tematica;
+use App\Models\Variable;
 use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Log;
@@ -92,11 +99,102 @@ class PublicApiController extends Controller
         }
     }
 
+    public function municipios()
+    {
+        $data = Municipio::select('id', 'nombre', 'slug', 'cvegeo')->orderBy('nombre')->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $data,
+        ]);
+    }
+
+    public function microrregiones()
+    {
+        $data = Microrregion::select('id', 'nombre')->orderBy('nombre')->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $data,
+        ]);
+    }
+
+    public function macrorregiones()
+    {
+        $data = Macrorregion::select('id', 'nombre')->orderBy('nombre')->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $data,
+        ]);
+    }
+
+    public function metadata()
+    {
+        $dimensiones = Dimension::with(['tematicas' => function ($query) {
+            $query->orderBy('orden')->orderBy('nombre');
+        }])->orderBy('orden')->orderBy('nombre')->get();
+
+        $indicadores = Indicador::with('variables')->orderBy('nombre_amigable')->get();
+        $variables   = Variable::select('id', 'indicador_id', 'nombre_amigable', 'unidad_medida', 'orden')->orderBy('nombre_amigable')->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'dimensiones'  => $dimensiones,
+                'indicadores'  => $indicadores,
+                'variables'    => $variables,
+            ],
+        ]);
+    }
+
+    public function indicadores(Request $request)
+    {
+        $query = Indicador::with('variables')->orderBy('nombre_amigable');
+
+        if ($request->filled('tematica_id')) {
+            $query->where('tematica_id', $request->input('tematica_id'));
+        }
+
+        if ($request->filled('dimension_id')) {
+            $query->whereHas('tematica', function ($builder) use ($request) {
+                $builder->where('dimension_id', $request->input('dimension_id'));
+            });
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => $query->get(),
+        ]);
+    }
+
+    public function indicador($id)
+    {
+        $indicador = Indicador::with('variables')->find($id);
+
+        if (! $indicador) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Indicador no encontrado.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => $indicador,
+        ]);
+    }
+
+    public function data(Request $request)
+    {
+        return $this->consultarDatos($request);
+    }
+
     public function debugController()
     {
         // Log::info('API DEBUG: Entrando a debugController');
         try {
-            $count = \App\Models\Indicador::count();
+            $count = Indicador::query()->count();
 
             // Probar instanciación de FichaController
             $fichaController = new FichaController();

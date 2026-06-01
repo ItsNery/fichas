@@ -163,6 +163,18 @@ fichas_municipales/
 - `/datos-abiertos` - Sección de descarga de datos abiertos
 - `/api/municipios/search` - API de búsqueda de municipios
 
+### API Pública
+
+- `/api/v1/municipios` - Lista pública de municipios
+- `/api/v1/microrregiones` - Lista pública de microrregiones
+- `/api/v1/macrorregiones` - Lista pública de macrorregiones
+- `/api/v1/indicadores` - Lista pública de indicadores
+- `/api/v1/indicadores/{id}` - Detalle de un indicador
+- `/api/v1/metadata` - Metadatos de catálogo (dimensiones, indicadores y variables)
+- `/api/v1/data` - Consulta de datos estadísticos (POST o GET)
+- `/api/docs` - Documentación interactiva de la API
+- `/api/openapi.json` - Especificación OpenAPI pública
+
 ### Rutas Administrativas (requieren login)
 
 - `/admin/dashboard` - Tablero principal

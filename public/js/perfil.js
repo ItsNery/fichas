@@ -1,139 +1,403 @@
 /**
  * Perfil Municipal - Lógica Frontend
- * Maneja la renderización de ECharts, mapas y scrollspy para la ficha municipal.
+ * Maneja la renderización de ECharts, mapas y scrollspy para la ficha municipal con carga diferida.
  */
 
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener("DOMContentLoaded", function () {
     if (!window.FichaConfig) return;
 
     // Cargar mapa y renderizar todo
     fetch(window.FichaConfig.geojsonUrl)
-        .then(response => response.json())
-        .then(pueblaJson => {
+        .then((response) => response.json())
+        .then((pueblaJson) => {
             // Estandarizar nombres para ECharts
-            pueblaJson.features.forEach(f => {
+            pueblaJson.features.forEach((f) => {
                 f.properties.name = f.properties.nomgeo.toUpperCase().trim();
             });
-            echarts.registerMap('puebla', pueblaJson);
+            echarts.registerMap("puebla", pueblaJson);
 
             initHeroMap();
-            renderAllCharts();
+            setupLazyCharts();
             setupScrollSpy();
             initPopovers();
         });
 });
 
-function renderAllCharts() {
+function setupLazyCharts() {
     if (!window.FichaConfig || !window.FichaConfig.perfilData) return;
 
-    const perfilData = window.FichaConfig.perfilData;
+    // 1. Observer para gráficos principales
+    const lazyCharts = document.querySelectorAll('.lazy-chart');
+    const chartObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const chartElement = entry.target;
+                const chartId = chartElement.getAttribute('data-chart-id');
+                const itemData = findChartDataById(chartId);
 
-    // perfilData viene agrupado por seccion desde PHP
-    Object.values(perfilData).forEach(items => {
-        items.forEach(item => {
-            if (item.config.tipo_visualizacion !== 'kpi' && item.datos) {
-                renderMainChart(item);
-            }
+                if (itemData) {
+                    renderMainChart(itemData);
+                    
+                    // Fade-in de la gráfica
+                    chartElement.style.opacity = "1";
 
-            if (item.config.tipo_visualizacion === 'kpi' && item.datos && item.datos.tendencia && item.datos.tendencia.length > 1) {
-                renderSparkline(item);
+                    // Remover skeleton loader
+                    const skeleton = document.getElementById("skeleton-" + chartId);
+                    if (skeleton) {
+                        skeleton.style.transition = "opacity 0.3s ease";
+                        skeleton.style.opacity = "0";
+                        setTimeout(() => skeleton.remove(), 300);
+                    }
+                }
+                observer.unobserve(chartElement);
             }
         });
+    }, {
+        root: null,
+        rootMargin: "150px 0px 150px 0px",
+        threshold: 0.05
     });
+
+    lazyCharts.forEach(chart => chartObserver.observe(chart));
+
+    // 2. Observer para micrográficas (Sparklines)
+    const lazySparklines = document.querySelectorAll('.perfil-tarjeta__sparkline');
+    const sparkObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const sparkElement = entry.target;
+                const chartId = sparkElement.getAttribute('data-chart-id');
+                const itemData = findChartDataById(chartId);
+
+                if (itemData) {
+                    renderSparkline(itemData);
+                    sparkElement.style.opacity = "1";
+                }
+                observer.unobserve(sparkElement);
+            }
+        });
+    }, {
+        root: null,
+        rootMargin: "50px 0px 50px 0px",
+        threshold: 0.05
+    });
+
+    lazySparklines.forEach(spark => sparkObserver.observe(spark));
+}
+
+function findChartDataById(id) {
+    if (!window.FichaConfig || !window.FichaConfig.perfilData) return null;
+    const perfilData = window.FichaConfig.perfilData;
+    let found = null;
+    Object.values(perfilData).forEach((items) => {
+        const match = items.find(item => String(item.config.id) === String(id));
+        if (match) {
+            found = match;
+        }
+    });
+    return found;
 }
 
 function renderMainChart(itemData) {
-    var chartDom = document.getElementById('chart-' + itemData.config.id);
+    var chartDom = document.getElementById("chart-" + itemData.config.id);
     if (!chartDom) return;
 
     var myChart = echarts.init(chartDom);
     var option = {};
 
-    if (itemData.config.tipo_visualizacion === 'piramide') {
+    if (itemData.config.tipo_visualizacion === "piramide") {
         var d = itemData.datos;
-        var hombres = d.series && d.series[0] ? d.series[0].data : (d.hombres || []);
-        var mujeres = d.series && d.series[1] ? d.series[1].data : (d.mujeres || []);
-        var categorias = d.eje_x ? d.eje_x.categorias : (d.categorias || []);
+        var hombres =
+            d.series && d.series[0] ? d.series[0].data : d.hombres || [];
+        var mujeres =
+            d.series && d.series[1] ? d.series[1].data : d.mujeres || [];
+        var categorias = d.eje_x ? d.eje_x.categorias : d.categorias || [];
 
         option = {
             tooltip: {
-                trigger: 'axis',
-                axisPointer: { type: 'shadow' },
-                formatter: (p) => p[0].name + '<br/>' + p.map(x => x.marker + x.seriesName + ': ' + Math.abs(x.value).toLocaleString()).join('<br/>')
+                trigger: "axis",
+                axisPointer: { type: "shadow" },
+                confine: true,
+                formatter: (p) =>
+                    p[0].name +
+                    "<br/>" +
+                    p
+                        .map(
+                            (x) =>
+                                x.marker +
+                                x.seriesName +
+                                ": " +
+                                Math.abs(x.value).toLocaleString(),
+                        )
+                        .join("<br/>"),
             },
-            legend: { data: ['Hombres', 'Mujeres'], bottom: 0 },
-            grid: { left: '3%', right: '4%', bottom: '10%', containLabel: true },
-            xAxis: [{ type: 'value', axisLabel: { formatter: (v) => Math.abs(v).toLocaleString() } }],
-            yAxis: [{ type: 'category', data: categorias, axisTick: { show: false }, inverse: true }],
-            series: [{
-                name: 'Hombres', type: 'bar', stack: 'total', data: hombres.map(v => -Math.abs(v)), itemStyle: { color: '#0a192f' }
-            }, {
-                name: 'Mujeres', type: 'bar', stack: 'total', data: mujeres.map(v => Math.abs(v)), itemStyle: { color: '#c79b66' }
-            }]
+            legend: { data: ["Hombres", "Mujeres"], bottom: 0 },
+            grid: {
+                left: "3%",
+                right: "4%",
+                bottom: "10%",
+                containLabel: true,
+            },
+            xAxis: [
+                {
+                    type: "value",
+                    axisLabel: {
+                        formatter: (v) => Math.abs(v).toLocaleString(),
+                    },
+                },
+            ],
+            yAxis: [
+                {
+                    type: "category",
+                    data: categorias,
+                    axisTick: { show: false },
+                    inverse: true,
+                },
+            ],
+            series: [
+                {
+                    name: "Hombres",
+                    type: "bar",
+                    stack: "total",
+                    data: hombres.map((v) => -Math.abs(v)),
+                    itemStyle: { color: "#0a192f" },
+                },
+                {
+                    name: "Mujeres",
+                    type: "bar",
+                    stack: "total",
+                    data: mujeres.map((v) => Math.abs(v)),
+                    itemStyle: { color: "#c79b66" },
+                },
+            ],
         };
     } else if (itemData.datos && itemData.datos.echarts) {
         var echartsData = itemData.datos.echarts;
         var tVis = itemData.config.tipo_visualizacion.toLowerCase();
 
         var typeMap = {
-            'lineas': 'line', 'líneas': 'line', 'line': 'line', 'area': 'line',
-            'barras': 'bar', 'bar': 'bar',
-            'pie': 'pie', 'torta': 'pie', 'pastel': 'pie', 'donut': 'pie', 'dona': 'pie',
-            'mapa': 'map', 'map': 'map', 'treemap': 'treemap'
+            lineas: "line",
+            líneas: "line",
+            line: "line",
+            area: "line",
+            barras: "bar",
+            bar: "bar",
+            pie: "pie",
+            torta: "pie",
+            pastel: "pie",
+            donut: "pie",
+            dona: "pie",
+            mapa: "map",
+            map: "map",
+            treemap: "treemap",
+            scatter: "scatter",
         };
 
-        var chartType = echartsData.type || typeMap[tVis] || 'bar';
+        var chartType = echartsData.type || typeMap[tVis] || "bar";
 
-        if (chartType === 'map') {
+        if (chartType === "map") {
             var currentMunName = window.FichaConfig.municipioNombre.trim();
-            var cleanData = (echartsData.data || []).map(d => {
+            var cleanData = (echartsData.data || []).map((d) => {
                 var nameUpper = d.name.toUpperCase().trim();
-                var isCurrent = (nameUpper === currentMunName);
+                var isCurrent = nameUpper === currentMunName;
                 var item = { name: nameUpper, value: d.value };
                 if (isCurrent) {
                     item.selected = true;
                     item.itemStyle = {
-                        borderColor: '#c79b66', borderWidth: 3, shadowBlur: 10, shadowColor: 'rgba(199, 155, 102, 0.8)', areaColor: '#861e34'
+                        borderColor: "#c79b66",
+                        borderWidth: 3,
+                        shadowBlur: 10,
+                        shadowColor: "rgba(199, 155, 102, 0.8)",
+                        areaColor: "#861e34",
                     };
                 }
                 return item;
             });
 
             option = {
-                tooltip: { trigger: 'item', formatter: '{b}: {c}' },
+                tooltip: { trigger: "item", formatter: "{b}: {c}", confine: true },
                 visualMap: {
-                    min: echartsData.min || 0, max: echartsData.max || 100, text: ['Alto', 'Bajo'], realtime: false, calculable: true,
-                    inRange: { color: ['#fdf2f2', '#861e34', '#5f1b2d'] }, bottom: 20, left: 20
+                    min: echartsData.min || 0,
+                    max: echartsData.max || 100,
+                    text: ["Alto", "Bajo"],
+                    realtime: false,
+                    calculable: true,
+                    inRange: { color: ["#fdf2f2", "#861e34", "#5f1b2d"] },
+                    bottom: 20,
+                    left: 20,
                 },
-                series: [{
-                    name: 'Datos', type: 'map', map: 'puebla', roam: true, zoom: 1.2,
-                    emphasis: { label: { show: true }, itemStyle: { areaColor: '#c79b66' } },
-                    data: cleanData
-                }]
+                series: [
+                    {
+                        name: "Datos",
+                        type: "map",
+                        map: "puebla",
+                        roam: true,
+                        zoom: 1.2,
+                        emphasis: {
+                            label: { show: true },
+                            itemStyle: { areaColor: "#c79b66" },
+                        },
+                        data: cleanData,
+                    },
+                ],
+            };
+        } else if (chartType === "scatter") {
+            option = {
+                tooltip: {
+                    trigger: "item",
+                    confine: true,
+                    formatter: function (params) {
+                        if (params.data && params.data.length >= 3) {
+                            var xVal = params.data[0];
+                            var yVal = params.data[1];
+                            var munName = params.data[2];
+                            var xTitle =
+                                echartsData.eje_x && echartsData.eje_x.titulo
+                                    ? echartsData.eje_x.titulo
+                                    : "Inversión";
+                            var yTitle =
+                                echartsData.eje_y && echartsData.eje_y.titulo
+                                    ? echartsData.eje_y.titulo
+                                    : "Indicador";
+
+                            return (
+                                `<div style="font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid #ccc; padding-bottom: 3px;">${munName}</div>` +
+                                `<span style="color:#861e34; font-size: 14px;">●</span> ${xTitle}: <strong>$${xVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong><br/>` +
+                                `<span style="color:#c79b66; font-size: 14px;">●</span> ${yTitle}: <strong>${yVal.toLocaleString()}%</strong>`
+                            );
+                        }
+                        return params.value;
+                    },
+                },
+                legend: { bottom: 0 },
+                grid: { top: 40, bottom: 60, left: 60, right: 30 },
+                xAxis: {
+                    type: "value",
+                    name:
+                        echartsData.eje_x && echartsData.eje_x.titulo
+                            ? echartsData.eje_x.titulo
+                            : "Eje X",
+                    nameLocation: "middle",
+                    nameGap: 30,
+                    splitLine: { show: true, lineStyle: { type: "dashed" } },
+                },
+                yAxis: {
+                    type: "value",
+                    name:
+                        echartsData.eje_y && echartsData.eje_y.titulo
+                            ? echartsData.eje_y.titulo
+                            : "Eje Y",
+                    nameLocation: "middle",
+                    nameGap: 40,
+                    splitLine: { show: true, lineStyle: { type: "dashed" } },
+                },
+                series: (echartsData.series || []).map((s) => {
+                    s.type = "scatter";
+                    s.symbolSize = s.symbolSize || 10;
+                    return s;
+                }),
+            };
+        } else if (chartType === "bar-horizontal") {
+            option = {
+                tooltip: {
+                    trigger: "axis",
+                    axisPointer: { type: "shadow" },
+                    confine: true,
+                    formatter: function(params) {
+                        if (!params || params.length === 0) return '';
+                        let p = params[0];
+                        let val = p.value;
+                        if (typeof val === 'object' && val !== null) {
+                            val = val.value;
+                        }
+                        let formattedVal = Number(val).toLocaleString('es-MX');
+                        let unidad = echartsData.unidad || '';
+                        return `${p.name}<br/>${p.marker}${p.seriesName}: <strong>${formattedVal} ${unidad}</strong>`;
+                    }
+                },
+                grid: { top: 30, bottom: 30, left: 150, right: 30 },
+                xAxis: {
+                    type: "value",
+                    splitLine: { show: true, lineStyle: { type: "dashed" } },
+                    axisLabel: {
+                        formatter: function(value) {
+                            return Number(value).toLocaleString('es-MX');
+                        }
+                    }
+                },
+                yAxis: {
+                    type: "category",
+                    data: echartsData.eje_y ? echartsData.eje_y.categorias : [],
+                    inverse: true,
+                    axisTick: { show: false },
+                    axisLabel: {
+                        formatter: function(value) {
+                            if (!value) return '';
+                            // Match pattern: "Name of Municipality (Rank°)"
+                            const match = value.match(/^(.*?)\s*\(([^)]+)\)$/);
+                            if (match) {
+                                const name = match[1];
+                                const rank = match[2];
+                                if (name.length > 17) {
+                                    return name.substring(0, 17) + '... (' + rank + ')';
+                                }
+                            } else {
+                                if (value.length > 17) {
+                                    return value.substring(0, 17) + '...';
+                                }
+                            }
+                            return value;
+                        }
+                    }
+                },
+                series: (echartsData.series || []).map((s) => {
+                    s.type = "bar";
+                    return s;
+                }),
             };
         } else {
             option = {
-                tooltip: { trigger: (['line', 'bar', 'area'].includes(chartType) || (echartsData.eje_x && echartsData.eje_x.categorias)) ? 'axis' : 'item' },
+                tooltip: {
+                    trigger:
+                        ["line", "bar", "area"].includes(chartType) ||
+                        (echartsData.eje_x && echartsData.eje_x.categorias)
+                            ? "axis"
+                            : "item",
+                    confine: true,
+                },
                 legend: { bottom: 0 },
                 grid: { top: 40, bottom: 60, left: 60, right: 30 },
-                color: ['#861e34', '#c79b66', '#0a192f', '#444444', '#7a7a7a'],
-                series: (echartsData.series || []).map(s => {
+                color: ["#861e34", "#c79b66", "#0a192f", "#444444", "#7a7a7a"],
+                series: (echartsData.series || []).map((s) => {
                     s.type = chartType;
-                    if (chartType === 'line' || tVis.includes('area')) {
-                        s.smooth = true; s.symbol = 'circle'; s.symbolSize = 8;
-                        if (tVis.includes('area')) s.areaStyle = { opacity: 0.2 };
+                    if (chartType === "line" || tVis.includes("area")) {
+                        s.smooth = true;
+                        s.symbol = "circle";
+                        s.symbolSize = 8;
+                        if (tVis.includes("area"))
+                            s.areaStyle = { opacity: 0.2 };
                     }
                     return s;
-                })
+                }),
             };
 
-            if (['bar', 'line', 'area'].includes(chartType)) {
+            if (["bar", "line", "area"].includes(chartType)) {
                 option.xAxis = {
-                    type: 'category',
-                    data: (echartsData.eje_x && echartsData.eje_x.categorias) ? echartsData.eje_x.categorias : [],
-                    axisLabel: { rotate: (echartsData.eje_x && echartsData.eje_x.categorias && echartsData.eje_x.categorias.length > 5 ? 30 : 0) }
+                    type: "category",
+                    data:
+                        echartsData.eje_x && echartsData.eje_x.categorias
+                            ? echartsData.eje_x.categorias
+                            : [],
+                    axisLabel: {
+                        rotate:
+                            echartsData.eje_x &&
+                            echartsData.eje_x.categorias &&
+                            echartsData.eje_x.categorias.length > 5
+                                ? 30
+                                : 0,
+                    },
                 };
-                option.yAxis = { type: 'value' };
+                option.yAxis = { type: "value" };
             }
         }
     } else {
@@ -141,32 +405,48 @@ function renderMainChart(itemData) {
         var vars = [];
         if (rawData.variables) {
             vars = rawData.variables;
-        } else if (typeof rawData === 'object' && !Array.isArray(rawData)) {
-            vars = Object.keys(rawData).map(k => ({ nombre: k, valor: rawData[k] }));
+        } else if (typeof rawData === "object" && !Array.isArray(rawData)) {
+            vars = Object.keys(rawData).map((k) => ({
+                nombre: k,
+                valor: rawData[k],
+            }));
         }
 
         option = {
-            tooltip: { trigger: 'axis' },
+            tooltip: { trigger: "axis", confine: true },
             grid: { top: 40, bottom: 80, left: 60, right: 30 },
-            xAxis: { type: 'category', data: vars.map(v => v.nombre || v.name || ''), axisLabel: { rotate: 30 } },
-            yAxis: { type: 'value' },
-            series: [{ data: vars.map(v => v.valor || v.value || 0), type: 'bar', itemStyle: { color: '#861e34' } }]
+            xAxis: {
+                type: "category",
+                data: vars.map((v) => v.nombre || v.name || ""),
+                axisLabel: { rotate: 30 },
+            },
+            yAxis: { type: "value" },
+            series: [
+                {
+                    data: vars.map((v) => v.valor || v.value || 0),
+                    type: "bar",
+                    itemStyle: { color: "#861e34" },
+                },
+            ],
         };
     }
 
     if (itemData.config.ajustes_visuales) {
         try {
-            var extra = typeof itemData.config.ajustes_visuales === 'string' ? JSON.parse(itemData.config.ajustes_visuales) : itemData.config.ajustes_visuales;
+            var extra =
+                typeof itemData.config.ajustes_visuales === "string"
+                    ? JSON.parse(itemData.config.ajustes_visuales)
+                    : itemData.config.ajustes_visuales;
             Object.assign(option, extra);
-        } catch (e) { }
+        } catch (e) {}
     }
 
     myChart.setOption(option);
-    window.addEventListener('resize', () => myChart.resize());
+    window.addEventListener("resize", () => myChart.resize());
 }
 
 function renderSparkline(itemData) {
-    var sparkDom = document.getElementById('sparkline-' + itemData.config.id);
+    var sparkDom = document.getElementById("sparkline-" + itemData.config.id);
     if (!sparkDom) return;
 
     var sparkChart = echarts.init(sparkDom);
@@ -174,92 +454,161 @@ function renderSparkline(itemData) {
 
     var option = {
         grid: { left: 0, right: 0, top: 5, bottom: 5 },
-        xAxis: { type: 'category', show: false, data: trendData.map(t => t.anio) },
-        yAxis: { type: 'value', show: false, min: 'dataMin' },
-        series: [{
-            data: trendData.map(t => t.valor),
-            type: 'line',
-            smooth: true,
-            symbol: 'none',
-            lineStyle: { color: '#861e34', width: 2 },
-            areaStyle: {
-                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                    { offset: 0, color: 'rgba(134, 30, 52, 0.3)' },
-                    { offset: 1, color: 'rgba(134, 30, 52, 0)' }
-                ])
-            }
-        }]
+        xAxis: {
+            type: "category",
+            show: false,
+            data: trendData.map((t) => t.anio),
+        },
+        yAxis: { type: "value", show: false, min: "dataMin" },
+        series: [
+            {
+                data: trendData.map((t) => t.valor),
+                type: "line",
+                smooth: true,
+                symbol: "none",
+                lineStyle: { color: "#861e34", width: 2 },
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: "rgba(134, 30, 52, 0.3)" },
+                        { offset: 1, color: "rgba(134, 30, 52, 0)" },
+                    ]),
+                },
+            },
+        ],
     };
 
     sparkChart.setOption(option);
-    window.addEventListener('resize', () => sparkChart.resize());
+    window.addEventListener("resize", () => sparkChart.resize());
 }
 
 function initPopovers() {
-    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+    var popoverTriggerList = [].slice.call(
+        document.querySelectorAll('[data-bs-toggle="popover"]'),
+    );
     var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-        return new bootstrap.Popover(popoverTriggerEl);
+        if (popoverTriggerEl.classList.contains('similarity-popover-trigger')) {
+            const popover = new bootstrap.Popover(popoverTriggerEl, {
+                sanitize: false
+            });
+
+            popoverTriggerEl.addEventListener('inserted.bs.popover', function () {
+                const muniId = popoverTriggerEl.getAttribute('data-municipio-id');
+                const configId = popoverTriggerEl.getAttribute('data-config-id');
+                const popoverId = popoverTriggerEl.getAttribute('aria-describedby');
+                const popoverBody = document.querySelector(`#${popoverId} .popover-body`);
+
+                if (popoverBody && !popoverTriggerEl.getAttribute('data-loaded')) {
+                    fetch(`/ficha-municipal/api/similitud-indicador/${muniId}/${configId}`)
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                let html = `<div class="similarity-popover text-start" style="min-width: 200px;">`;
+                                html += `<p class="mb-1 border-bottom pb-1 small" style="font-size: 11px;">Variable: <strong class="text-vino">${data.variable}</strong> (${data.anio})</p>`;
+                                html += `<p class="mb-2 small" style="font-size: 11px;">Valor actual: <strong class="text-gold" style="color: #c79b66;">${data.valor_actual}</strong></p>`;
+                                html += `<ul class="list-unstyled mb-0 d-flex flex-column gap-2" style="padding-left: 0;">`;
+                                
+                                if (data.similares && data.similares.length > 0) {
+                                    data.similares.forEach(sim => {
+                                        html += `<li class="d-flex justify-content-between align-items-center gap-3 border-bottom pb-1" style="font-size: 11px;">`;
+                                        html += `  <div>`;
+                                        html += `    <span class="fw-bold d-block" style="font-size: 11px; color: #861e34;">${sim.nombre}</span>`;
+                                        html += `    <span class="text-muted" style="font-size: 10px;">Valor: ${sim.valor}</span>`;
+                                        html += `  </div>`;
+                                        html += `  <div class="d-flex gap-1">`;
+                                        html += `    <a href="/ficha-municipal/${sim.slug}/perfil" class="btn btn-outline-secondary btn-xs rounded-pill" style="font-size: 9px; padding: 1px 6px;">Ver</a>`;
+                                        html += `    <a href="/ficha-municipal/comparar/${window.FichaConfig.municipioSlug}/${sim.slug}" class="btn btn-vino btn-xs text-white rounded-pill" style="font-size: 9px; padding: 1px 6px; background-color: #861e34; border-color: #861e34;">Vs</a>`;
+                                        html += `  </div>`;
+                                        html += `</li>`;
+                                    });
+                                } else {
+                                    html += `<li class="text-muted small">No se encontraron similares</li>`;
+                                }
+                                
+                                html += `</ul></div>`;
+                                popoverBody.innerHTML = html;
+                                popoverTriggerEl.setAttribute('data-loaded', 'true');
+                            } else {
+                                popoverBody.innerHTML = `<div class="text-danger small">${data.message || 'Error al cargar'}</div>`;
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            popoverBody.innerHTML = `<div class="text-danger small">Error de conexión</div>`;
+                        });
+                }
+            });
+
+            return popover;
+        } else {
+            return new bootstrap.Popover(popoverTriggerEl);
+        }
     });
 }
 
 function initHeroMap() {
-    var dom = document.getElementById('hero-map');
+    var dom = document.getElementById("hero-map");
     if (!dom) return;
 
     var myChart = echarts.init(dom);
     var cvegeo = window.FichaConfig.cvegeo;
-    var geo = echarts.getMap('puebla').geoJSON;
-    var feature = geo.features.find(f => String(f.properties.cvegeo) == String(cvegeo));
+    var geo = echarts.getMap("puebla").geoJSON;
+    var feature = geo.features.find(
+        (f) => String(f.properties.cvegeo) == String(cvegeo),
+    );
 
     myChart.setOption({
-        backgroundColor: 'transparent',
+        backgroundColor: "transparent",
         animation: false,
-        series: [{
-            type: 'map',
-            map: 'puebla',
-            silent: true,
-            roam: false,
-            aspectScale: 1.0,
-            layoutCenter: ['50%', '50%'],
-            layoutSize: '100%',
-            label: { show: false },
-            itemStyle: {
-                areaColor: 'rgba(255, 255, 255, 0.3)',
-                borderColor: 'rgba(255, 255, 255, 0.6)',
-                borderWidth: 1.5
-            },
-            data: [{
-                name: feature ? feature.properties.name : '',
-                selected: true,
+        series: [
+            {
+                type: "map",
+                map: "puebla",
+                silent: true,
+                roam: false,
+                aspectScale: 1.0,
+                layoutCenter: ["50%", "50%"],
+                layoutSize: "100%",
+                label: { show: false },
                 itemStyle: {
-                    areaColor: '#c79b66',
-                    shadowBlur: 30,
-                    shadowColor: 'rgba(0,0,0,0.5)',
-                    borderColor: '#fff',
-                    borderWidth: 2
-                }
-            }]
-        }]
+                    areaColor: "rgba(255, 255, 255, 0.3)",
+                    borderColor: "rgba(255, 255, 255, 0.6)",
+                    borderWidth: 1.5,
+                },
+                data: [
+                    {
+                        name: feature ? feature.properties.name : "",
+                        selected: true,
+                        itemStyle: {
+                            areaColor: "#c79b66",
+                            shadowBlur: 30,
+                            shadowColor: "rgba(0,0,0,0.5)",
+                            borderColor: "#fff",
+                            borderWidth: 2,
+                        },
+                    },
+                ],
+            },
+        ],
     });
 }
 
 function setupScrollSpy() {
-    const sections = document.querySelectorAll('.section-perfil');
-    const navLinks = document.querySelectorAll('.nav-premium-link');
+    const sections = document.querySelectorAll(".section-perfil");
+    const navLinks = document.querySelectorAll(".sticky-nav__link");
 
     window.onscroll = () => {
         let current = "";
-        sections.forEach(s => {
+        sections.forEach((s) => {
             const top = s.offsetTop;
             if (pageYOffset >= top - 150) {
-                current = s.getAttribute('id');
+                current = s.getAttribute("id");
             }
         });
 
-        navLinks.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('href').includes(current)) {
-                link.classList.add('active');
+        navLinks.forEach((link) => {
+            link.classList.remove("active");
+            if (link.getAttribute("href").includes(current)) {
+                link.classList.add("active");
             }
         });
     };
