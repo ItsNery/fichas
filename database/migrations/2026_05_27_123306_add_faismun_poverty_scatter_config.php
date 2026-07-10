@@ -21,7 +21,8 @@ return new class extends Migration
             ->first();
 
         if (!$indicador) {
-            throw new \Exception("No se encontró el indicador de Recursos Federales (FORTAMUN y FAISMUN) en la base de datos.");
+            \Illuminate\Support\Facades\Log::warning("No se encontró el indicador de Recursos Federales (FORTAMUN y FAISMUN) en la base de datos. Saltando migración.");
+            return;
         }
 
         // Buscar variables por nombre
@@ -29,7 +30,8 @@ return new class extends Migration
         $varY = DB::table('variables')->where('nombre_amigable', 'Porcentaje de población en situación de pobreza')->first();
 
         if (!$varX || !$varY) {
-            throw new \Exception("No se encontraron las variables de FAISMUN DEVENGADO o de Porcentaje de Pobreza en la base de datos.");
+            \Illuminate\Support\Facades\Log::warning("No se encontraron las variables de FAISMUN DEVENGADO o de Porcentaje de Pobreza en la base de datos. Saltando migración.");
+            return;
         }
 
         // 1. Insertar en configuracion_fichas

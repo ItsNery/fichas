@@ -55,7 +55,7 @@
             {{-- ENLACE 3: Fichas Municipales --}}
             <li>
                 <a href="{{ route('ficha-municipal.index') }}"
-                    class="{{ request()->is('ficha-municipal*') ? 'active' : '' }}">
+                    class="{{ request()->is('ficha*') ? 'active' : '' }}">
                     Fichas Municipales
                 </a>
             </li>

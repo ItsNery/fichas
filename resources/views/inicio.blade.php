@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="https://unpkg.com/flickity@2/dist/flickity.min.css">
 @endsection
 @section('jss')
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <script src="https://unpkg.com/flickity@2/dist/flickity.pkgd.min.js"></script>
 @endsection
@@ -22,36 +22,28 @@
 
             <div class="row justify-content-center">
                 <div class="col-lg-8">
-                    <div class="card border-0 rounded-4 shadow-lg p-2" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
-                        <!-- Pestañas de Navegación -->
-                        <ul class="nav nav-pills nav-justified mb-3" id="heroTabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active text-white fw-bold rounded-pill inicio" data-bs-toggle="pill" data-bs-target="#tab-municipio" type="button" role="tab" aria-selected="true">Mi Municipio</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link text-white fw-bold rounded-pill inicio" data-bs-toggle="pill" data-bs-target="#tab-indicadores" type="button" role="tab" aria-selected="false">Datos Temáticos</button>
-                            </li>
-                        </ul>
+                    <div class="card border-0 rounded-4 shadow-lg p-4" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                        <h5 class="fw-bold mb-2 text-white">
+                            <i class="fas fa-search me-2"></i>Explora Puebla en Datos
+                        </h5>
+                        <p class="text-white-50 small mb-3">
+                            Busca municipios, indicadores estadísticos o regiones del estado.
+                        </p>
+                        <div class="omnisearch-container mx-auto w-100">
+                            <select id="omnisearch-input" placeholder="Ej: Puebla, Población total, Sierra Norte..."></select>
+                        </div>
 
-                        <!-- Contenido de Pestañas -->
-                        <div class="tab-content bg-white text-dark p-4 rounded-4 text-start" id="heroTabsContent">
-                            <!-- Tab Municipio -->
-                            <div class="tab-pane fade show active" id="tab-municipio" role="tabpanel">
-                                <h5 class="fw-bold mb-2"><i class="fas fa-map-marker-alt texto-color-1 me-2"></i>Consulta la Ficha de tu Municipio</h5>
-                                <p class="text-muted small mb-3">Obtén un resumen completo de población, economía y servicios de tu localidad.</p>
-                                <div class="quick-search-container mx-auto">
-                                    <select id="municipio-quick-search" placeholder="Escribe el nombre de un municipio..."></select>
-                                </div>
-                            </div>
-                            
-                            <!-- Tab Indicadores -->
-                            <div class="tab-pane fade" id="tab-indicadores" role="tabpanel">
-                                <h5 class="fw-bold mb-2"><i class="fas fa-chart-line custom-text-primary me-2"></i>Banco de Indicadores</h5>
-                                <p class="text-muted small mb-3">Accede a la base de datos completa para explorar, comparar y descargar indicadores estadísticos a nivel estatal.</p>
-                                <a href="{{ route('banco-indicadores.index') }}" class="btn btn-custom-primary w-100 py-2 fw-bold">
-                                    <i class="fas fa-database me-2"></i>Explorar Base de Datos
-                                </a>
-                            </div>
+                        {{-- Quick access links --}}
+                        <div class="d-flex justify-content-center gap-3 mt-3 flex-wrap">
+                            <a href="{{ route('ficha-municipal.index') }}" class="omnisearch-quicklink">
+                                <i class="fas fa-map-marker-alt me-1"></i>Municipios
+                            </a>
+                            <a href="{{ route('banco-indicadores.index') }}" class="omnisearch-quicklink">
+                                <i class="fas fa-chart-line me-1"></i>Banco de Indicadores
+                            </a>
+                            <a href="{{ route('datos-abiertos.index') }}" class="omnisearch-quicklink">
+                                <i class="fas fa-download me-1"></i>Datos Abiertos
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -148,35 +140,56 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", () => {
-        // buscador de municipios
-        const quickSearch = document.getElementById('municipio-quick-search');
+        // --- OMNISEARCH: Buscador unificado ---
+        const omniInput = document.getElementById('omnisearch-input');
 
-        if (quickSearch) {
-            new TomSelect(quickSearch, {
+        if (omniInput) {
+            new TomSelect(omniInput, {
                 valueField: 'id',
                 labelField: 'text',
                 searchField: 'text',
                 maxItems: 1,
-                create: true,
-                // Activa la búsqueda remota
-                load: function(query, callback) {
-                    if (!query.length) return callback();
-
-                    fetch(`{{ route('api.municipios.search') }}?q=${encodeURIComponent(query)}`)
-                        .then(response => response.json())
-                        .then(json => {
-                            callback(json);
-                        }).catch(() => {
-                            callback();
-                        });
+                create: false,
+                // Renderizado custom con íconos y badges de tipo
+                render: {
+                    option: function(data, escape) {
+                        const typeColors = {
+                            'Municipio':     '#861e34',
+                            'Indicador':     '#0c312d',
+                            'Microrregión':  '#c5a059',
+                            'Macrorregión':  '#2c5f2d',
+                        };
+                        const color = typeColors[data.type] || '#666';
+                        return `<div class="d-flex align-items-center gap-2 py-1 px-1">
+                            <span class="omnisearch-icon" style="background: ${color};">
+                                <i class="fas ${escape(data.icon)}"></i>
+                            </span>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold" style="font-size: 0.9rem;">${escape(data.text)}</div>
+                            </div>
+                            <span class="omnisearch-type-badge" style="color: ${color}; border-color: ${color};">${escape(data.type)}</span>
+                        </div>`;
+                    },
+                    item: function(data, escape) {
+                        return `<div><i class="fas ${escape(data.icon)} me-1"></i>${escape(data.text)}</div>`;
+                    },
+                    no_results: function() {
+                        return '<div class="no-results p-3 text-center text-muted"><i class="fas fa-search me-1"></i>Sin resultados. Intenta con otro término.</div>';
+                    }
                 },
-                // Redirige al usuario cuando selecciona un municipio
+                load: function(query, callback) {
+                    if (query.length < 2) return callback();
+
+                    fetch(`{{ route('api.omnisearch') }}?q=${encodeURIComponent(query)}`)
+                        .then(response => response.json())
+                        .then(json => callback(json))
+                        .catch(() => callback());
+                },
                 onChange: function(value) {
-                    if (value) {
-                        // Reemplaza 'fichas.resumen' con el nombre de tu ruta de resumen municipal
-                        let url =
-                            "{{ route('ficha-municipal.show', ['municipio' => 'ID_PLACEHOLDER']) }}";
-                        window.location.href = url.replace('ID_PLACEHOLDER', value);
+                    if (!value) return;
+                    const item = this.options[value];
+                    if (item && item.url) {
+                        window.location.href = item.url;
                     }
                 }
             });
@@ -198,44 +211,56 @@
         const sparklineCharts = document.querySelectorAll('.sparkline-chart');
         sparklineCharts.forEach(chartEl => {
             const seriesData = JSON.parse(chartEl.dataset.series);
+            chartEl.style.height = '80px';
+            chartEl.style.width = '100%';
 
+            const chart = echarts.init(chartEl);
             const options = {
-                series: [{
-                    data: seriesData
-                }],
-                chart: {
-                    type: 'line',
-                    height: 80,
-                    sparkline: {
-                        enabled: true
-                    },
+                grid: {
+                    left: 0,
+                    right: 0,
+                    top: 10,
+                    bottom: 0
                 },
-                colors: ['#0c312d'],
-                stroke: {
-                    curve: 'smooth',
-                    width: 2
+                xAxis: {
+                    type: 'category',
+                    show: false
+                },
+                yAxis: {
+                    type: 'value',
+                    show: false,
+                    min: 'dataMin'
                 },
                 tooltip: {
-                    fixed: {
-                        enabled: false
-                    },
-                    x: {
-                        show: false
-                    },
-                    y: {
-                        title: {
-                            formatter: (seriesName) => ''
-                        },
-                        formatter: (value) => new Intl.NumberFormat().format(value)
-                    },
-                    marker: {
-                        show: false
+                    trigger: 'axis',
+                    formatter: function(params) {
+                        return new Intl.NumberFormat().format(params[0].value);
                     }
-                }
+                },
+                series: [{
+                    data: seriesData,
+                    type: 'line',
+                    smooth: 0.3,
+                    symbol: 'none',
+                    lineStyle: {
+                        color: '#0c312d',
+                        width: 2
+                    },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                            offset: 0,
+                            color: '#0c312d44'
+                        }, {
+                            offset: 1,
+                            color: 'transparent'
+                        }])
+                    }
+                }]
             };
-
-            const chart = new ApexCharts(chartEl, options);
-            chart.render();
+            chart.setOption(options);
+            window.addEventListener('resize', function() {
+                chart.resize();
+            });
         });
     });
 </script>

@@ -9,7 +9,18 @@ class SiteEvaluation extends Model
     use HasFactory;
     protected $fillable = [
         'score',
-        'url',
+        'comment',
+        'url_evaluated',
         'user_agent',
+        'ip_address',
+        'user_id',
+        'device_type',
+        'browser',
+        'browser_version',
+        'os',
+        'os_version',
+        'screen_resolution',
+        'language',
+        'time_zone',
     ];
 }

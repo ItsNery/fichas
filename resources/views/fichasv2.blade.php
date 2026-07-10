@@ -24,7 +24,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
 @endsection
 @section('jss')
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
 @endsection
 
@@ -297,7 +297,7 @@
             </div>
         </div>
     </section>
-    <script src="{{ asset('js/script-ficha_new.js') }}" defer></script>
+    <script src="{{ asset('js/script-ficha.js') }}" defer></script>
     <script src="{{ asset('js/buscador-indicadores.js') }}" defer></script>
     {{-- <script src="{{ asset('js/mapa-dashboard.js') }}" defer></script> --}}
 @endsection

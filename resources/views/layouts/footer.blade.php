@@ -29,7 +29,7 @@
                 <div id="evaluationDiv" class="evaluation-container">
                     <h5>¡Ayúdanos a mejorar!</h5>
                     <p>¿Te ha sido útil la información de esta página?</p>
-                    <div class="emoji-container">
+                    <div class="emoji-container" id="emojiContainer">
                         <div class="emoji-wrapper" data-score="3" title="¡Muy útil!">
                             <span class="emoji">😊</span>
                             <span class="emoji-label">Útil</span>
@@ -42,6 +42,15 @@
                             <span class="emoji">😞</span>
                             <span class="emoji-label">Poco útil</span>
                         </div>
+                    </div>
+                    {{-- Formulario de retroalimentación (oculto por defecto) --}}
+                    <div id="feedbackForm" class="feedback-form" style="display: none;">
+                        <label for="feedbackComment" class="feedback-label">¿Qué podríamos mejorar?</label>
+                        <textarea id="feedbackComment" class="feedback-textarea" rows="3" maxlength="1000"
+                            placeholder="Escribe tu sugerencia aquí..."></textarea>
+                        <button type="button" id="submitFeedbackBtn" class="feedback-submit-btn">
+                            <i class="fa fa-paper-plane mr-1"></i> Enviar
+                        </button>
                     </div>
                 </div>
             </div>
@@ -178,41 +187,40 @@
 </footer>
 
 <script>
-    // Esperamos a que todo el contenido de la página se haya cargado.
     document.addEventListener('DOMContentLoaded', function() {
-
-
-
-        // 1. Obtenemos las referencias a los elementos del DOM.
         const evaluationDiv = document.getElementById('evaluationDiv');
+        const emojiContainer = document.getElementById('emojiContainer');
         const emojiWrappers = document.querySelectorAll('.emoji-container .emoji-wrapper');
+        const feedbackForm = document.getElementById('feedbackForm');
+        const feedbackComment = document.getElementById('feedbackComment');
+        const submitFeedbackBtn = document.getElementById('submitFeedbackBtn');
+        let selectedScore = null;
 
+        if (!evaluationDiv || emojiWrappers.length === 0) return;
 
-
-        // Si el cuadro de evaluación o los emojis no existen, no hacemos nada más.
-        if (!evaluationDiv || emojiWrappers.length === 0) {
-            console.error(
-                "No se encontraron los elementos necesarios para la evaluación. El script se detendrá.");
-            return;
-        }
-
-        // --- LA REGLA DE "VOTAR UNA SOLA VEZ" ---
-        // 2. Revisamos en localStorage si el usuario ya ha votado antes.
+        // Revisa si ya votó
         if (localStorage.getItem('siteEvaluationVoted') === 'true') {
-            // Si ya votó, simplemente ocultamos el cuadro y detenemos el script.
             evaluationDiv.style.display = 'none';
             return;
         }
 
-        // --- LA FUNCIÓN QUE ENVÍA EL VOTO AL SERVIDOR ---
-        function submitEvaluation(score) {
-            // Obtenemos el token CSRF para la seguridad de Laravel.
+        // Función para enviar el voto al servidor con datos extra del cliente
+        function submitEvaluation(score, comment = null) {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-            // Mostramos un mensaje de "cargando" para el usuario.
-            evaluationDiv.innerHTML = '<p class="text-black">Procesando tu voto...</p>';
+            // Datos del cliente recolectados con JS
+            const currentUrl = window.location.href;
+            const screenRes = window.screen.width + 'x' + window.screen.height;
+            const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const lang = navigator.language;
 
-            // Usamos la API fetch para enviar los datos a tu backend.
+            // Feedback visual de espera
+            if (comment !== null && feedbackForm) {
+                feedbackForm.innerHTML = '<p class="text-white-50" style="margin:10px 0;">Procesando tu voto...</p>';
+            } else {
+                evaluationDiv.innerHTML = '<p class="text-black">Procesando tu voto...</p>';
+            }
+
             fetch(`${window.APP_URL}/api/site-evaluation`, {
                     method: 'POST',
                     headers: {
@@ -221,51 +229,88 @@
                         'Accept': 'application/json'
                     },
                     body: JSON.stringify({
-                        score: score
-                    }) // Enviamos la puntuación como JSON.
+                        score: score,
+                        comment: comment,
+                        url_evaluated: currentUrl,
+                        screen_resolution: screenRes,
+                        language: lang,
+                        time_zone: timeZone
+                    })
                 })
                 .then(response => {
-                    if (!response.ok) { // Si hay un error en el servidor.
-                        throw new Error('La respuesta del servidor no fue exitosa.');
-                    }
+                    if (!response.ok) throw new Error('La respuesta del servidor no fue exitosa.');
                     return response.json();
                 })
                 .then(data => {
-                    // ¡ÉXITO! El servidor guardó el voto.
-                    // 1. Guardamos la bandera en localStorage para que no pueda volver a votar.
                     localStorage.setItem('siteEvaluationVoted', 'true');
-
-                    // 2. Mostramos el mensaje de agradecimiento y añadimos la clase CSS.
                     evaluationDiv.innerHTML = '<p>¡Gracias por tu evaluación!</p>';
                     evaluationDiv.classList.add('thank-you');
 
-                    // 3. Hacemos que el cuadro desaparezca después de 1.5 segundos.
                     setTimeout(() => {
-                        evaluationDiv.style.transition =
-                            'opacity 0.5s ease-out, transform 0.5s ease-out';
+                        evaluationDiv.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
                         evaluationDiv.style.opacity = '0';
                         evaluationDiv.style.transform = 'translateY(-20px)';
                         setTimeout(() => evaluationDiv.style.display = 'none', 500);
                     }, 1500);
                 })
                 .catch(error => {
-                    // Si hubo un error, lo mostramos en la consola y al usuario.
                     console.error('Error al enviar la evaluación:', error);
-                    evaluationDiv.innerHTML =
+                    let targetDiv = (comment !== null && feedbackForm) ? feedbackForm : evaluationDiv;
+                    targetDiv.innerHTML =
                         '<p class="text-danger">Hubo un error. Por favor, intenta más tarde.</p>';
                 });
         }
 
-        // --- CONECTAMOS LOS CLICS A LA FUNCIÓN ---
-        // 3. Recorremos cada emoji-wrapper y le añadimos el evento de clic.
+        // Lógica de clic en emojis
         emojiWrappers.forEach(wrapper => {
             wrapper.addEventListener('click', function() {
-                // Obtenemos la puntuación del atributo 'data-score'.
-                const score = this.dataset.score;
-                // Llamamos a la función para enviar el voto.
-                submitEvaluation(score);
+                selectedScore = this.dataset.score;
+
+                if (selectedScore === "3") {
+                    // Score "Útil": envía inmediatamente sin pedir comentario
+                    submitEvaluation(selectedScore);
+                } else {
+                    // Score "Regular" o "Poco útil": muestra el formulario de feedback
+                    emojiWrappers.forEach(w => {
+                        w.style.opacity = '0.4';
+                        w.style.transform = 'scale(1)';
+                    });
+                    this.style.opacity = '1';
+                    this.style.transform = 'scale(1.15)';
+
+                    feedbackForm.style.display = 'block';
+                    feedbackComment.focus();
+                }
             });
         });
 
+        // Enviar con el botón (requiere comentario para scores 1-2)
+        submitFeedbackBtn.addEventListener('click', function() {
+            if (selectedScore) {
+                const comment = feedbackComment.value.trim();
+                if (!comment) {
+                    feedbackComment.classList.add('is-invalid');
+                    feedbackComment.focus();
+                    return;
+                }
+                feedbackComment.classList.remove('is-invalid');
+                submitEvaluation(selectedScore, comment);
+            }
+        });
+
+        // Quitar validación al escribir
+        feedbackComment.addEventListener('input', function() {
+            if (this.value.trim()) {
+                this.classList.remove('is-invalid');
+            }
+        });
+
+        // Enviar con Enter
+        feedbackComment.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submitFeedbackBtn.click();
+            }
+        });
     });
 </script>

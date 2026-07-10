@@ -28,7 +28,7 @@
                     <table class="table table-custom align-middle mb-0">
                         <thead>
                             <tr>
-                                <th class="ps-4">Sección</th>
+                                <th class="ps-4">Dimensión</th>
                                 <th>Orden</th>
                                 <th>Indicador / Título en Ficha</th>
                                 <th>Visualización</th>
@@ -60,8 +60,8 @@
                             @forelse($configuraciones as $config)
                                 <tr>
                                     <td class="ps-4">
-                                        <span class="badge rounded-pill {{ $section_colors[$config->seccion] ?? 'bg-secondary' }} text-uppercase px-3 py-2" style="font-size: 0.65rem;">
-                                            {{ str_replace('_', ' ', $config->seccion) }}
+                                        <span class="badge rounded-pill bg-secondary text-uppercase px-3 py-2" style="font-size: 0.65rem;">
+                                            {{ $config->indicador->tematica->dimension->nombre ?? 'Sin Dimensión' }}
                                         </span>
                                     </td>
                                     <td class="fw-bold text-muted">#{{ $config->orden }}</td>

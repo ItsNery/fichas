@@ -1083,6 +1083,113 @@ footer {
     display: none;
 }
 
+/* ========================================
+   OMNISEARCH — Buscador unificado del Hero
+   ======================================== */
+
+/* Contenedor del TomSelect en el hero */
+.omnisearch-container .ts-wrapper {
+    width: 100%;
+}
+
+.omnisearch-container .ts-control {
+    background-color: rgba(255, 255, 255, 0.95) !important;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    color: #333;
+    border-radius: 0.75rem;
+    padding: 0.6rem 1rem !important;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.omnisearch-container .ts-control:hover,
+.omnisearch-container .ts-control:focus-within {
+    border-color: #c5a059;
+    box-shadow: 0 4px 25px rgba(197, 160, 89, 0.3);
+}
+
+.omnisearch-container .ts-control input {
+    color: #333 !important;
+    font-size: 1rem;
+}
+
+.omnisearch-container .ts-control input::placeholder {
+    color: #999;
+}
+
+.omnisearch-container .ts-control::after {
+    display: none;
+}
+
+/* Dropdown con los resultados */
+.omnisearch-container .ts-dropdown {
+    text-align: left;
+    border-radius: 0.75rem;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    margin-top: 6px;
+    padding: 0.25rem;
+    overflow: hidden;
+}
+
+.omnisearch-container .ts-dropdown .option {
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    transition: background-color 0.15s ease;
+}
+
+.omnisearch-container .ts-dropdown .option:hover,
+.omnisearch-container .ts-dropdown .option.active {
+    background-color: #f8f4ef;
+}
+
+/* Icono circular a la izquierda de cada resultado */
+.omnisearch-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 8px;
+    color: white;
+    font-size: 0.75rem;
+}
+
+/* Badge de tipo (Municipio, Indicador, etc.) */
+.omnisearch-type-badge {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border: 1px solid;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+/* Quick links debajo del buscador */
+.omnisearch-quicklink {
+    display: inline-flex;
+    align-items: center;
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.8rem;
+    text-decoration: none;
+    padding: 4px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 20px;
+    transition: all 0.2s ease;
+}
+
+.omnisearch-quicklink:hover {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-1px);
+}
+
+
 /* Footer */
 .evaluation-container {
     background-color: #f8f9fa;
@@ -1150,6 +1257,89 @@ footer {
     font-weight: bold;
     font-size: 1.2rem;
     margin: 0;
+}
+
+/* --- Formulario de retroalimentación --- */
+.feedback-form {
+    margin-top: 15px;
+    animation: feedbackSlideIn 0.3s ease-out;
+}
+
+@keyframes feedbackSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.feedback-label {
+    display: block;
+    color: #343a40;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.feedback-textarea {
+    width: 100%;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    resize: vertical;
+    min-height: 70px;
+    max-height: 150px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    font-family: inherit;
+}
+
+.feedback-textarea:focus {
+    outline: none;
+    border-color: #6c757d;
+    box-shadow: 0 0 0 3px rgba(108, 117, 125, 0.15);
+}
+
+.feedback-textarea::placeholder {
+    color: #adb5bd;
+}
+
+.feedback-submit-btn {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 8px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.feedback-submit-btn:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+}
+
+.feedback-submit-btn:active {
+    transform: translateY(0);
+}
+
+.feedback-textarea.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
+    animation: feedbackShake 0.4s ease;
+}
+
+@keyframes feedbackShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
 }
 
 /* Utilidades */

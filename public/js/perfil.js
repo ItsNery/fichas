@@ -23,66 +23,97 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 });
 
+const renderQueue = [];
+let processingQueue = false;
+
+function processNextInQueue() {
+    if (renderQueue.length === 0) {
+        processingQueue = false;
+        return;
+    }
+    processingQueue = true;
+
+    const task = renderQueue.shift();
+    
+    // Renderizar gráfico principal
+    renderMainChart(task.itemData);
+    task.chartElement.style.opacity = "1";
+
+    // Remover skeleton loader
+    const skeleton = document.getElementById("skeleton-" + task.chartId);
+    if (skeleton) {
+        skeleton.style.transition = "opacity 0.3s ease";
+        skeleton.style.opacity = "0";
+        setTimeout(() => skeleton.remove(), 300);
+    }
+
+    // Esperar un momento (retraso controlado de 40ms) antes de renderizar el siguiente gráfico
+    setTimeout(() => {
+        requestAnimationFrame(processNextInQueue);
+    }, 40);
+}
+
 function setupLazyCharts() {
     if (!window.FichaConfig || !window.FichaConfig.perfilData) return;
 
     // 1. Observer para gráficos principales
-    const lazyCharts = document.querySelectorAll('.lazy-chart');
-    const chartObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const chartElement = entry.target;
-                const chartId = chartElement.getAttribute('data-chart-id');
-                const itemData = findChartDataById(chartId);
+    const lazyCharts = document.querySelectorAll(".lazy-chart");
+    const chartObserver = new IntersectionObserver(
+        (entries, observer) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    const chartElement = entry.target;
+                    const chartId = chartElement.getAttribute("data-chart-id");
+                    const itemData = findChartDataById(chartId);
 
-                if (itemData) {
-                    renderMainChart(itemData);
-                    
-                    // Fade-in de la gráfica
-                    chartElement.style.opacity = "1";
-
-                    // Remover skeleton loader
-                    const skeleton = document.getElementById("skeleton-" + chartId);
-                    if (skeleton) {
-                        skeleton.style.transition = "opacity 0.3s ease";
-                        skeleton.style.opacity = "0";
-                        setTimeout(() => skeleton.remove(), 300);
+                    if (itemData) {
+                        // Agregar a la cola de renderizado diferido
+                        renderQueue.push({ itemData, chartElement, chartId });
+                        if (!processingQueue) {
+                            processNextInQueue();
+                        }
                     }
+                    observer.unobserve(chartElement);
                 }
-                observer.unobserve(chartElement);
-            }
-        });
-    }, {
-        root: null,
-        rootMargin: "150px 0px 150px 0px",
-        threshold: 0.05
-    });
+            });
+        },
+        {
+            root: null,
+            rootMargin: "150px 0px 150px 0px",
+            threshold: 0.05,
+        },
+    );
 
-    lazyCharts.forEach(chart => chartObserver.observe(chart));
+    lazyCharts.forEach((chart) => chartObserver.observe(chart));
 
     // 2. Observer para micrográficas (Sparklines)
-    const lazySparklines = document.querySelectorAll('.perfil-tarjeta__sparkline');
-    const sparkObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const sparkElement = entry.target;
-                const chartId = sparkElement.getAttribute('data-chart-id');
-                const itemData = findChartDataById(chartId);
+    const lazySparklines = document.querySelectorAll(
+        ".perfil-tarjeta__sparkline",
+    );
+    const sparkObserver = new IntersectionObserver(
+        (entries, observer) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    const sparkElement = entry.target;
+                    const chartId = sparkElement.getAttribute("data-chart-id");
+                    const itemData = findChartDataById(chartId);
 
-                if (itemData) {
-                    renderSparkline(itemData);
-                    sparkElement.style.opacity = "1";
+                    if (itemData) {
+                        renderSparkline(itemData);
+                        sparkElement.style.opacity = "1";
+                    }
+                    observer.unobserve(sparkElement);
                 }
-                observer.unobserve(sparkElement);
-            }
-        });
-    }, {
-        root: null,
-        rootMargin: "50px 0px 50px 0px",
-        threshold: 0.05
-    });
+            });
+        },
+        {
+            root: null,
+            rootMargin: "50px 0px 50px 0px",
+            threshold: 0.05,
+        },
+    );
 
-    lazySparklines.forEach(spark => sparkObserver.observe(spark));
+    lazySparklines.forEach((spark) => sparkObserver.observe(spark));
 }
 
 function findChartDataById(id) {
@@ -90,7 +121,9 @@ function findChartDataById(id) {
     const perfilData = window.FichaConfig.perfilData;
     let found = null;
     Object.values(perfilData).forEach((items) => {
-        const match = items.find(item => String(item.config.id) === String(id));
+        const match = items.find(
+            (item) => String(item.config.id) === String(id),
+        );
         if (match) {
             found = match;
         }
@@ -102,7 +135,12 @@ function renderMainChart(itemData) {
     var chartDom = document.getElementById("chart-" + itemData.config.id);
     if (!chartDom) return;
 
-    var myChart = echarts.init(chartDom);
+    var myChart = echarts.getInstanceByDom(chartDom);
+    var isNew = false;
+    if (!myChart) {
+        myChart = echarts.init(chartDom);
+        isNew = true;
+    }
     var option = {};
 
     if (itemData.config.tipo_visualizacion === "piramide") {
@@ -215,7 +253,11 @@ function renderMainChart(itemData) {
             });
 
             option = {
-                tooltip: { trigger: "item", formatter: "{b}: {c}", confine: true },
+                tooltip: {
+                    trigger: "item",
+                    formatter: "{b}: {c}",
+                    confine: true,
+                },
                 visualMap: {
                     min: echartsData.min || 0,
                     max: echartsData.max || 100,
@@ -242,6 +284,17 @@ function renderMainChart(itemData) {
                 ],
             };
         } else if (chartType === "scatter") {
+            var extraScatter = null;
+            if (itemData.config.ajustes_visuales) {
+                try {
+                    extraScatter = typeof itemData.config.ajustes_visuales === "string"
+                        ? JSON.parse(itemData.config.ajustes_visuales)
+                        : itemData.config.ajustes_visuales;
+                } catch (e) {}
+            }
+            var normalColor = (extraScatter && extraScatter.otros_color) || '#c79b66';
+            var highlightColor = (extraScatter && extraScatter.municipio_color) || '#861e34';
+
             option = {
                 tooltip: {
                     trigger: "item",
@@ -254,23 +307,24 @@ function renderMainChart(itemData) {
                             var xTitle =
                                 echartsData.eje_x && echartsData.eje_x.titulo
                                     ? echartsData.eje_x.titulo
-                                    : "Inversión";
+                                    : "Variable X";
                             var yTitle =
                                 echartsData.eje_y && echartsData.eje_y.titulo
                                     ? echartsData.eje_y.titulo
-                                    : "Indicador";
+                                    : "Variable Y";
 
                             return (
                                 `<div style="font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid #ccc; padding-bottom: 3px;">${munName}</div>` +
-                                `<span style="color:#861e34; font-size: 14px;">●</span> ${xTitle}: <strong>$${xVal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong><br/>` +
-                                `<span style="color:#c79b66; font-size: 14px;">●</span> ${yTitle}: <strong>${yVal.toLocaleString()}%</strong>`
+                                `<span style="color:${highlightColor}; font-size: 14px;">●</span> ${xTitle}: <strong>${xVal.toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong><br/>` +
+                                `<span style="color:${normalColor}; font-size: 14px;">●</span> ${yTitle}: <strong>${yVal.toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong>`
                             );
                         }
                         return params.value;
                     },
                 },
                 legend: { bottom: 0 },
-                grid: { top: 40, bottom: 60, left: 60, right: 30 },
+                color: [normalColor, highlightColor],
+                grid: { top: 40, bottom: 60, left: 60, right: 40 },
                 xAxis: {
                     type: "value",
                     name:
@@ -294,6 +348,15 @@ function renderMainChart(itemData) {
                 series: (echartsData.series || []).map((s) => {
                     s.type = "scatter";
                     s.symbolSize = s.symbolSize || 10;
+                    s.itemStyle = {
+                        color: function(params) {
+                            var currentMunName = window.FichaConfig && window.FichaConfig.municipioNombre ? window.FichaConfig.municipioNombre.toUpperCase().trim() : '';
+                            if (params.data && params.data[2] && params.data[2].toUpperCase().trim() === currentMunName) {
+                                return highlightColor; // Vino para municipio actual
+                            }
+                            return normalColor; // Dorado/Gris para otros
+                        }
+                    };
                     return s;
                 }),
             };
@@ -303,27 +366,27 @@ function renderMainChart(itemData) {
                     trigger: "axis",
                     axisPointer: { type: "shadow" },
                     confine: true,
-                    formatter: function(params) {
-                        if (!params || params.length === 0) return '';
+                    formatter: function (params) {
+                        if (!params || params.length === 0) return "";
                         let p = params[0];
                         let val = p.value;
-                        if (typeof val === 'object' && val !== null) {
+                        if (typeof val === "object" && val !== null) {
                             val = val.value;
                         }
-                        let formattedVal = Number(val).toLocaleString('es-MX');
-                        let unidad = echartsData.unidad || '';
+                        let formattedVal = Number(val).toLocaleString("es-MX");
+                        let unidad = echartsData.unidad || "";
                         return `${p.name}<br/>${p.marker}${p.seriesName}: <strong>${formattedVal} ${unidad}</strong>`;
-                    }
+                    },
                 },
                 grid: { top: 30, bottom: 30, left: 150, right: 30 },
                 xAxis: {
                     type: "value",
                     splitLine: { show: true, lineStyle: { type: "dashed" } },
                     axisLabel: {
-                        formatter: function(value) {
-                            return Number(value).toLocaleString('es-MX');
-                        }
-                    }
+                        formatter: function (value) {
+                            return Number(value).toLocaleString("es-MX");
+                        },
+                    },
                 },
                 yAxis: {
                     type: "category",
@@ -331,24 +394,29 @@ function renderMainChart(itemData) {
                     inverse: true,
                     axisTick: { show: false },
                     axisLabel: {
-                        formatter: function(value) {
-                            if (!value) return '';
+                        formatter: function (value) {
+                            if (!value) return "";
                             // Match pattern: "Name of Municipality (Rank°)"
                             const match = value.match(/^(.*?)\s*\(([^)]+)\)$/);
                             if (match) {
                                 const name = match[1];
                                 const rank = match[2];
                                 if (name.length > 17) {
-                                    return name.substring(0, 17) + '... (' + rank + ')';
+                                    return (
+                                        name.substring(0, 17) +
+                                        "... (" +
+                                        rank +
+                                        ")"
+                                    );
                                 }
                             } else {
                                 if (value.length > 17) {
-                                    return value.substring(0, 17) + '...';
+                                    return value.substring(0, 17) + "...";
                                 }
                             }
                             return value;
-                        }
-                    }
+                        },
+                    },
                 },
                 series: (echartsData.series || []).map((s) => {
                     s.type = "bar";
@@ -441,8 +509,10 @@ function renderMainChart(itemData) {
         } catch (e) {}
     }
 
-    myChart.setOption(option);
-    window.addEventListener("resize", () => myChart.resize());
+    myChart.setOption(option, true);
+    if (isNew) {
+        window.addEventListener("resize", () => myChart.resize());
+    }
 }
 
 function renderSparkline(itemData) {
@@ -486,57 +556,76 @@ function initPopovers() {
         document.querySelectorAll('[data-bs-toggle="popover"]'),
     );
     var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-        if (popoverTriggerEl.classList.contains('similarity-popover-trigger')) {
+        if (popoverTriggerEl.classList.contains("similarity-popover-trigger")) {
             const popover = new bootstrap.Popover(popoverTriggerEl, {
-                sanitize: false
+                sanitize: false,
             });
 
-            popoverTriggerEl.addEventListener('inserted.bs.popover', function () {
-                const muniId = popoverTriggerEl.getAttribute('data-municipio-id');
-                const configId = popoverTriggerEl.getAttribute('data-config-id');
-                const popoverId = popoverTriggerEl.getAttribute('aria-describedby');
-                const popoverBody = document.querySelector(`#${popoverId} .popover-body`);
+            popoverTriggerEl.addEventListener(
+                "inserted.bs.popover",
+                function () {
+                    const muniId =
+                        popoverTriggerEl.getAttribute("data-municipio-id");
+                    const configId =
+                        popoverTriggerEl.getAttribute("data-config-id");
+                    const popoverId =
+                        popoverTriggerEl.getAttribute("aria-describedby");
+                    const popoverBody = document.querySelector(
+                        `#${popoverId} .popover-body`,
+                    );
 
-                if (popoverBody && !popoverTriggerEl.getAttribute('data-loaded')) {
-                    fetch(`/ficha-municipal/api/similitud-indicador/${muniId}/${configId}`)
-                        .then(r => r.json())
-                        .then(data => {
-                            if (data.success) {
-                                let html = `<div class="similarity-popover text-start" style="min-width: 200px;">`;
-                                html += `<p class="mb-1 border-bottom pb-1 small" style="font-size: 11px;">Variable: <strong class="text-vino">${data.variable}</strong> (${data.anio})</p>`;
-                                html += `<p class="mb-2 small" style="font-size: 11px;">Valor actual: <strong class="text-gold" style="color: #c79b66;">${data.valor_actual}</strong></p>`;
-                                html += `<ul class="list-unstyled mb-0 d-flex flex-column gap-2" style="padding-left: 0;">`;
-                                
-                                if (data.similares && data.similares.length > 0) {
-                                    data.similares.forEach(sim => {
-                                        html += `<li class="d-flex justify-content-between align-items-center gap-3 border-bottom pb-1" style="font-size: 11px;">`;
-                                        html += `  <div>`;
-                                        html += `    <span class="fw-bold d-block" style="font-size: 11px; color: #861e34;">${sim.nombre}</span>`;
-                                        html += `    <span class="text-muted" style="font-size: 10px;">Valor: ${sim.valor}</span>`;
-                                        html += `  </div>`;
-                                        html += `  <div class="d-flex gap-1">`;
-                                        html += `    <a href="/ficha-municipal/${sim.slug}/perfil" class="btn btn-outline-secondary btn-xs rounded-pill" style="font-size: 9px; padding: 1px 6px;">Ver</a>`;
-                                        html += `    <a href="/ficha-municipal/comparar/${window.FichaConfig.municipioSlug}/${sim.slug}" class="btn btn-vino btn-xs text-white rounded-pill" style="font-size: 9px; padding: 1px 6px; background-color: #861e34; border-color: #861e34;">Vs</a>`;
-                                        html += `  </div>`;
-                                        html += `</li>`;
-                                    });
+                    if (
+                        popoverBody &&
+                        !popoverTriggerEl.getAttribute("data-loaded")
+                    ) {
+                        fetch(
+                            `/ficha/municipio/api/similitud-indicador/${muniId}/${configId}`,
+                        )
+                            .then((r) => r.json())
+                            .then((data) => {
+                                if (data.success) {
+                                    let html = `<div class="similarity-popover text-start" style="min-width: 200px;">`;
+                                    html += `<p class="mb-1 border-bottom pb-1 small" style="font-size: 11px;">Variable: <strong class="text-vino">${data.variable}</strong> (${data.anio})</p>`;
+                                    html += `<p class="mb-2 small" style="font-size: 11px;">Valor actual: <strong class="text-gold" style="color: #c79b66;">${data.valor_actual}</strong></p>`;
+                                    html += `<ul class="list-unstyled mb-0 d-flex flex-column gap-2" style="padding-left: 0;">`;
+
+                                    if (
+                                        data.similares &&
+                                        data.similares.length > 0
+                                    ) {
+                                        data.similares.forEach((sim) => {
+                                            html += `<li class="d-flex justify-content-between align-items-center gap-3 border-bottom pb-1" style="font-size: 11px;">`;
+                                            html += `  <div>`;
+                                            html += `    <span class="fw-bold d-block" style="font-size: 11px; color: #861e34;">${sim.nombre}</span>`;
+                                            html += `    <span class="text-muted" style="font-size: 10px;">Valor: ${sim.valor}</span>`;
+                                            html += `  </div>`;
+                                            html += `  <div class="d-flex gap-1">`;
+                                            html += `    <a href="/ficha/municipio/${sim.slug}/perfil" class="btn btn-outline-secondary btn-xs rounded-pill" style="font-size: 9px; padding: 1px 6px;">Ver</a>`;
+                                            html += `    <a href="/ficha/municipio/comparar/${window.FichaConfig.municipioSlug}/${sim.slug}" class="btn btn-vino btn-xs text-white rounded-pill" style="font-size: 9px; padding: 1px 6px; background-color: #861e34; border-color: #861e34;">Vs</a>`;
+                                            html += `  </div>`;
+                                            html += `</li>`;
+                                        });
+                                    } else {
+                                        html += `<li class="text-muted small">No se encontraron similares</li>`;
+                                    }
+
+                                    html += `</ul></div>`;
+                                    popoverBody.innerHTML = html;
+                                    popoverTriggerEl.setAttribute(
+                                        "data-loaded",
+                                        "true",
+                                    );
                                 } else {
-                                    html += `<li class="text-muted small">No se encontraron similares</li>`;
+                                    popoverBody.innerHTML = `<div class="text-danger small">${data.message || "Error al cargar"}</div>`;
                                 }
-                                
-                                html += `</ul></div>`;
-                                popoverBody.innerHTML = html;
-                                popoverTriggerEl.setAttribute('data-loaded', 'true');
-                            } else {
-                                popoverBody.innerHTML = `<div class="text-danger small">${data.message || 'Error al cargar'}</div>`;
-                            }
-                        })
-                        .catch(err => {
-                            console.error(err);
-                            popoverBody.innerHTML = `<div class="text-danger small">Error de conexión</div>`;
-                        });
-                }
-            });
+                            })
+                            .catch((err) => {
+                                console.error(err);
+                                popoverBody.innerHTML = `<div class="text-danger small">Error de conexión</div>`;
+                            });
+                    }
+                },
+            );
 
             return popover;
         } else {
@@ -613,3 +702,117 @@ function setupScrollSpy() {
         });
     };
 }
+
+// Manejo del selector de navegación por años
+document.addEventListener("click", function (e) {
+    const btn = e.target.closest(".btn-year-selector");
+    if (!btn) return;
+
+    e.preventDefault();
+
+    // Si ya está activo, no hacemos nada
+    if (btn.classList.contains("active")) return;
+
+    const year = btn.getAttribute("data-year");
+    const configId = btn.getAttribute("data-config-id");
+    const muniSlug = btn.getAttribute("data-muni-slug");
+
+    // Encontrar todos los botones del mismo contenedor
+    const container = btn.closest(".perfil-tarjeta__years-container");
+    if (!container) return;
+    const siblingBtns = container.querySelectorAll(".btn-year-selector");
+
+    // Encontrar el elemento de la tarjeta padre
+    const cardEl = btn.closest(".perfil-tarjeta");
+    if (!cardEl) return;
+    const chartDom = cardEl.querySelector(".perfil-tarjeta__chart-box");
+    const narrativeEl = cardEl.querySelector(
+        ".perfil-tarjeta__narrativa-texto",
+    );
+    const anioBadge = cardEl.querySelector(".perfil-tarjeta__anio-badge");
+    const skeleton = cardEl.querySelector(".perfil-tarjeta__skeleton");
+
+    // 1. Mostrar estado de carga (loading)
+    if (skeleton) {
+        skeleton.style.display = "flex";
+    }
+    const myChart = chartDom ? echarts.getInstanceByDom(chartDom) : null;
+    if (myChart) {
+        myChart.showLoading({
+            text: "Cargando datos...",
+            color: "#861e34",
+            textColor: "#861e34",
+            maskColor: "rgba(255, 255, 255, 0.7)",
+            zlevel: 0,
+        });
+    }
+
+    // 2. Realizar petición AJAX para obtener datos del año seleccionado
+    fetch(`/ficha/municipio/api/grafico-datos/${muniSlug}/${configId}/${year}`)
+        .then((response) => {
+            if (!response.ok)
+                throw new Error("Error en la respuesta del servidor");
+            return response.json();
+        })
+        .then((res) => {
+            if (res.success) {
+                // 3. Cambiar botón activo visualmente
+                siblingBtns.forEach((b) => {
+                    b.classList.remove(
+                        "active",
+                        "btn-vino",
+                        "text-white",
+                        "border-vino",
+                    );
+                    b.classList.add("btn-outline-secondary");
+                });
+                btn.classList.remove("btn-outline-secondary");
+                btn.classList.add(
+                    "active",
+                    "btn-vino",
+                    "text-white",
+                    "border-vino",
+                );
+
+                // 4. Actualizar Badge de año en el título
+                if (anioBadge) {
+                    anioBadge.textContent = year;
+                }
+
+                // 5. Actualizar Narrativa de forma fluida
+                if (narrativeEl && res.narrativa) {
+                    narrativeEl.style.opacity = 0;
+                    setTimeout(() => {
+                        narrativeEl.innerHTML = res.narrativa;
+                        narrativeEl.style.opacity = 1;
+                    }, 150);
+                }
+
+                // 6. Actualizar Gráfico
+                if (myChart && res.datos) {
+                    // Volver a renderizar llamando a renderMainChart pasándole la estructura actualizada
+                    renderMainChart({
+                        config: {
+                            id: configId,
+                            tipo_visualizacion: res.datos.echarts
+                                ? res.datos.echarts.type
+                                : "bar",
+                        },
+                        datos: res.datos,
+                    });
+                }
+            }
+        })
+        .catch((error) => {
+            console.error("Error al actualizar datos del año:", error);
+        })
+        .finally(() => {
+            // Ocultar cargando
+            if (skeleton) {
+                skeleton.style.display = "none";
+            }
+            if (myChart) {
+                myChart.hideLoading();
+            }
+        });
+});

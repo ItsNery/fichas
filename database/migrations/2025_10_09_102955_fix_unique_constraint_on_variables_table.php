@@ -13,6 +13,10 @@ class FixUniqueConstraintOnVariablesTable extends Migration
      */
     public function up()
     {
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         Schema::table('variables', function (Blueprint $table) {
             // Paso 1: Eliminar la clave foránea que está causando el conflicto.
             // Laravel nombra esta restricción automáticamente como 'tabla_columna_foreign'.
@@ -37,6 +41,10 @@ class FixUniqueConstraintOnVariablesTable extends Migration
      */
     public function down()
     {
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         Schema::table('variables', function (Blueprint $table) {
             // El método down() hace los pasos en orden inverso para poder revertir.
             $table->dropForeign(['indicador_id']);

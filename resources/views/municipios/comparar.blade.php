@@ -12,7 +12,7 @@
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ url('/') }}" class="text-white-50">Inicio</a></li>
-                            <li class="breadcrumb-item"><a href="{{ url('/ficha-municipal') }}"
+                            <li class="breadcrumb-item"><a href="{{ route('ficha-municipal.index') }}"
                                     class="text-white-50">Directorio</a></li>
                             <li class="breadcrumb-item active text-white" aria-current="page">Comparar Municipios</li>
                         </ol>

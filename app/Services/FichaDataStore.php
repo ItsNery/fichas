@@ -48,7 +48,8 @@ class FichaDataStore
             ->get();
 
         // Cargar datos históricos globales solo de las columnas necesarias en una sola consulta
-        $this->globalData = $globalData ?: DatoHistorico::whereIn('variable_id', $allVariableIds)
+        $this->globalData = $globalData ?: \Illuminate\Support\Facades\DB::table('dato_historicos')
+            ->whereIn('variable_id', $allVariableIds)
             ->select('municipio_id', 'variable_id', 'anio', 'valor')
             ->get();
 

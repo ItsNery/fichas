@@ -113,18 +113,7 @@
                                             </div>
 
                                             <div class="row g-3">
-                                                <div class="col-md-7">
-                                                    <label for="seccion" class="form-label">Sección en Ficha</label>
-                                                    <select id="seccion" name="seccion" class="form-select" required>
-                                                        @foreach ($secciones as $slug => $nombre)
-                                                            <option value="{{ $slug }}"
-                                                                {{ old('seccion', $configuracion->seccion ?? '') == $slug ? 'selected' : '' }}>
-                                                                {{ $nombre }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-5">
+                                                <div class="col-md-12">
                                                     <label for="orden" class="form-label">Prioridad (Orden)</label>
                                                     <input type="number" class="form-control" id="orden"
                                                         name="orden"
@@ -148,6 +137,7 @@
                                                         'barras' => 'fas fa-chart-bar',
                                                         'lineas' => 'fas fa-chart-line',
                                                         'mapa' => 'fas fa-map-marked-alt',
+                                                        'scatter' => 'fas fa-project-diagram',
                                                     ];
                                                 @endphp
                                                 @foreach ($visualizaciones as $vis)
@@ -155,7 +145,7 @@
                                                         <div class="vis-option {{ old('tipo_visualizacion', $configuracion->tipo_visualizacion ?? '') == $vis ? 'active' : '' }}"
                                                             data-value="{{ $vis }}">
                                                             <i class="{{ $icons[$vis] ?? 'fas fa-chart-area' }}"></i>
-                                                            <span>{{ $vis == 'kpi' ? 'Indicador Clave' : ucfirst($vis) }}</span>
+                                                            <span>{{ $vis == 'kpi' ? 'Indicador Clave' : ($vis == 'scatter' ? 'Dispersión (Cruce)' : ucfirst($vis)) }}</span>
                                                             <div class="check-mark"><i
                                                                     class="fas fa-check-circle"></i></div>
                                                         </div>
@@ -168,8 +158,12 @@
 
                                             <div class="row g-3 mb-4">
                                                 <div class="col-md-8">
-                                                    <label for="clase_grid" class="form-label">Distribución
-                                                        (Grid)</label>
+                                                    <label for="clase_grid" class="form-label">
+                                                        Distribución (Grid)
+                                                        <i class="fa-solid fa-circle-info text-muted ms-1 cursor-pointer"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top"
+                                                            title="Define el ancho de la tarjeta en la pantalla del perfil: 100% ocupa todo el ancho, 50% permite colocar dos tarjetas lado a lado, etc."></i>
+                                                    </label>
                                                     <select id="clase_grid" name="clase_grid" class="form-select"
                                                         required>
                                                         <option value="col-12"
@@ -193,18 +187,34 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <label for="anios_historial" class="form-label">Años Trend</label>
-                                                    <input type="number" class="form-control" id="anios_historial"
-                                                        name="anios_historial"
-                                                        value="{{ old('anios_historial', $configuracion->anios_historial) }}"
-                                                        min="1">
+                                                    <label for="anios_historial" class="form-label">
+                                                        Años Trend
+                                                        <i class="fa-solid fa-circle-info text-muted ms-1 cursor-pointer"
+                                                            data-bs-toggle="tooltip" data-bs-placement="top"
+                                                            title="Define cuántos años de histórico se muestran en el minigráfico (Sparkline) de tendencia de la tarjeta. Evita saturar de puntos la visualización."></i>
+                                                    </label>
+                                                    <select class="form-select" id="anios_historial" name="anios_historial">
+                                                        @php
+                                                            $currentAnios = old('anios_historial', $configuracion->anios_historial ?? 5);
+                                                            $maxDefault = max(5, $currentAnios);
+                                                        @endphp
+                                                        @for ($i = 1; $i <= $maxDefault; $i++)
+                                                            <option value="{{ $i }}" {{ $i == $currentAnios ? 'selected' : '' }}>
+                                                                {{ $i == 1 ? '1 año' : $i . ' años' }}
+                                                            </option>
+                                                        @endfor
+                                                    </select>
 
                                                 </div>
                                             </div>
 
                                             <div class="mb-0">
-                                                <label for="ajustes_visuales" class="form-label">Ajustes JSON
-                                                    (Avanzado)</label>
+                                                <label for="ajustes_visuales" class="form-label">
+                                                    Ajustes JSON (Avanzado)
+                                                    <i class="fa-solid fa-circle-info text-muted ms-1 cursor-pointer"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top"
+                                                        title="Configuraciones estéticas en formato JSON para personalizar la gráfica (colores de series, límites de ejes, leyendas adicionales, etc.)."></i>
+                                                </label>
                                                 <textarea class="form-control font-monospace" id="ajustes_visuales" name="ajustes_visuales" rows="4"
                                                     style="font-size: 0.8rem;" placeholder='{"colors": ["#861e34", "#c79b66"]}'>{{ old('ajustes_visuales', isset($configuracion->ajustes_visuales) ? json_encode($configuracion->ajustes_visuales, JSON_PRETTY_PRINT) : '') }}</textarea>
                                             </div>
@@ -236,8 +246,12 @@
                                             </div>
 
                                             <div class="mb-0">
-                                                <label for="plantilla_narrativa" class="form-label">Narrativa
-                                                    Dinámica</label>
+                                                <label for="plantilla_narrativa" class="form-label">
+                                                    Narrativa Dinámica
+                                                    <i class="fa-solid fa-circle-info text-muted ms-1 cursor-pointer"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top"
+                                                        title="Redacción en lenguaje natural del comportamiento del indicador. Las etiquetas entre llaves {tag} se reemplazarán en tiempo real con valores dinámicos."></i>
+                                                </label>
                                                 <textarea class="form-control" id="plantilla_narrativa" name="plantilla_narrativa" rows="5"
                                                     placeholder="Escribe usando las etiquetas disponibles...">{{ old('plantilla_narrativa', $configuracion->plantilla_narrativa ?? '') }}</textarea>
 
@@ -351,10 +365,17 @@
                     'treemap': 'fas fa-th-large',
                     'barras': 'fas fa-chart-bar',
                     'lineas': 'fas fa-chart-line',
-                    'mapa': 'fas fa-map-marked-alt'
+                    'mapa': 'fas fa-map-marked-alt',
+                    'scatter': 'fas fa-project-diagram'
                 };
                 document.getElementById('preview-mock-chart').querySelector('i').className = (
                     icons[val] || 'fas fa-chart-bar') + ' me-2';
+                
+                // Re-fetch variables si cambiamos a scatter o regresamos de scatter
+                const indicadorId = indicadorSelect.getValue();
+                if (indicadorId) {
+                    fetchVariables(indicadorId, variablesSelect.getValue());
+                }
             });
         });
 
@@ -398,10 +419,80 @@
                 'variables_ids',
                 isset($configuracion) && $configuracion->variables ? $configuracion->variables->pluck('id')->toArray() : []));
 
+        let currentAniosHistorialValue = @json(old('anios_historial', $configuracion->anios_historial ?? 5));
+
+        function populateAniosHistorial(maxYears, selectedVal) {
+            const select = document.getElementById('anios_historial');
+            if (!select) return;
+            
+            const previousVal = select.value || selectedVal;
+            select.innerHTML = '';
+            
+            let limit = maxYears > 0 ? maxYears : 10;
+            if (previousVal && parseInt(previousVal) > limit) {
+                limit = parseInt(previousVal);
+            }
+
+            for (let i = 1; i <= limit; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i === 1 ? '1 año' : `${i} años`;
+                if (i == previousVal) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            }
+        }
+
+        function fetchAniosDisponibles(indicadorId, variablesIds = []) {
+            if (!indicadorId) {
+                populateAniosHistorial(5, currentAniosHistorialValue);
+                return;
+            }
+
+            if (typeof variablesIds === 'string') {
+                variablesIds = variablesIds ? [variablesIds] : [];
+            }
+
+            let url = `/admin/configuracion-fichas/api/anios-disponibles?indicador_id=${indicadorId}`;
+            if (variablesIds && variablesIds.length > 0) {
+                const filteredVars = variablesIds.filter(v => v);
+                if (filteredVars.length > 0) {
+                    url += `&variables_ids=${filteredVars.join(',')}`;
+                }
+            }
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const maxYears = data.anios_disponibles;
+                        const selectEl = document.getElementById('anios_historial');
+                        const activeVal = selectEl ? selectEl.value : currentAniosHistorialValue;
+                        populateAniosHistorial(maxYears, activeVal);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching available years:', error);
+                    populateAniosHistorial(5, currentAniosHistorialValue);
+                });
+        }
+
+        function updateAniosTrend() {
+            const indicadorId = indicadorSelect.getValue();
+            const selectedVars = variablesSelect.getValue();
+            fetchAniosDisponibles(indicadorId, selectedVars);
+        }
+
         function fetchVariables(indicadorId, preSelectedIds = []) {
             if (!indicadorId) return;
 
-            fetch(`/admin/configuracion-fichas/api/variables-por-indicador/${indicadorId}`)
+            const tipoVis = document.getElementById('tipo_visualizacion_hidden').value;
+            const url = tipoVis === 'scatter' 
+                ? `/admin/configuracion-fichas/api/todas-las-variables` 
+                : `/admin/configuracion-fichas/api/variables-por-indicador/${indicadorId}`;
+
+            fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     variablesSelect.clearOptions();
@@ -414,6 +505,7 @@
                         variablesSelect.setValue(preSelectedIds);
                     }
                     updateDynamicTags();
+                    updateAniosTrend();
                 });
         }
 
@@ -425,9 +517,14 @@
         // Si ya hay un indicador seleccionado al cargar (por old() en create, o al editar)
         if (indicadorSelect.getValue()) {
             fetchVariables(indicadorSelect.getValue(), oldVariables);
+        } else {
+            updateAniosTrend();
         }
 
-        variablesSelect.on('change', updateDynamicTags);
+        variablesSelect.on('change', function() {
+            updateDynamicTags();
+            updateAniosTrend();
+        });
 
         function updateDynamicTags() {
             const container = document.getElementById('dynamic_tags_container');
@@ -455,6 +552,12 @@
                 benchmarkModeGroup.style.display = this.checked ? 'block' : 'none';
             });
         }
+
+        // Inicializar tooltips de Bootstrap
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
 
         updatePreview();
     });

@@ -25,6 +25,16 @@ use App\Services\FichaDataStore;
 use App\Services\FichaProfilerService;
 use App\Services\FichaNarratorService;
 
+/**
+ * Clase FichaController
+ *
+ * Controlador principal encargado de la gestión, consulta, renderizado y exportación
+ * de la información estadística e histórica de las Fichas Municipales.
+ * Proporciona endpoints para visualizaciones dinámicas (ECharts), generación de PDFs,
+ * exportaciones de datos en formatos tabulares (Excel/CSV) y herramientas comparativas intermunicipales.
+ *
+ * @package App\Http\Controllers
+ */
 class FichaController extends Controller
 {
     /**
@@ -254,28 +264,7 @@ class FichaController extends Controller
         return $chartData;
     }
 
-    // public function getChartData(array $validated)
-    // {
-    //     $indicador = Indicador::with('variables')->find($validated['indicador_id']);
-    //     $nivel     = $validated['nivel_de_agregacion'];
 
-    //     $selection = $this->prepareGeographicSelection($nivel, $validated);
-
-    //     // 3. Dirige la petición al método correspondiente
-    //     if (
-    //         $indicador->id == 2 &&
-    //         (($nivel === 'municipio' && count($validated['municipio_ids'] ?? []) === 1) || in_array($nivel, ['microrregion', 'macrorregion']))
-    //     ) {
-    //         $chartData = $this->handlePiramideChart($indicador, $selection);
-    //     } elseif ($nivel === 'municipio' && count($selection['ids']) > 1) {
-    //         $chartData = $this->handleComparativeView($validated, $indicador, $selection);
-    //     } else {
-    //         $chartData = $this->handleAggregatedView($nivel, $validated, $indicador, $selection);
-    //     }
-
-    //     // Devuelve el array de datos del gráfico
-    //     return $chartData;
-    // }
 
     /**
      * Exports processed chart data (obtained via getChartData) into a downloadable Excel/CSV file.
@@ -519,7 +508,7 @@ class FichaController extends Controller
                         ->where('municipio_id', $munId)->where('anio', $year)->value('valor');
                     $dataPoints[] = $valor !== null ? (float) $valor : 0;
                 }
-                // $seriesParaGrafico[] = ['name' => $nombresMunicipios[$munId], 'data' => $dataPoints];
+
                 $seriesParaGrafico[] = ['name' => $nombresArray[$munId] ?? 'N/A', 'data' => $dataPoints];
             }
 
@@ -570,7 +559,7 @@ class FichaController extends Controller
                 'series'          => $seriesParaGrafico,
                 'available_years' => $availableYears,
                 'selected_years'  => $yearToQuery ? [$yearToQuery] : [],
-                // 'eje_x'           => ['categorias' => array_values($nombresMunicipios)],
+
                 'eje_x'           => ['categorias' => $nombresMunicipios],
                 'eje_y'           => ['titulo' => $indicador->variables->first()->unidad_medida ?? 'Valor'],
                 'descripcion'     => $indicador->descripcion,
@@ -680,15 +669,7 @@ class FichaController extends Controller
                 $variablesParaProcesar = collect([$variableTotal]);
             }
         }
-        // if ($nivel !== 'municipio' || in_array('estatal', $selection['ids'])) {
-        //     $variableTotal = $indicador->variables->first(function ($variable) {
-        //         return str_contains(mb_strtolower($variable->nombre_amigable, 'UTF-8'), 'total');
-        //     });
 
-        //     if ($variableTotal) {
-        //         $variablesParaProcesar = collect([$variableTotal]);
-        //     }
-        // }
 
         foreach ($variablesParaProcesar->sortBy(['orden', 'nombre_amigable']) as $variable) {
             $query = DatoHistorico::where('variable_id', $variable->id);
@@ -904,34 +885,7 @@ class FichaController extends Controller
         return $pdf->download($fileName);
     }
 
-    public function exportarResumenPDFOLD(Municipio $municipio)
-    {
-        // Reutilizamos la misma lógica que en 'resumenMunicipal' para obtener los datos
-        $variablesKPI   = Variable::with('indicador.tematica.dimension')->where('es_kpi', true)->get();
-        $datosAgrupados = [];
-        foreach ($variablesKPI as $variable) {
-            $dato = DatoHistorico::where('variable_id', $variable->id)
-                ->where('municipio_id', $municipio->id)
-                ->orderBy('anio', 'desc')->first();
 
-            $dimensionNombre = $variable->indicador->tematica->dimension->nombre;
-            $tematicaNombre  = $variable->indicador->tematica->nombre;
-
-            $datosAgrupados[$dimensionNombre][$tematicaNombre][] = [
-                'nombre'        => $variable->nombre_amigable,
-                'valor_display' => $dato ? $dato->valor_display : 'N/D',
-                'anio'          => $dato->anio ?? 'N/D',
-                'unidad'        => $variable->unidad_medida,
-            ];
-        }
-
-        // Cargamos la vista del PDF con los datos
-        $pdf = PDF::loadView('municipios.resumen_pdf', compact('municipio', 'datosAgrupados'));
-
-        // Generamos un nombre de archivo dinámico y lo ofrecemos para descarga
-        $fileName = 'resumen-' . Str::slug($municipio->nombre) . '.pdf';
-        return $pdf->download($fileName);
-    }
 
     /**
      * Retrieves and aggregates historical data by 'cvegeo' (municipio code) for a specific year,
@@ -1071,7 +1025,7 @@ class FichaController extends Controller
         }
         // Convertimos el arreglo asociativo en uno indexado para el @foreach de Blade
         $datosAgrupados = array_values($datosPorDimension);
-        // $instrumentos   = $municipio->instrumentos()->orderBy('anio', 'desc')->get();
+
         // --- FIN DE LA NUEVA LÓGICA DE AGRUPACIÓN ---
 
         return view('municipios.resumen', [
@@ -1080,52 +1034,26 @@ class FichaController extends Controller
         ]);
     }
 
+    /**
+     * Muestra la versión 3 del resumen municipal.
+     * Incluye datos básicos del Hero (población, marginación, presupuesto, pobreza, PEA)
+     * e indicadores agrupados por su dimensión y temática para la ficha general.
+     *
+     * @param  \App\Models\Municipio  $municipio El municipio a visualizar.
+     * @return \Illuminate\View\View Vista del resumen municipal V3.
+     */
     public function resumenMunicipalV3(Municipio $municipio)
     {
-        // 1. Datos del Hero (Población, Marginación, etc.)
-        $poblacionTotal = 0;
-        $varPob = Variable::where('nombre_amigable', 'Población total')
-            ->whereHas('indicador', fn($q) => $q->where('nombre_amigable', 'Población total según sexo'))
-            ->first();
-        if ($varPob) {
-            $datoPob = DatoHistorico::where('variable_id', $varPob->id)->where('municipio_id', $municipio->id)->orderBy('anio', 'desc')->first();
-            $poblacionTotal = $datoPob->valor ?? 0;
-        }
+        // ponytail: Obtener estadísticas optimizadas del Hero usando FichaProfilerService (2 queries en lugar de 12)
+        $hero = $this->getHeroStats($municipio);
+        $poblacionTotal = $hero['poblacionTotal'];
+        $gradoMarginacion = $hero['gradoMarginacion'];
+        $superficieKm2 = $hero['superficieKm2'];
+        $presupuestoTotal = $hero['presupuesto'];
+        $anioPresupuesto = $hero['ultimoAnioPres'] ?? 'N/D';
 
-        $gradoMarginacion = 'N/D';
-        $varMarg = Variable::where('nombre_amigable', 'Grado de Marginación')->first();
-        if ($varMarg) {
-            $datoMarg = DatoHistorico::where('variable_id', $varMarg->id)->where('municipio_id', $municipio->id)->orderBy('anio', 'desc')->first();
-            $gradoMarginacion = $datoMarg->valor_display ?? 'N/D';
-        }
-
-        $superficieKm2 = 0;
-        $varSup = Variable::where('nombre_amigable', 'Superficie territorial (Hectáreas)')->first();
-        if ($varSup) {
-            $datoSup = DatoHistorico::where('variable_id', $varSup->id)->where('municipio_id', $municipio->id)->orderBy('anio', 'desc')->first();
-            if ($datoSup && $datoSup->valor > 0) {
-                $superficieKm2 = $datoSup->valor / 100;
-            }
-        }
-
-        $presupuestoTotal = 0;
-        $anioPresupuesto = 'N/D';
-        $indicadorPresupuesto = Indicador::where('nombre_amigable', 'Recursos federales transferidos al municipio (FORTAMUN y FAISMUN) en miles de pesos')->first();
-        if ($indicadorPresupuesto) {
-            $variablesPresupuesto = Variable::where('indicador_id', $indicadorPresupuesto->id)
-                ->whereIn('nombre_amigable', ['Faismun aprobado', 'Fortamun aprobado'])
-                ->get();
-            foreach ($variablesPresupuesto as $v) {
-                $ultimoDato = DatoHistorico::where('variable_id', $v->id)->where('municipio_id', $municipio->id)->orderBy('anio', 'desc')->first();
-                if ($ultimoDato) {
-                    $presupuestoTotal += $ultimoDato->valor;
-                    $anioPresupuesto = $ultimoDato->anio;
-                }
-            }
-        }
-
-        // 2. Carga de Wikipedia
-        $wikiSummary = $this->getWikipediaSummary($municipio);
+        // 2. Carga de Wikipedia (ponytail: corregir bug de tipo de argumento)
+        $wikiSummary = $this->getWikipediaSummary($municipio->nombre);
 
         // 3. Carga de Configuración Dinámica para V3
         $configuraciones = ConfiguracionFicha::with(['indicador.variables', 'indicador.tematica.dimension', 'variables'])
@@ -1186,7 +1114,7 @@ class FichaController extends Controller
                 'indicador_nombre' => $indicador->nombre_amigable,
                 'nombre'           => $indicador->nombre_amigable,
                 'valor'            => is_array($datos) ? ($datos['total'] ?? 0) : (is_numeric($datos) ? $datos : 0),
-                'valor_display'    => is_array($datos) ? (isset($datos['total']) ? number_format($datos['total']) : 'N/D') : ($datos ?? 'N/D'),
+                'valor_display'    => is_array($datos) ? ($datos['valor_actual'] ?? (isset($datos['total']) ? number_format($datos['total']) : 'N/D')) : ($datos ?? 'N/D'),
                 'anio'             => is_array($datos) ? ($datos['anio'] ?? 'N/D') : 'N/D',
                 'unidad'           => $variablePrincipal->unidad_medida ?? '',
                 'solo_resumen'     => $indicador->solo_resumen,
@@ -1207,59 +1135,23 @@ class FichaController extends Controller
         ]);
     }
 
+    /**
+     * Endpoint de pruebas para el resumen municipal.
+     * Permite probar la optimización de consultas del Hero y la estructuración
+     * de los KPIs del municipio.
+     *
+     * @param  \App\Models\Municipio  $municipio El municipio a probar.
+     * @return \Illuminate\View\View Vista resumen_test.
+     */
     public function resumenMunicipalTest(Municipio $municipio)
     {
-        // --- CÁLCULO DE DATOS PARA EL HERO ---
-
-        // 1. Población Total
-        $poblacionTotal = 0;
-        $varPob = Variable::where('nombre_amigable', 'Población total')
-            ->whereHas('indicador', fn($q) => $q->where('nombre_amigable', 'Población total según sexo'))
-            ->first();
-        if ($varPob) {
-            $datoPob = DatoHistorico::where('variable_id', $varPob->id)->where('municipio_id', $municipio->id)->orderBy('anio', 'desc')->first();
-            $poblacionTotal = $datoPob->valor ?? 0;
-        }
-
-        // 2. Grado de Marginación
-        $gradoMarginacion = 'N/D';
-        $varMarg = Variable::where('nombre_amigable', 'Grado de Marginación')->first();
-        if ($varMarg) {
-            $datoMarg = DatoHistorico::where('variable_id', $varMarg->id)->where('municipio_id', $municipio->id)->orderBy('anio', 'desc')->first();
-            $gradoMarginacion = $datoMarg->valor_display ?? 'N/D';
-        }
-
-        // 3. Presupuesto
-        $indicadorPresupuesto = Indicador::where('nombre_amigable', 'Recursos federales transferidos al municipio (FORTAMUN y FAISMUN) en miles de pesos')->first();
-        $presupuestoTotal = 0;
-        $anioPresupuesto = 'N/D';
-
-        if ($indicadorPresupuesto) {
-            $variablesPresupuesto = Variable::where('indicador_id', $indicadorPresupuesto->id)
-                ->whereIn('nombre_amigable', ['Faismun aprobado', 'Fortamun aprobado'])
-                ->get();
-
-            foreach ($variablesPresupuesto as $v) {
-                $ultimoDato = DatoHistorico::where('variable_id', $v->id)
-                    ->where('municipio_id', $municipio->id)
-                    ->orderBy('anio', 'desc')
-                    ->first();
-                if ($ultimoDato) {
-                    $presupuestoTotal += $ultimoDato->valor;
-                    $anioPresupuesto = $ultimoDato->anio;
-                }
-            }
-        }
-
-        // 4. Superficie Territorial
-        $superficieKm2 = 0;
-        $varSup = Variable::where('nombre_amigable', 'Superficie territorial (Hectáreas)')->first();
-        if ($varSup) {
-            $datoSup = DatoHistorico::where('variable_id', $varSup->id)->where('municipio_id', $municipio->id)->orderBy('anio', 'desc')->first();
-            if ($datoSup && $datoSup->valor > 0) {
-                $superficieKm2 = $datoSup->valor / 100; // Convertimos hectáreas a km²
-            }
-        }
+        // ponytail: Obtener estadísticas optimizadas del Hero usando FichaProfilerService
+        $hero = $this->getHeroStats($municipio);
+        $poblacionTotal = $hero['poblacionTotal'];
+        $gradoMarginacion = $hero['gradoMarginacion'];
+        $superficieKm2 = $hero['superficieKm2'];
+        $presupuestoTotal = $hero['presupuesto'];
+        $anioPresupuesto = $hero['ultimoAnioPres'] ?? 'N/D';
 
         $variablesKPI = Variable::with('indicador.tematica.dimension')
             ->where('es_kpi', true)
@@ -1398,6 +1290,13 @@ class FichaController extends Controller
         ]);
     }
 
+    /**
+     * Muestra el directorio visual de municipios.
+     * Organiza y agrupa los municipios por macrorregiones y microrregiones
+     * en un diseño de cuadrícula interactivo.
+     *
+     * @return \Illuminate\View\View Vista del directorio municipal.
+     */
     public function directorioVisual()
     {
         $macrorregiones = Macrorregion::with(['microrregiones.municipios' => function ($q) {
@@ -1407,132 +1306,7 @@ class FichaController extends Controller
         return view('municipios.directorio', compact('macrorregiones'));
     }
 
-    /**
-     * Processes complex indicator data for charting, handling two main scenarios:
-     * 1) Comparison between two selected municipalities (Bar Chart for a single year).
-     * 2) Aggregated view for a single area (Line Chart for historical trend or Bar Chart for single-year breakdown).
-     *
-     * @param  array  $validated  The validated input parameters (anios, nivel_de_agregacion, etc.).
-     * @param  \App\Models\Indicador  $indicador // The complex Indicador model instance.
-     * @param  array{ids: array<int|string>, titulo: string}  $selection // The prepared geographic selection (Municipio IDs and title).
-     * @return array
-     */
-    private function handleComplexIndicatorView(array $validated, Indicador $indicador, array $selection)
-    {
-        $selectedYears = $validated['anios'] ?? [];
-        $selectionIds  = $selection['ids'];
-        $nivel         = $validated['nivel_de_agregacion'];
 
-        // --- CASO A: COMPARACIÓN DE DOS MUNICIPIOS ---
-        if ($nivel === 'municipio' && count($selectionIds) === 2) {
-            $nombresMunicipios = Municipio::whereIn('id', $selectionIds)->pluck('nombre', 'id');
-            $availableYears    = $this->getAvailableYearsForComplex($indicador, $selectionIds, 2);
-            $anio              = ! empty($selectedYears) ? $selectedYears[0] : $availableYears->first();
-
-            if (! $anio) {
-                return ['titulo' => "{$indicador->nombre_amigable} (Sin años en común para comparar)", 'series' => []];
-            }
-
-            $datosMunA = DatoIndicadorComplejo::where(['indicador_id' => $indicador->id, 'municipio_id' => $selectionIds[0], 'anio' => $anio])->first();
-            $datosMunB = DatoIndicadorComplejo::where(['indicador_id' => $indicador->id, 'municipio_id' => $selectionIds[1], 'anio' => $anio])->first();
-
-            $datosArrayA = $datosMunA ? (is_array($datosMunA->datos) ? $datosMunA->datos : json_decode($datosMunA->datos, true)) : [];
-            $datosArrayB = $datosMunB ? (is_array($datosMunB->datos) ? $datosMunB->datos : json_decode($datosMunB->datos, true)) : [];
-
-            $todosLosCultivos = array_unique(array_merge(array_keys($datosArrayA), array_keys($datosArrayB)));
-            sort($todosLosCultivos);
-
-            $serieA_valores = [];
-            $serieB_valores = [];
-            foreach ($todosLosCultivos as $cultivo) {
-                $serieA_valores[] = $datosArrayA[$cultivo] ?? 0;
-                $serieB_valores[] = $datosArrayB[$cultivo] ?? 0;
-            }
-
-            return [
-                'titulo' => "{$indicador->nombre_amigable} - Comparación (Año: {$anio})",
-                'tipo_grafico' => 'bar',
-                'series' => [['name' => $nombresMunicipios[$selectionIds[0]], 'data' => $serieA_valores], ['name' => $nombresMunicipios[$selectionIds[1]], 'data' => $serieB_valores]],
-                'eje_x' => ['categorias' => $todosLosCultivos],
-                'eje_y' => ['titulo' => $indicador->variables->first()->unidad_medida ?? 'Valor'],
-                'available_years' => $availableYears,
-                'selected_years' => [$anio],
-                'descripcion'                                          => $indicador->descripcion,
-                'fuente' => $indicador->fuente,
-                'metodo_calculo' => $indicador->metodo_calculo,
-            ];
-        }
-        // --- CASO B: VISTA ÚNICA (MUNICIPIO, REGIÓN O ESTATAL) ---
-        else {
-            $availableYears = $this->getAvailableYearsForComplex($indicador, $selectionIds);
-            $yearsToUse     = ! empty($selectedYears) ? $selectedYears : $availableYears->all();
-
-            if (empty($yearsToUse)) {
-                return ['titulo' => "{$indicador->nombre_amigable} - {$selection['titulo']} (Sin Datos)", 'series' => []];
-            }
-
-            if (count($yearsToUse) > 1) { // Gráfico de Líneas
-                $query = DatoIndicadorComplejo::where('indicador_id', $indicador->id)->whereIn('anio', $yearsToUse);
-                if (! in_array('estatal', $selectionIds)) {
-                    $query->whereIn('municipio_id', $selectionIds);
-                }
-
-                $datosMultiAnio = $query->orderBy('anio', 'asc')->get();
-
-                $seriesData = [];
-                foreach ($datosMultiAnio as $registro) {
-                    $datosArray = is_array($registro->datos) ? $registro->datos : json_decode($registro->datos, true);
-                    $anioActual = (int) $registro->anio;
-                    foreach ($datosArray as $cultivo => $valor) {
-                        if (! isset($seriesData[$cultivo])) {
-                            $seriesData[$cultivo] = [];
-                        }
-
-                        if (! isset($seriesData[$cultivo][$anioActual])) {
-                            $seriesData[$cultivo][$anioActual] = 0;
-                        }
-
-                        $seriesData[$cultivo][$anioActual] += (float) $valor;
-                    }
-                }
-
-                $seriesFinales = [];
-                foreach ($seriesData as $cultivo => $datosAnuales) {
-                    $dataPoints = [];
-                    ksort($datosAnuales);
-                    foreach ($datosAnuales as $anio => $valorTotal) {
-                        $dataPoints[] = [$anio, $valorTotal];
-                    }
-
-                    $seriesFinales[] = ['name' => $cultivo, 'data' => $dataPoints];
-                }
-                return ['titulo' => "{$indicador->nombre_amigable} - {$selection['titulo']} (Histórico)", 'tipo_grafico' => 'line', 'series' => $seriesFinales, 'eje_x' => ['type' => 'numeric', 'titulo' => 'Año'], 'eje_y' => ['titulo' => $indicador->variables->first()->unidad_medida ?? 'Valor'], 'available_years' => $availableYears, 'selected_years' => $yearsToUse, 'descripcion' => $indicador->descripcion, 'fuente' => $indicador->fuente, 'metodo_calculo' => $indicador->metodo_calculo];
-            } else { // Gráfico de Barras
-                $anio       = $yearsToUse[0];
-                $queryDatos = DatoIndicadorComplejo::where('indicador_id', $indicador->id)->where('anio', $anio);
-                if (! in_array('estatal', $selectionIds)) {
-                    $queryDatos->whereIn('municipio_id', $selectionIds);
-                }
-
-                $datosComplejos = $queryDatos->get();
-
-                $datosAgregados = [];
-                foreach ($datosComplejos as $registro) {
-                    $datosArray = is_array($registro->datos) ? $registro->datos : json_decode($registro->datos, true);
-                    foreach ($datosArray as $cultivo => $valor) {
-                        if (! isset($datosAgregados[$cultivo])) {
-                            $datosAgregados[$cultivo] = 0;
-                        }
-
-                        $datosAgregados[$cultivo] += $valor;
-                    }
-                }
-                arsort($datosAgregados);
-
-                return ['titulo' => "{$indicador->nombre_amigable} - {$selection['titulo']} (Año: {$anio})", 'tipo_grafico' => 'bar', 'series' => [['name' => 'Producción', 'data' => array_values($datosAgregados)]], 'eje_x' => ['categorias' => array_keys($datosAgregados)], 'eje_y' => ['titulo' => $indicador->variables->first()->unidad_medida ?? 'Valor'], 'available_years' => $availableYears, 'selected_years' => [$anio], 'descripcion' => $indicador->descripcion, 'fuente' => $indicador->fuente, 'metodo_calculo' => $indicador->metodo_calculo];
-            }
-        }
-    }
 
     /**
      * Retrieves a distinct, ordered list of years available for a complex indicator,
@@ -1558,6 +1332,13 @@ class FichaController extends Controller
             ->pluck('anio');
     }
 
+    /**
+     * Obtiene todos los años históricos con registros para una Dimensión específica.
+     * Es útil para actualizar selectores de año basados en dimensiones.
+     *
+     * @param  \App\Models\Dimension  $dimension El modelo de Dimensión a consultar.
+     * @return \Illuminate\Http\JsonResponse Lista ordenada descendentemente de años únicos.
+     */
     public function getAniosPorDimension(Dimension $dimension)
     {
         // Usamos 'whereHas' para hacer una consulta a través de
@@ -1606,6 +1387,15 @@ class FichaController extends Controller
         return Excel::download(new DatosComplejosExport($indicador, $anio), $fileName);
     }
 
+    /**
+     * Muestra la vista del perfil interactivo municipal.
+     * Carga todos los estadísticos del Hero, genera la estructura del perfil
+     * dinámico con base en la configuración activa de la ficha, e identifica
+     * los municipios similares por macrorregión y población.
+     *
+     * @param  \App\Models\Municipio  $municipio El municipio a perfilar.
+     * @return \Illuminate\View\View Vista del perfil interactivo.
+     */
     public function perfilMunicipal(Municipio $municipio)
     {
         $municipio->load('microrregion.macrorregion');
@@ -1622,7 +1412,6 @@ class FichaController extends Controller
 
         $configuraciones = ConfiguracionFicha::with(['indicador.variables', 'indicador.tematica.dimension', 'variables'])
             ->where('activo', true)
-            ->orderBy('seccion')
             ->orderBy('orden')
             ->get();
 
@@ -1636,7 +1425,10 @@ class FichaController extends Controller
 
             $narrativa = $this->procesarNarrativa($config->plantilla_narrativa, $municipio, $datos);
 
-            $perfil[$config->seccion][] = [
+            $dimension = $config->indicador->tematica->dimension->nombre ?? 'Sin Dimensión';
+            $dimensionKey = str_replace(' ', '_', strtolower($dimension));
+
+            $perfil[$dimensionKey][] = [
                 'config' => $config,
                 'datos' => $datos,
                 'narrativa' => $narrativa
@@ -1686,6 +1478,14 @@ class FichaController extends Controller
         ));
     }
 
+    /**
+     * Obtiene municipios similares ordenados por la distancia absoluta del valor de un indicador o variable.
+     * Utilizado para comparar al municipio actual con su contexto de macrorregión.
+     *
+     * @param  \App\Models\Municipio  $municipio Municipio base para la comparación.
+     * @param  int|string  $configKeyOrId ID de la configuración de la ficha o clave del Hero.
+     * @return \Illuminate\Http\JsonResponse Datos formateados de municipios similares con su valor actual.
+     */
     public function getSimilitudIndicador(Municipio $municipio, $configKeyOrId)
     {
         $variable = null;
@@ -1884,7 +1684,17 @@ class FichaController extends Controller
         ]);
     }
 
-    private function obtenerDatosParaConfig($config, $municipio, FichaDataStore $dataStore = null)
+    /**
+     * Obtiene y estructura los datos de un indicador o variable para una configuración de ficha específica.
+     * Soporta diferentes tipos de visualizaciones: scatter (dispersión), pirámide, mapas y gráficos estándar.
+     * Extrae información de rango municipal, estatal, macrorregional, rankings y tendencias históricas.
+     *
+     * @param  \App\Models\ConfiguracionFicha  $config Configuración de la ficha de la cual obtener los datos.
+     * @param  \App\Models\Municipio  $municipio Municipio base para consultar datos históricos.
+     * @param  \App\Services\FichaDataStore|null  $dataStore Almacén de datos optimizado en memoria para evitar consultas redundantes.
+     * @return array|null Estructura de datos formateada para el motor de ECharts y la narrativa descriptiva.
+     */
+    private function obtenerDatosParaConfig($config, $municipio, FichaDataStore $dataStore = null, $anioForzado = null)
     {
         $indicador = $config->indicador;
         $variablesConfig = $config->variables;
@@ -1894,9 +1704,9 @@ class FichaController extends Controller
             : $indicador->variables->pluck('id');
 
         if ($dataStore) {
-            $anioMax = $dataStore->muniData->whereIn('variable_id', $variableIds)->max('anio');
+            $anioMax = $anioForzado ?? $dataStore->muniData->whereIn('variable_id', $variableIds)->max('anio');
         } else {
-            $anioMax = DatoHistorico::whereIn('variable_id', $variableIds)
+            $anioMax = $anioForzado ?? DatoHistorico::whereIn('variable_id', $variableIds)
                 ->where('municipio_id', $municipio->id)
                 ->max('anio');
         }
@@ -2200,8 +2010,35 @@ class FichaController extends Controller
             }
         }
 
+        if ($indicador->es_complejo) {
+            $availableYears = DatoIndicadorComplejo::where('indicador_id', $indicador->id)
+                ->where('municipio_id', $municipio->id)
+                ->distinct()
+                ->orderBy('anio', 'desc')
+                ->pluck('anio')
+                ->toArray();
+        } else {
+            if ($dataStore) {
+                $availableYears = $dataStore->muniData
+                    ->whereIn('variable_id', $variableIds)
+                    ->pluck('anio')
+                    ->unique()
+                    ->sortDesc()
+                    ->values()
+                    ->toArray();
+            } else {
+                $availableYears = DatoHistorico::whereIn('variable_id', $variableIds)
+                    ->where('municipio_id', $municipio->id)
+                    ->distinct()
+                    ->orderBy('anio', 'desc')
+                    ->pluck('anio')
+                    ->toArray();
+            }
+        }
+
         $res = [
             'anio'                    => $anioMax,
+            'available_years'         => $availableYears,
             'total'                   => $valorTotal,
             'valor_actual'            => number_format($valorTotal),
             'ranking'                 => $dataStore 
@@ -2236,8 +2073,11 @@ class FichaController extends Controller
 
         if (isset($ajustes['mapping']) && is_array($ajustes['mapping'])) {
             $mapeo = $ajustes['mapping'];
-        } elseif (count($res['variables']) === 1 && !empty($res['variables'][0]['mapeo'])) {
-            $mapeo = $res['variables'][0]['mapeo'];
+        } elseif (count($res['variables']) === 1) {
+            $firstVar = reset($res['variables']);
+            if (!empty($firstVar['mapeo'])) {
+                $mapeo = $firstVar['mapeo'];
+            }
         }
 
         if ($mapeo) {
@@ -2373,6 +2213,21 @@ class FichaController extends Controller
         return $res;
     }
 
+    /**
+     * Formatea el conjunto de variables y sus valores en la estructura JSON requerida
+     * por la biblioteca de gráficos Apache ECharts.
+     * Soporta diferentes tipos de series (línea, barra, dona, etc.), incluyendo la inyección
+     * de líneas de tendencias para municipio, estado y macrorregión.
+     *
+     * @param  array  $variablesArray Variables procesadas con sus respectivos datos históricos.
+     * @param  string  $tipo_visualizacion Tipo de visualización configurado (ej: barras, lineas, dona).
+     * @param  mixed  $variableIds Colección o array de identificadores de variables involucradas.
+     * @param  int|null  $anio Año máximo de análisis.
+     * @param  array|null  $tendencia Historial del municipio.
+     * @param  array|null  $tendenciaEstado Historial estatal.
+     * @param  array|null  $tendenciaMacrorregion Historial macrorregional.
+     * @return array Estructura con la configuración de series, ejes y opciones para ECharts.
+     */
     private function formatearDatosParaECharts(array $variablesArray, string $tipo_visualizacion, $variableIds = null, $anio = null, $tendencia = null, $tendenciaEstado = null, $tendenciaMacrorregion = null)
     {
         $tipoLower = strtolower($tipo_visualizacion);
@@ -2426,6 +2281,44 @@ class FichaController extends Controller
             ];
         }
 
+        if ($tipo_visualizacion === 'scatter' && $variableIds && count($variableIds) >= 2 && $anio) {
+            $var1Id = $variableIds[0];
+            $var2Id = $variableIds[1];
+
+            $datosVar1 = DatoHistorico::where('variable_id', $var1Id)->where('anio', $anio)->get()->keyBy('municipio_id');
+            $datosVar2 = DatoHistorico::where('variable_id', $var2Id)->where('anio', $anio)->get()->keyBy('municipio_id');
+
+            $municipiosIds = $datosVar1->keys()->intersect($datosVar2->keys());
+            $municipios = Municipio::whereIn('id', $municipiosIds)->get()->keyBy('id');
+
+            $data = [];
+            foreach ($municipiosIds as $mId) {
+                $mNombre = $municipios->get($mId)->nombre ?? 'Desconocido';
+                $val1 = (float)$datosVar1->get($mId)->valor;
+                $val2 = (float)$datosVar2->get($mId)->valor;
+                // Formato que perfil.js espera: [xVal, yVal, munName, municipio_id]
+                $data[] = [$val1, $val2, $mNombre, $mId];
+            }
+
+            return [
+                'type' => 'scatter',
+                'series' => [
+                    [
+                        'data' => $data,
+                        'symbolSize' => 12,
+                        'itemStyle' => [
+                            // En ECharts, la función de color puede recibir params en frontend, pero 
+                            // como pasamos JSON no podemos pasar funciones directas.
+                            // Dejamos que el frontend lo maneje si queremos, o definimos color estándar aquí.
+                            'color' => '#861e34'
+                        ]
+                    ]
+                ],
+                'eje_x' => ['titulo' => Variable::find($var1Id)->nombre_amigable ?? 'Variable X'],
+                'eje_y' => ['titulo' => Variable::find($var2Id)->nombre_amigable ?? 'Variable Y']
+            ];
+        }
+
         if ($tipo_visualizacion === 'mapa' && $variableIds && $anio) {
             $statsMunicipios = DatoHistorico::select('municipio_id', DB::raw('SUM(valor) as value'))
                 ->whereIn('variable_id', $variableIds)
@@ -2433,7 +2326,7 @@ class FichaController extends Controller
                 ->groupBy('municipio_id')
                 ->get();
 
-            $municipios = \App\Models\Municipio::whereIn('id', $statsMunicipios->pluck('municipio_id'))->get()->keyBy('id');
+            $municipios = Municipio::whereIn('id', $statsMunicipios->pluck('municipio_id'))->get()->keyBy('id');
 
             $data = $statsMunicipios->map(function ($m) use ($municipios) {
                 $mun = $municipios->get($m->municipio_id);
@@ -2512,6 +2405,15 @@ class FichaController extends Controller
         return null;
     }
 
+    /**
+     * Calcula la posición (ranking) del municipio en comparación con todos los demás municipios
+     * para un grupo específico de variables en un año determinado (usando base de datos).
+     *
+     * @param  array|\Illuminate\Support\Collection  $variableIds Identificadores de las variables.
+     * @param  int|string  $municipio_id Identificador del municipio a evaluar.
+     * @param  int  $anio Año de comparación.
+     * @return array{posicion: int|string, total_municipios: int} Posición en el ranking y total de municipios con datos.
+     */
     private function getMunicipalityRanking($variableIds, $municipio_id, $anio)
     {
 
@@ -2531,6 +2433,14 @@ class FichaController extends Controller
         ];
     }
 
+    /**
+     * Obtiene el promedio o suma total estatal para un conjunto de variables en un año específico (usando base de datos).
+     *
+     * @param  array|\Illuminate\Support\Collection  $variableIds Identificadores de las variables.
+     * @param  int  $anio Año a evaluar.
+     * @param  string  $method Método de agregación ('avg' o 'sum').
+     * @return float|int Valor agregado resultante.
+     */
     private function getStateAverage($variableIds, $anio, $method = 'avg')
     {
         $method = in_array($method, ['avg', 'sum']) ? $method : 'avg';
@@ -2539,6 +2449,16 @@ class FichaController extends Controller
             ->$method('valor') ?? 0;
     }
 
+    /**
+     * Obtiene el promedio o suma total para la macrorregión a la que pertenece el municipio
+     * para un conjunto de variables en un año específico (usando base de datos).
+     *
+     * @param  array|\Illuminate\Support\Collection  $variableIds Identificadores de las variables.
+     * @param  \App\Models\Municipio  $municipio Municipio base para determinar la macrorregión.
+     * @param  int  $anio Año a evaluar.
+     * @param  string  $method Método de agregación ('avg' o 'sum').
+     * @return float|int Valor agregado regional resultante.
+     */
     private function getMacrorregionalAverage($variableIds, $municipio, $anio, $method = 'avg')
     {
         $macrorregionId = $municipio->microrregion->macrorregion_id ?? null;
@@ -2555,6 +2475,17 @@ class FichaController extends Controller
             ->$method('valor') ?? 0;
     }
 
+    /**
+     * Calcula la posición (ranking) del municipio en comparación con todos los demás municipios
+     * para un grupo específico de variables en un año determinado utilizando una colección cargada en memoria.
+     * Esto optimiza significativamente el rendimiento al no realizar consultas sql repetidas.
+     *
+     * @param  \App\Services\FichaDataStore  $dataStore Almacén de datos en memoria.
+     * @param  array|\Illuminate\Support\Collection  $variableIds Identificadores de las variables.
+     * @param  int|string  $municipio_id Identificador del municipio a evaluar.
+     * @param  int  $anio Año de comparación.
+     * @return array{posicion: int|string, total_municipios: int} Posición en el ranking y total de municipios.
+     */
     private function getMunicipalityRankingInMemory($dataStore, $variableIds, $municipio_id, $anio)
     {
         $rankings = $dataStore->globalData
@@ -2573,6 +2504,16 @@ class FichaController extends Controller
         ];
     }
 
+    /**
+     * Obtiene el promedio o suma total estatal para un conjunto de variables en un año específico
+     * utilizando una colección cargada en memoria.
+     *
+     * @param  \App\Services\FichaDataStore  $dataStore Almacén de datos en memoria.
+     * @param  array|\Illuminate\Support\Collection  $variableIds Identificadores de las variables.
+     * @param  int  $anio Año a evaluar.
+     * @param  string  $method Método de agregación ('avg' o 'sum').
+     * @return float|int Valor estatal resultante.
+     */
     private function getStateAverageInMemory($dataStore, $variableIds, $anio, $method = 'avg')
     {
         $filtered = $dataStore->globalData
@@ -2582,6 +2523,17 @@ class FichaController extends Controller
         return $method === 'sum' ? $filtered->sum('valor') : $filtered->avg('valor');
     }
 
+    /**
+     * Obtiene el promedio o suma total para la macrorregión
+     * para un conjunto de variables en un año específico utilizando una colección cargada en memoria.
+     *
+     * @param  \App\Services\FichaDataStore  $dataStore Almacén de datos en memoria.
+     * @param  array|\Illuminate\Support\Collection  $variableIds Identificadores de las variables.
+     * @param  \Illuminate\Support\Collection  $municipiosIds Colección de IDs de municipios de la macrorregión.
+     * @param  int  $anio Año a evaluar.
+     * @param  string  $method Método de agregación ('avg' o 'sum').
+     * @return float|int Valor regional resultante.
+     */
     private function getMacrorregionalAverageInMemory($dataStore, $variableIds, $municipiosIds, $anio, $method = 'avg')
     {
         if ($municipiosIds->isEmpty()) return 0;
@@ -2594,6 +2546,15 @@ class FichaController extends Controller
         return $method === 'sum' ? $filtered->sum('valor') : $filtered->avg('valor');
     }
 
+    /**
+     * Procesa la plantilla de narrativa utilizando el servicio FichaNarratorService.
+     * Reemplaza los tokens de datos e información dinámica del municipio en el texto descriptivo.
+     *
+     * @param  string  $plantilla Texto de la plantilla con tokens.
+     * @param  \App\Models\Municipio  $municipio Municipio del cual obtener contexto.
+     * @param  array  $datos Datos del indicador asociados.
+     * @return string Narrativa final en lenguaje natural procesada.
+     */
     private function procesarNarrativa($plantilla, $municipio, $datos)
     {
         return FichaNarratorService::procesar($plantilla, $municipio, $datos);
@@ -2639,12 +2600,19 @@ class FichaController extends Controller
             }
         }
 
-        // $ttl = $resultado ? now()->addDays(7) : now()->addHours(6);
-        // Cache::put($cacheKey, $resultado, $ttl);
+        // ponytail: habilitar caché para no re-consultar el API externa de Wikipedia constantemente
+        $ttl = $resultado ? now()->addDays(7) : now()->addHours(6);
+        Cache::put($cacheKey, $resultado, $ttl);
 
         return $resultado;
     }
 
+    /**
+     * Instancia y configura el cliente HTTP para interactuar con la API REST de Wikipedia.
+     * Define un tiempo de espera límite (timeout) y el encabezado User-Agent.
+     *
+     * @return \Illuminate\Http\Client\PendingRequest Cliente HTTP configurado.
+     */
     private function wikipediaClient(): \Illuminate\Http\Client\PendingRequest
     {
         return Http::timeout(5)->withHeaders([
@@ -2652,11 +2620,27 @@ class FichaController extends Controller
         ]);
     }
 
+    /**
+     * Recupera y calcula los estadísticos esenciales (KPIs) del Hero para un municipio.
+     * Delega el procesamiento al servicio FichaProfilerService.
+     *
+     * @param  \App\Models\Municipio  $municipio El municipio a evaluar.
+     * @return array Conjunto de estadísticos clave estructurados.
+     */
     private function getHeroStats(Municipio $municipio)
     {
         return FichaProfilerService::getHeroStats($municipio);
     }
 
+    /**
+     * Muestra la vista comparativa entre dos municipios.
+     * Carga las estadísticas del Hero de ambos municipios y cruza toda la configuración
+     * de fichas activas utilizando almacenes de datos en memoria para optimizar la carga.
+     *
+     * @param  string  $slug1 Slug identificador del primer municipio.
+     * @param  string  $slug2 Slug identificador del segundo municipio.
+     * @return \Illuminate\View\View Vista comparativa municipal.
+     */
     public function compararMunicipal($slug1, $slug2)
     {
         $municipio1 = Municipio::where('slug', $slug1)->firstOrFail();
@@ -2675,7 +2659,8 @@ class FichaController extends Controller
             ->get();
 
         $allVariableIds = FichaDataStore::extractVariableIds($configuraciones);
-        $globalData = DatoHistorico::whereIn('variable_id', $allVariableIds)
+        $globalData = \Illuminate\Support\Facades\DB::table('dato_historicos')
+            ->whereIn('variable_id', $allVariableIds)
             ->select('municipio_id', 'variable_id', 'anio', 'valor')
             ->get();
 
@@ -2690,7 +2675,10 @@ class FichaController extends Controller
 
             $combinadoECharts = $this->combinarDatosParaECharts($config, $datos1, $datos2, $municipio1, $municipio2);
 
-            $comparativa[$config->seccion][] = [
+            $dimension = $config->indicador->tematica->dimension->nombre ?? 'Sin Dimensión';
+            $dimensionKey = str_replace(' ', '_', strtolower($dimension));
+
+            $comparativa[$dimensionKey][] = [
                 'config' => $config,
                 'datos1' => $datos1,
                 'datos2' => $datos2,
@@ -2708,6 +2696,17 @@ class FichaController extends Controller
         ));
     }
 
+    /**
+     * Combina las estructuras de datos de dos municipios para generar una opción única de ECharts.
+     * Esto permite graficar las comparaciones lado a lado en series combinadas de barras o líneas temporales.
+     *
+     * @param  \App\Models\ConfiguracionFicha  $config Configuración visual de la ficha.
+     * @param  array|null  $datos1 Datos estructurados del primer municipio.
+     * @param  array|null  $datos2 Datos estructurados del segundo municipio.
+     * @param  \App\Models\Municipio  $municipio1 Primer municipio.
+     * @param  \App\Models\Municipio  $municipio2 Segundo municipio.
+     * @return array|null Estructura JSON para el gráfico combinado de ECharts, o null si no es combinable.
+     */
     private function combinarDatosParaECharts($config, $datos1, $datos2, $municipio1, $municipio2)
     {
         if (!$datos1 || !$datos2) return null;
@@ -2799,6 +2798,15 @@ class FichaController extends Controller
         return null;
     }
 
+    /**
+     * Genera y exporta un documento PDF comparativo entre dos municipios.
+     * Integra la información de Hero de ambos municipios, sus métricas clave,
+     * y genera la estructura de secciones configuradas activas en la ficha.
+     *
+     * @param  string  $slug1 Slug del primer municipio.
+     * @param  string  $slug2 Slug del segundo municipio.
+     * @return \Illuminate\Http\Response Respuesta HTTP para descarga del archivo PDF.
+     */
     public function exportarComparativaPDF($slug1, $slug2)
     {
         $municipio1 = Municipio::where('slug', $slug1)->firstOrFail();
@@ -2817,7 +2825,8 @@ class FichaController extends Controller
             ->get();
 
         $allVariableIds = FichaDataStore::extractVariableIds($configuraciones);
-        $globalData = DatoHistorico::whereIn('variable_id', $allVariableIds)
+        $globalData = \Illuminate\Support\Facades\DB::table('dato_historicos')
+            ->whereIn('variable_id', $allVariableIds)
             ->select('municipio_id', 'variable_id', 'anio', 'valor')
             ->get();
 
@@ -2830,7 +2839,10 @@ class FichaController extends Controller
             $datos1 = $this->obtenerDatosParaConfig($config, $municipio1, $dataStore1);
             $datos2 = $this->obtenerDatosParaConfig($config, $municipio2, $dataStore2);
 
-            $comparativa[$config->seccion][] = [
+            $dimension = $config->indicador->tematica->dimension->nombre ?? 'Sin Dimensión';
+            $dimensionKey = str_replace(' ', '_', strtolower($dimension));
+
+            $comparativa[$dimensionKey][] = [
                 'config' => $config,
                 'datos1' => $datos1,
                 'datos2' => $datos2
@@ -2846,5 +2858,38 @@ class FichaController extends Controller
 
         $fileName = 'comparativa-' . Str::slug($municipio1->nombre) . '-vs-' . Str::slug($municipio2->nombre) . '.pdf';
         return $pdf->download($fileName);
+    }
+
+    /**
+     * Endpoint API para consultar y devolver dinámicamente los datos de un indicador y su narrativa
+     * filtrados por un año específico para un municipio.
+     *
+     * @param  \App\Models\Municipio  $municipio El municipio a consultar.
+     * @param  int  $configId ID de la configuración de ficha.
+     * @param  int  $anio Año forzado de consulta.
+     * @return \Illuminate\Http\JsonResponse Datos del indicador y narrativa estructurada.
+     */
+    public function getGraficoDatosApi(Municipio $municipio, $configId, $anio)
+    {
+        $config = ConfiguracionFicha::with(['indicador.variables', 'variables'])->find($configId);
+        if (!$config) {
+            return response()->json(['success' => false, 'error' => 'Configuración no encontrada'], 404);
+        }
+
+        // Obtener datos específicos forzando el año
+        $datos = $this->obtenerDatosParaConfig($config, $municipio, null, (int)$anio);
+
+        if (!$datos) {
+            return response()->json(['success' => false, 'error' => 'No hay datos para el año especificado'], 404);
+        }
+
+        // Procesar la plantilla de narrativa descriptiva con los nuevos datos obtenidos
+        $narrativa = $this->procesarNarrativa($config->plantilla_narrativa, $municipio, $datos);
+
+        return response()->json([
+            'success' => true,
+            'datos' => $datos,
+            'narrativa' => $narrativa
+        ]);
     }
 }

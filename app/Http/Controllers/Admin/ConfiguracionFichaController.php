@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 
 use App\Models\ConfiguracionFicha;
 use App\Models\Indicador;
+use App\Models\Variable;
+use App\Models\DatoHistorico;
 use Illuminate\Support\Str;
 
 class ConfiguracionFichaController extends Controller
@@ -14,7 +16,6 @@ class ConfiguracionFichaController extends Controller
     public function index()
     {
         $configuraciones = ConfiguracionFicha::with('indicador')
-            ->orderBy('seccion')
             ->orderBy('orden')
             ->paginate(10);
             
@@ -26,25 +27,15 @@ class ConfiguracionFichaController extends Controller
         $configuracion = new ConfiguracionFicha();
         $indicadores = Indicador::where('es_complejo', false)->orderBy('nombre_amigable')->get();
         $total_indicadores= $indicadores->count();
-        $secciones = [
-            'demografia' => 'Demografía',
-            'economia' => 'Economía',
-            'salud' => 'Salud',
-            'educacion' => 'Educación',
-            'vivienda' => 'Vivienda',
-            'seguridad' => 'Seguridad',
-            'medio_ambiente' => 'Medio Ambiente'
-        ];
-        $visualizaciones = ['kpi', 'piramide', 'treemap', 'barras', 'lineas', 'mapa'];
+        $visualizaciones = ['kpi', 'piramide', 'treemap', 'barras', 'lineas', 'mapa', 'scatter'];
         
-        return view('admin.configuracion_fichas.form', compact('configuracion', 'indicadores', 'secciones', 'visualizaciones', 'total_indicadores'));
+        return view('admin.configuracion_fichas.form', compact('configuracion', 'indicadores', 'visualizaciones', 'total_indicadores'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'indicador_id' => 'required|exists:indicadors,id',
-            'seccion' => 'required|string',
             'orden' => 'required|integer',
             'tipo_visualizacion' => 'required|string',
             'titulo_reporte' => 'nullable|string',
@@ -65,6 +56,9 @@ class ConfiguracionFichaController extends Controller
             $validated['ajustes_visuales'] = [];
         }
         $validated['ajustes_visuales']['benchmark_mode'] = $request->input('benchmark_mode', 'avg');
+
+        $indicador = Indicador::with('tematica.dimension')->findOrFail($request->indicador_id);
+        $validated['seccion'] = Str::lower($indicador->tematica->dimension->nombre_tecnico ?? 'general');
 
         $configuracion = ConfiguracionFicha::create($validated);
 
@@ -81,18 +75,9 @@ class ConfiguracionFichaController extends Controller
         $configuracion = ConfiguracionFicha::with('variables')->findOrFail($id);
         $variablesIndicador = $configuracion->indicador->variables()->orderBy('orden')->get();
         $indicadores = Indicador::where('es_complejo', false)->orderBy('nombre_amigable')->get();
-        $secciones = [
-            'demografia' => 'Demografía',
-            'economia' => 'Economía',
-            'salud' => 'Salud',
-            'educacion' => 'Educación',
-            'vivienda' => 'Vivienda',
-            'seguridad' => 'Seguridad',
-            'medio_ambiente' => 'Medio Ambiente'
-        ];
-        $visualizaciones = ['kpi', 'piramide', 'treemap', 'barras', 'lineas', 'mapa'];
+        $visualizaciones = ['kpi', 'piramide', 'treemap', 'barras', 'lineas', 'mapa', 'scatter'];
         
-        return view('admin.configuracion_fichas.form', compact('configuracion', 'indicadores', 'secciones', 'visualizaciones', 'variablesIndicador'));
+        return view('admin.configuracion_fichas.form', compact('configuracion', 'indicadores', 'visualizaciones', 'variablesIndicador'));
     }
 
     public function update(Request $request, $id)
@@ -101,7 +86,6 @@ class ConfiguracionFichaController extends Controller
         
         $validated = $request->validate([
             'indicador_id' => 'required|exists:indicadors,id',
-            'seccion' => 'required|string',
             'orden' => 'required|integer',
             'tipo_visualizacion' => 'required|string',
             'titulo_reporte' => 'nullable|string',
@@ -122,6 +106,9 @@ class ConfiguracionFichaController extends Controller
             $validated['ajustes_visuales'] = [];
         }
         $validated['ajustes_visuales']['benchmark_mode'] = $request->input('benchmark_mode', 'avg');
+
+        $indicador = Indicador::with('tematica.dimension')->findOrFail($request->indicador_id);
+        $validated['seccion'] = Str::lower($indicador->tematica->dimension->nombre_tecnico ?? 'general');
 
         $configuracion->update($validated);
 
@@ -158,5 +145,65 @@ class ConfiguracionFichaController extends Controller
         });
 
         return response()->json($mapped);
+    }
+
+    public function getAllVariables()
+    {
+        $indicadores = Indicador::with(['variables' => function($q) {
+            $q->orderBy('orden');
+        }])->where('es_complejo', false)->orderBy('nombre_amigable')->get();
+
+        $mapped = [];
+        foreach ($indicadores as $ind) {
+            if ($ind->variables->count() > 0) {
+                $options = $ind->variables->map(function($var) use ($ind) {
+                    return [
+                        'id' => $var->id,
+                        'text' => $ind->nombre_amigable . ' - ' . $var->nombre_amigable,
+                        'tag_valor' => '{' . Str::slug($var->nombre_amigable, '_') . '_valor}',
+                        'tag_nombre' => '{' . Str::slug($var->nombre_amigable, '_') . '_nombre}'
+                    ];
+                })->toArray();
+                
+                $mapped = array_merge($mapped, $options);
+            }
+        }
+
+        return response()->json($mapped);
+    }
+
+    public function getAniosDisponibles(Request $request)
+    {
+        $variablesIds = $request->input('variables_ids');
+        $indicadorId = $request->input('indicador_id');
+
+        if (!is_array($variablesIds)) {
+            $variablesIds = $variablesIds ? explode(',', $variablesIds) : [];
+        }
+        $variablesIds = array_filter(array_map('intval', $variablesIds));
+
+        if (empty($variablesIds) && $indicadorId) {
+            $variablesIds = Variable::where('indicador_id', $indicadorId)->pluck('id')->toArray();
+        }
+
+        if (empty($variablesIds)) {
+            return response()->json([
+                'success' => true,
+                'anios_disponibles' => 0,
+                'anios' => []
+            ]);
+        }
+
+        $anios = DatoHistorico::whereIn('variable_id', $variablesIds)
+            ->distinct()
+            ->orderBy('anio', 'desc')
+            ->pluck('anio')
+            ->toArray();
+
+        return response()->json([
+            'success' => true,
+            'anios_disponibles' => count($anios),
+            'anios' => $anios
+        ]);
     }
 }
