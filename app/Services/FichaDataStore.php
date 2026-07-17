@@ -39,7 +39,7 @@ class FichaDataStore
         $this->allVariableIds = $allVariableIds;
 
         // Cargar variables correspondientes
-        $this->allVariables = Variable::whereIn('id', $allVariableIds)->get()->keyBy('id');
+        $this->allVariables = Variable::with('indicador')->whereIn('id', $allVariableIds)->get()->keyBy('id');
 
         // Cargar datos históricos del municipio objetivo con su relación variable precargada
         $this->muniData = DatoHistorico::with('variable')
@@ -73,9 +73,10 @@ class FichaDataStore
     {
         $allVariableIds = collect();
         foreach ($configuraciones as $config) {
-            $vars = $config->variables->isNotEmpty() 
-                ? $config->variables->pluck('id') 
-                : ($config->indicador ? $config->indicador->variables->pluck('id') : collect());
+            $varsConfiguradas = $config->variables->where('visible_en_ficha', true);
+            $vars = $varsConfiguradas->isNotEmpty()
+                ? $varsConfiguradas->pluck('id')
+                : ($config->indicador ? $config->indicador->variables->where('visible_en_ficha', true)->pluck('id') : collect());
             $allVariableIds = $allVariableIds->merge($vars);
         }
         return $allVariableIds->unique()->values()->toArray();

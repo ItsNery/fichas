@@ -27,13 +27,27 @@
 
 <body class="font-sans antialiased bg-light">
 
-    @include('layouts.admin-navigation')
+    <div class="admin-wrapper">
+        @include('layouts.admin-navigation')
 
-    <main class="container py-4">
-        <div class="card py-3 px-3">
-            {{ $slot }}
+        <div class="admin-content">
+            <nav class="admin-topbar">
+                <button class="btn btn-sm btn-outline-secondary border-0" type="button" data-sidebar-toggle>
+                    <i class="fas fa-bars fa-lg"></i>
+                </button>
+                <span class="admin-topbar-title">@yield('title', 'Panel de Administración')</span>
+                <span class="ms-auto small text-muted">{{ Auth::user()->name ?? '' }}</span>
+            </nav>
+
+            <main class="container-fluid py-4 px-4">
+                @isset($slot)
+                    {{ $slot }}
+                @else
+                    @yield('content')
+                @endisset
+            </main>
         </div>
-    </main>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -46,6 +60,39 @@
                 return new bootstrap.Tooltip(tooltipTriggerEl)
             });
 
+            function isDesktop() {
+                return window.innerWidth >= 992;
+            }
+
+            var STORAGE_KEY = 'adminSidebarCollapsed';
+
+            function applySidebarState() {
+                if (!isDesktop()) return;
+                var saved = localStorage.getItem(STORAGE_KEY);
+                if (saved === 'true') {
+                    document.querySelector('.admin-wrapper').classList.add('sidebar-collapsed');
+                } else {
+                    document.querySelector('.admin-wrapper').classList.remove('sidebar-collapsed');
+                }
+            }
+
+            applySidebarState();
+
+            document.querySelectorAll('[data-sidebar-toggle]').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    var sidebar = document.getElementById('adminSidebar');
+                    var overlay = document.getElementById('sidebarOverlay');
+
+                    if (isDesktop()) {
+                        document.querySelector('.admin-wrapper').classList.toggle('sidebar-collapsed');
+                        var collapsed = document.querySelector('.admin-wrapper').classList.contains('sidebar-collapsed');
+                        localStorage.setItem(STORAGE_KEY, collapsed);
+                    } else {
+                        sidebar.classList.toggle('show');
+                        overlay.classList.toggle('show');
+                    }
+                });
+            });
         });
     </script>
 </body>

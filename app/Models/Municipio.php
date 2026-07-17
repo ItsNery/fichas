@@ -3,10 +3,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Municipio extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->setDescriptionForEvent(fn(string $eventName) =>
+                "El municipio '{$this->nombre}' fue {$eventName}"
+            );
+    }
 
     protected $fillable = [
         'nombre',
@@ -14,12 +26,15 @@ class Municipio extends Model
         'microrregion_id',
         'cvegeo',
         'banner_image_url',
-        'logo_url',
-        'presidente_municipal',
-        'periodo_gobierno',
+        'banner_attribution',
         'cabecera',
         'clima',
         'superficie',
+    ];
+
+    protected $casts = [
+        'superficie' => 'float',
+        'banner_attribution' => 'array',
     ];
 
     public function microrregion()

@@ -10,6 +10,17 @@ let geojsonLayerRegional = null;
 let pueblaGeoJSON = null;
 let microGeoJSON = null;
 let macroGeoJSON = null;
+
+function limpiarCapasMapa() {
+    if (geojsonLayerMunicipal && mapMunicipal) {
+        mapMunicipal.removeLayer(geojsonLayerMunicipal);
+        geojsonLayerMunicipal = null;
+    }
+    if (geojsonLayerRegional && mapRegional) {
+        mapRegional.removeLayer(geojsonLayerRegional);
+        geojsonLayerRegional = null;
+    }
+}
 // Lista negra de microrregiones
 const IDS_BLOQUEADOS = ["9", "10", "24"];
 const MENSAJE_REGIONALIZACION =
@@ -31,6 +42,7 @@ document.addEventListener("DOMContentLoaded", function () {
         microrregionId: null,
         macrorregionId: null,
         selectedYears: [],
+        showAsPercentage: false,
     };
 
     const API_URL = appContainer.dataset.apiUrl;
@@ -265,6 +277,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const toggleMapBtnRegions = document.getElementById(
         "toggle-map-btn-regions",
     );
+    const MAP_VISIBILITY_KEY = "bancoIndicadoresMapaVisible";
+    let mapVisiblePreference = localStorage.getItem(MAP_VISIBILITY_KEY) !== "false";
     const fullscreenModal = document.getElementById("chart-fullscreen-modal");
     const fullscreenChartContainer = document.getElementById(
         "chart-fullscreen-container",
@@ -281,6 +295,10 @@ document.addEventListener("DOMContentLoaded", function () {
         regional: null,
     };
     const lastChartOptionsByView = {
+        municipio: null,
+        regional: null,
+    };
+    const rawDataByView = {
         municipio: null,
         regional: null,
     };
@@ -688,11 +706,109 @@ document.addEventListener("DOMContentLoaded", function () {
      */
     function gestionarOpcionEstatal(tipoDato) {
         appState.indicatorTipoDato = tipoDato;
-        if (tipoDato.toLowerCase() === "absoluto") {
-            estatalBtn.style.display = "block";
+        appState.showAsPercentage = false;
+        const esAbsoluto = tipoDato.toLowerCase() === "absoluto";
+        estatalBtn.style.display = esAbsoluto ? "block" : "none";
+    }
+
+    /**
+     * Transforma datos absolutos a porcentajes para la visualización actual.
+     */
+    function aplicarPorcentajePorCategoria(datos) {
+        const totalsByCategory = new Map();
+        datos.series.forEach(serie => {
+            serie.data.forEach(point => {
+                const category = Array.isArray(point) ? point[0] : null;
+                const value = Array.isArray(point) ? point[1] : point;
+                totalsByCategory.set(
+                    category,
+                    (totalsByCategory.get(category) || 0) + Math.abs(Number(value) || 0),
+                );
+            });
+        });
+
+        datos.series.forEach(serie => {
+            serie.data = serie.data.map(point => {
+                const isPoint = Array.isArray(point);
+                const category = isPoint ? point[0] : null;
+                const value = isPoint ? point[1] : point;
+                const denominator = totalsByCategory.get(category) || 0;
+                if (!denominator) return isPoint ? [category, 0] : 0;
+                const pct = +(Math.abs(Number(value) || 0) / denominator * 100).toFixed(2);
+                const signedPct = Number(value) < 0 ? -pct : pct;
+                return isPoint ? [category, signedPct] : signedPct;
+            });
+        });
+    }
+
+    function transformarAPorcentaje(datos) {
+        if (!datos || !datos.series) return datos;
+        const cloned = JSON.parse(JSON.stringify(datos));
+
+        // Identificar series que son "Total" (case-insensitive)
+        const isTotalSerie = (name) => name && name.toLowerCase().includes("total");
+
+        // La serie Total duplica la suma de las demás y no debe graficarse en modo %.
+        cloned.series = cloned.series.filter(serie => !isTotalSerie(serie.name));
+        if (!cloned.series.length) return datos;
+
+        if (cloned.tipo_grafico === "piramide") {
+            const grandTotal = cloned.series.reduce(
+                (total, serie) => total + serie.data.reduce((sum, value) => sum + Math.abs(value), 0),
+                0,
+            );
+            if (!grandTotal) return datos;
+
+            cloned.series.forEach(serie => {
+                serie.data = serie.data.map(value => {
+                    const pct = +(Math.abs(value) / grandTotal * 100).toFixed(2);
+                    return value < 0 ? -pct : pct;
+                });
+            });
+        } else if (Array.isArray(cloned.eje_x?.categorias)) {
+            // En gráficos de barras, "Total" suele ser una categoría del eje X,
+            // no una serie independiente.
+            const totalIndexes = cloned.eje_x.categorias.reduce((indexes, category, index) => {
+                if (isTotalSerie(String(category))) indexes.push(index);
+                return indexes;
+            }, []);
+            const totalIndexSet = new Set(totalIndexes);
+
+            if (totalIndexes.length) {
+                cloned.eje_x.categorias = cloned.eje_x.categorias.filter((_, index) => !totalIndexSet.has(index));
+                cloned.series.forEach(serie => {
+                    const values = serie.data.filter((_, index) => !totalIndexSet.has(index));
+                    const denominator = values.reduce((sum, value) => sum + Math.abs(Number(value) || 0), 0);
+                    serie.data = denominator
+                        ? values.map(value => {
+                            const pct = +(Math.abs(Number(value) || 0) / denominator * 100).toFixed(2);
+                            return Number(value) < 0 ? -pct : pct;
+                        })
+                        : values.map(() => 0);
+                });
+            } else {
+                const esSerieUnicaDeCategorias = cloned.series.length === 1 &&
+                    cloned.series[0].data.every(value => !Array.isArray(value));
+                if (esSerieUnicaDeCategorias) {
+                    const serie = cloned.series[0];
+                    const denominator = serie.data.reduce(
+                        (sum, value) => sum + Math.abs(Number(value) || 0),
+                        0,
+                    );
+                    serie.data = denominator
+                        ? serie.data.map(value => +(Math.abs(Number(value) || 0) / denominator * 100).toFixed(2))
+                        : serie.data.map(() => 0);
+                } else {
+                    aplicarPorcentajePorCategoria(cloned);
+                }
+            }
         } else {
-            estatalBtn.style.display = "none";
+            // Para opciones/años, cada categoría se expresa como parte de su total.
+            aplicarPorcentajePorCategoria(cloned);
         }
+
+        cloned._esPorcentaje = true;
+        return cloned;
     }
 
     /**
@@ -770,13 +886,21 @@ document.addEventListener("DOMContentLoaded", function () {
         toggleMapBtn.addEventListener("click", () => {
             if (mapContainer.style.display === "none") {
                 mapContainer.style.display = "block";
+                mapVisiblePreference = true;
+                localStorage.setItem(MAP_VISIBILITY_KEY, "true");
                 toggleMapBtn.classList.replace(
                     "btn-outline-primary",
                     "btn-primary",
                 );
                 if (mapMunicipal) mapMunicipal.invalidateSize();
+                if (appState.municipioIds.length === 1 && appState.municipioIds[0] !== "estatal") {
+                    const optionData = municipioSelector.options[appState.municipioIds[0]];
+                    if (optionData?.cvegeo) displaySingleMunicipalityMap(optionData.cvegeo);
+                }
             } else {
                 mapContainer.style.display = "none";
+                mapVisiblePreference = false;
+                localStorage.setItem(MAP_VISIBILITY_KEY, "false");
                 toggleMapBtn.classList.replace(
                     "btn-primary",
                     "btn-outline-primary",
@@ -790,13 +914,22 @@ document.addEventListener("DOMContentLoaded", function () {
             const container = document.getElementById("map-container-regions");
             if (container.style.display === "none") {
                 container.style.display = "block";
+                mapVisiblePreference = true;
+                localStorage.setItem(MAP_VISIBILITY_KEY, "true");
                 toggleMapBtnRegions.classList.replace(
                     "btn-outline-primary",
                     "btn-primary",
                 );
                 if (mapRegional) mapRegional.invalidateSize();
+                if (appState.nivelDeAgregacion === "microrregion" && appState.microrregionId) {
+                    displaySingleFeatureMap(microGeoJSON, appState.microrregionId, "id_micro");
+                } else if (appState.nivelDeAgregacion === "macrorregion" && appState.macrorregionId) {
+                    displaySingleFeatureMap(macroGeoJSON, appState.macrorregionId, "id_macro");
+                }
             } else {
                 container.style.display = "none";
+                mapVisiblePreference = false;
+                localStorage.setItem(MAP_VISIBILITY_KEY, "false");
                 toggleMapBtnRegions.classList.replace(
                     "btn-primary",
                     "btn-outline-primary",
@@ -1519,8 +1652,31 @@ document.addEventListener("DOMContentLoaded", function () {
     function generarOpcionesEcharts(datosParaGrafico) {
         let options = {};
         const formatNum = (val) => new Intl.NumberFormat("es-MX").format(val);
+        const esAbsoluto = appState.indicatorTipoDato && appState.indicatorTipoDato.toLowerCase() === "absoluto";
+        const pctFeature = esAbsoluto ? {
+            myPercentage: {
+                show: true,
+                title: appState.showAsPercentage ? "Ver valores absolutos" : "Ver como porcentaje",
+                icon: "path://M7.5,4C5.6,4,4,5.6,4,7.5S5.6,11,7.5,11S11,9.4,11,7.5S9.4,4,7.5,4z M16.5,13c-1.9,0-3.5,1.6-3.5,3.5s1.6,3.5,3.5,3.5s3.5-1.6,3.5-3.5S18.4,13,16.5,13z M5.4,18.6L18.6,5.4l1.4,1.4L6.8,20L5.4,18.6z",
+                onclick: function () {
+                    appState.showAsPercentage = !appState.showAsPercentage;
+                    const viewKey = getChartViewKey();
+                    const rawData = rawDataByView[viewKey];
+                    if (rawData) {
+                        const container = document.getElementById(
+                            appState.nivelDeAgregacion === "municipio" ? "chart-container" : "chart-container-regions"
+                        );
+                        const titleEl = document.getElementById(
+                            appState.nivelDeAgregacion === "municipio" ? "chart-title" : "chart-title-regions"
+                        );
+                        renderizarGrafico(rawData, container, titleEl, viewKey);
+                    }
+                }
+            }
+        } : {};
 
         if (datosParaGrafico.tipo_grafico === "piramide") {
+            const esPct = datosParaGrafico._esPorcentaje;
             options = {
                 color: ["#008FFB", "#FF4560"],
                 toolbox: {
@@ -1529,6 +1685,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         saveAsImage: { title: "Descargar" },
                         dataView: { title: "Ver datos", readOnly: true },
                         restore: { title: "Restaurar" },
+                        ...pctFeature
                     },
                 },
                 tooltip: {
@@ -1538,7 +1695,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         let html = `<strong>${params[0].axisValueLabel}</strong><br/>`;
                         params.forEach(
                             (p) =>
-                                (html += `${p.marker} ${p.seriesName}: ${formatNum(Math.abs(p.value))} personas<br/>`),
+                                (html += `${p.marker} ${p.seriesName}: ${formatNum(Math.abs(p.value))}${esPct ? '%' : ' personas'}<br/>`),
                         );
                         return html;
                     },
@@ -1552,10 +1709,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 },
                 xAxis: {
                     type: "value",
-                    name: "Número de Habitantes",
+                    name: esPct ? "Porcentaje de la Población (%)" : "Número de Habitantes",
                     nameLocation: "middle",
                     nameGap: 30,
-                    axisLabel: { formatter: (v) => formatNum(Math.abs(v)) },
+                    axisLabel: { formatter: (v) => formatNum(Math.abs(v)) + (esPct ? '%' : '') },
                 },
                 yAxis: {
                     type: "category",
@@ -1635,6 +1792,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         },
                         dataView: { title: "Ver Datos", readOnly: true },
                         restore: { title: "Restaurar" },
+                        ...pctFeature
                     },
                 },
                 tooltip: {
@@ -1649,9 +1807,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
                         let html = `<div style="font-weight:bold; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">${prefijoX}${params.name}</div>`;
 
+                        const sufijo = datosParaGrafico._esPorcentaje ? '%' : '';
                         html += `<div style="display: flex; justify-content: space-between; gap: 20px; font-size: 13px;">
                                     <span>${params.marker} ${params.seriesName}</span>
-                                    <span style="font-weight: bold;">${formatNum(params.value)}</span>
+                                    <span style="font-weight: bold;">${formatNum(params.value)}${sufijo}</span>
                                  </div>`;
 
                         return html;
@@ -1764,9 +1923,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 },
                 yAxis: {
                     type: "value",
-                    name: datosParaGrafico.eje_y.titulo,
+                    name: datosParaGrafico._esPorcentaje ? "Porcentaje (%)" : (datosParaGrafico.eje_y?.titulo || ""),
                     nameTextStyle: { align: "left", padding: [0, 0, 0, -30] },
-                    axisLabel: { formatter: (v) => formatNum(v) },
+                    axisLabel: { formatter: (v) => formatNum(v) + (datosParaGrafico._esPorcentaje ? '%' : '') },
                 },
                 series: seriesData.map((s, idx) => ({
                     ...s,
@@ -1842,11 +2001,19 @@ document.addEventListener("DOMContentLoaded", function () {
         // 1. Delegamos el trabajo de los textos y modales a su propia función
         actualizarTextosUI(datosParaGrafico, titleElement);
 
-        // 2. Delegamos el cálculo matemático y visual a su propia función
-        const options = generarOpcionesEcharts(datosParaGrafico);
+        rawDataByView[viewKey] = datosParaGrafico;
+
+        // 2. Si está activo el modo porcentaje, transformar los datos
+        let datosRender = datosParaGrafico;
+        if (appState.showAsPercentage) {
+            datosRender = transformarAPorcentaje(datosParaGrafico);
+        }
+
+        // 3. Delegamos el cálculo matemático y visual a su propia función
+        const options = generarOpcionesEcharts(datosRender);
         lastChartOptionsByView[viewKey] = options;
 
-        // 3. Pintamos el lienzo (Esto es todo lo que hace esta función ahora)
+        // 4. Pintamos el lienzo
         container.style.width = "100%";
         container.style.height = "500px";
 
@@ -1855,6 +2022,11 @@ document.addEventListener("DOMContentLoaded", function () {
             disposeChartInstance(viewKey);
             chart = echarts.init(container);
             setChartInstance(viewKey, chart);
+
+            // Resetear modo porcentaje al usar "Restaurar" en la toolbox
+            chart.on("restore", () => {
+                appState.showAsPercentage = false;
+            });
         }
 
         chart.setOption(options, true);
@@ -1955,15 +2127,18 @@ document.addEventListener("DOMContentLoaded", function () {
             "map-container-regions",
         );
 
+        limpiarCapasMapa();
+
         // --- 2. Ocultamos AMBOS al inicio ---
         if (mapContainerMunicipal) mapContainerMunicipal.style.display = "none";
         if (mapContainerRegional) mapContainerRegional.style.display = "none";
         // El mapa se muestra si es un solo municipio O si es el caso del coropletas
         if (
-            esUnMunicipio ||
-            esCasoChoropleth ||
-            esUnaMicrorregion ||
-            esUnaMacrorregion
+            mapVisiblePreference &&
+            (esUnMunicipio ||
+                esCasoChoropleth ||
+                esUnaMicrorregion ||
+                esUnaMacrorregion)
         ) {
             showMap = true;
         }
@@ -1973,10 +2148,8 @@ document.addEventListener("DOMContentLoaded", function () {
             toggleMapBtn.style.display =
                 esUnMunicipio || esCasoChoropleth ? "inline-block" : "none";
             if (esUnMunicipio || esCasoChoropleth) {
-                toggleMapBtn.classList.replace(
-                    "btn-outline-primary",
-                    "btn-primary",
-                );
+                toggleMapBtn.classList.toggle("btn-primary", mapVisiblePreference);
+                toggleMapBtn.classList.toggle("btn-outline-primary", !mapVisiblePreference);
             } else {
                 toggleMapBtn.classList.replace(
                     "btn-primary",
@@ -1990,10 +2163,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     ? "inline-block"
                     : "none";
             if (esUnaMicrorregion || esUnaMacrorregion) {
-                toggleMapBtnRegions.classList.replace(
-                    "btn-outline-primary",
-                    "btn-primary",
-                );
+                toggleMapBtnRegions.classList.toggle("btn-primary", mapVisiblePreference);
+                toggleMapBtnRegions.classList.toggle("btn-outline-primary", !mapVisiblePreference);
             } else {
                 toggleMapBtnRegions.classList.replace(
                     "btn-primary",

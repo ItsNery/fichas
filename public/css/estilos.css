@@ -1024,7 +1024,6 @@ footer {
     height: 100%;
     width: 100%;
     background-color: rgba(14, 43, 64, 0.7);
-    /* Un overlay oscuro para que el texto resalte */
     z-index: 1;
 }
 
@@ -1066,7 +1065,7 @@ footer {
     text-decoration: none;
     font-size: 0.85rem;
     font-weight: 600;
-    text-uppercase;
+    text-transform: uppercase;
     letter-spacing: 1px;
     transition: all 0.3s ease;
     opacity: 0.8;

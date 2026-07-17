@@ -38,6 +38,21 @@
                         <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" required>
                     </div>
 
+                    @can('usuarios.asignar-roles')
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Rol</label>
+                        <select name="role" id="role" class="form-select @error('role') is-invalid @enderror">
+                            <option value="">Seleccionar rol...</option>
+                            @foreach($roles ?? [] as $role)
+                                <option value="{{ $role->name }}" @selected(old('role') == $role->name)>{{ $role->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('role')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    @endcan
+
                     <button type="submit" class="btn btn-primary">Guardar Usuario</button>
                     <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Cancelar</a>
                 </form>

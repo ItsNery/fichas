@@ -121,9 +121,14 @@
 
                     {{-- 5. Datos Históricos (CASO ESPECIAL: Doble Paso) --}}
                     <div class="tab-pane fade" id="datoshistoricos" role="tabpanel">
-                        <div class="alert alert-light border-start border-4 border-warning mb-4">
-                            <i class="fa-solid fa-triangle-exclamation text-warning me-2"></i>
-                            <strong>Proceso de dos pasos:</strong> Primero validamos la integridad del archivo, luego confirmas la carga.
+                        <div class="alert alert-light border-start border-4 border-warning mb-4 d-flex justify-content-between align-items-center gap-3">
+                            <div>
+                                <i class="fa-solid fa-shield-halved text-warning me-2"></i>
+                                <strong>Proceso gobernado:</strong> el archivo se valida y se envía a revisión. Los datos solo serán públicos después de su aprobación.
+                            </div>
+                            <a href="{{ route('admin.lotes-datos.index') }}" class="btn btn-sm btn-outline-secondary text-nowrap">
+                                <i class="fa-solid fa-box-archive me-1"></i>Ver lotes
+                            </a>
                         </div>
 
                         <form id="validate-form" action="{{ route('admin.import.datos.validate') }}" method="POST" enctype="multipart/form-data">
@@ -153,9 +158,9 @@
 
                             <form id="import-form" action="{{ route('admin.import.datos.perform') }}" method="POST" class="text-center mt-3" style="display: none;">
                                 @csrf
-                                <input type="hidden" name="temp_path" id="temp_path">
+                                <input type="hidden" name="lote_id" id="lote_id">
                                 <button type="submit" class="btn btn-custom-verde btn-lg shadow">
-                                    <i class="fas fa-rocket me-2"></i>Ejecutar Importación Final
+                                    <i class="fas fa-paper-plane me-2"></i>Enviar a Revisión
                                 </button>
                             </form>
                         </div>
@@ -197,7 +202,7 @@
                                     <i class="fas fa-download me-2"></i>Plantilla
                                 </a>
                                 <button type="submit" class="btn btn-custom-primary">
-                                    <i class="fas fa-upload me-2"></i>Cargar datos de complejos
+                                    <i class="fas fa-paper-plane me-2"></i>Validar y enviar a revisión
                                 </button>
                             </div>
                         </form>
@@ -260,7 +265,7 @@
             const resultsArea = document.getElementById('results-area');
             const validationMessage = document.getElementById('validation-message');
             const importForm = document.getElementById('import-form');
-            const tempPathInput = document.getElementById('temp_path');
+            const loteIdInput = document.getElementById('lote_id');
             const originalBtnText = validateBtn.innerHTML;
 
             if (validateForm) {
@@ -337,10 +342,10 @@
                                 resultsArea.style.display = 'block';
                             } else if (data.json.success) {
                                 console.log("-> ¡Validación exitosa en el backend!");
-                                console.log("-> Path del archivo temporal:", data.json.path);
+                                console.log("-> Lote creado:", data.json.lote_id);
                                 validationMessage.className = 'alert alert-success';
-                                validationMessage.innerText = data.json.message;
-                                tempPathInput.value = data.json.path;
+                                validationMessage.innerHTML = `${data.json.message} <a href="${data.json.detalle_url}" class="alert-link">Ver detalle</a>`;
+                                loteIdInput.value = data.json.lote_id;
                                 resultsArea.style.display = 'block';
                                 importForm.style.display = 'block';
                             }

@@ -24,7 +24,9 @@
                                 <th class="ps-4 text-center" style="width: 80px;">ID</th>
                                 <th>Clave GEO</th>
                                 <th>Nombre del Municipio</th>
-                                <th class="text-center">Asignación</th>
+                                @if(auth()->user()->can('municipios.editar') || auth()->user()->can('municipios.instrumentos.editar'))
+                                <th class="text-center">Acciones</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -44,22 +46,28 @@
                                         <span class="fw-bold text-vino">{{ $municipio->nombre }}</span>
                                     </div>
                                 </td>
+                                @if(auth()->user()->can('municipios.editar') || auth()->user()->can('municipios.instrumentos.editar'))
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-2">
                                         {{-- Botón Editar Info --}}
+                                        @can('municipios.editar')
                                         <a href="{{ route('admin.municipios.edit', $municipio) }}" class="btn-icon-square">
                                             <i class="fas fa-edit fs-5" data-bs-toggle="tooltip" title="Editar Información"></i>
                                         </a>
+                                        @endcan
 
                                         {{-- Botón Asignar Instrumentos --}}
+                                        @can('municipios.instrumentos.editar')
                                         <button type="button" class="btn-icon-square edit"
                                             data-bs-toggle="modal" data-bs-target="#asignarModal"
                                             data-municipio-id="{{ $municipio->id }}"
                                             data-municipio-nombre="{{ $municipio->nombre }}"
                                             style="width: 42px; height: 42px;"> <i class="fas fa-file-signature fs-5" data-bs-toggle="tooltip" title="Asignar Instrumentos"></i>
                                         </button>
+                                        @endcan
                                     </div>
                                 </td>
+                                @endif
 
                             </tr>
                             @endforeach

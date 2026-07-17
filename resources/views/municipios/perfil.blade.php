@@ -2,11 +2,15 @@
 
 @section('title', 'Ficha del municipio de ' . $municipio->nombre)
 
+@section('css')
+@endsection
+
 @section('content')
 
     {{-- 1. HERO SECTION (v2) --}}
     <section class="hero-ficha"
-        style="background-image: url('{{ $municipio->banner_image_url ?? 'https://picsum.photos/seed/' . $municipio->id . '/400/250??grayscale&blur=2' }}')">
+        style="background-image: url('{{ $municipio->banner_image_url ?? 'https://picsum.photos/seed/' . $municipio->id . '/1400/650?grayscale&blur=1' }}')">
+        <div class="hero-ficha__capa-gradiente"></div>
 
         <div class="container hero-ficha__contenedor">
             <div class="row align-items-center">
@@ -26,6 +30,11 @@
                             data-bs-toggle="modal" data-bs-target="#compararModal">
                             Comparar
                         </button>
+                        <a href="{{ route('ficha-municipal.perfil.pdf', $municipio->slug) }}"
+                           class="btn btn-outline-light btn-sm fw-bold px-3 py-1 rounded-pill"
+                           target="_blank">
+                            <i class="fa-solid fa-file-pdf me-1"></i> PDF
+                        </a>
                     </div>
                     <h1 class="display-1 fw-bold mb-2">{{ $municipio->nombre }}</h1>
                     <p class="h3 fw-light mb-5 opacity-75">
@@ -39,10 +48,8 @@
                             <span class="h5 fw-bold">{{ $municipio->cabecera ?? $municipio->nombre }}</span>
                         </div>
                         <div class="hero-info-item">
-                            <small class="d-block text-white-50 text-uppercase small letter-spacing-1">Presidente
-                                Municipal</small>
-                            <span class="h5 fw-bold d-block">{{ $municipio->presidente_municipal ?? 'N/D' }}</span>
-                            <small class="text-white-50">{{ $municipio->periodo_gobierno }}</small>
+                            <small class="d-block text-white-50 text-uppercase small letter-spacing-1">Clima predominante</small>
+                            <span class="h5 fw-bold d-block">{{ $municipio->clima ?? 'Información no disponible' }}</span>
                         </div>
                     </div>
                 </div>
@@ -54,6 +61,26 @@
                 </div>
             </div>
         </div>
+
+        @php
+            $attr = $municipio->banner_attribution;
+            $creditUrl = $attr['source_url'] ?? null;
+        @endphp
+        @if($attr && ($attr['author'] ?? null) && ($attr['license'] ?? null) && $creditUrl)
+            <a href="{{ $creditUrl }}" target="_blank" rel="noopener noreferrer"
+                class="hero-ficha__creditos"
+                data-bs-toggle="tooltip" data-bs-placement="left"
+                title="Foto por {{ $attr['author'] }} — {{ $attr['license'] }}">
+                <i class="fas fa-camera"></i>
+            </a>
+        @elseif($attr && $creditUrl)
+            <a href="{{ $creditUrl }}" target="_blank" rel="noopener noreferrer"
+                class="hero-ficha__creditos"
+                data-bs-toggle="tooltip" data-bs-placement="left"
+                title="Ver fuente de la imagen">
+                <i class="fas fa-camera"></i>
+            </a>
+        @endif
     </section>
 
     {{-- 2. ICON BAR (Hero Stats) --}}
@@ -177,10 +204,10 @@
     </div>
 
     {{-- 4. CONTENIDO EDITORIAL --}}
-    <div class="container mt-5">
+    <div class="container mt-4">
         @foreach($perfil as $seccion => $items)
             @if($seccion != 'general')
-                <section id="section-{{ Str::slug($seccion) }}" class="section-perfil mb-5 pb-5">
+                <section id="section-{{ Str::slug($seccion) }}" class="section-perfil mb-4 pb-4">
                     <div class="dimension-header shadow-sm">
                         <h2 class="display-4 fw-bold mb-0">{{ ucwords(str_replace('_', ' ', $seccion)) }}</h2>
                     </div>
@@ -203,7 +230,7 @@
                                             </div>
                                         @endif
 
-                                        <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
                                             <h3 class="perfil-tarjeta__titulo mb-0">
                                                 {{ $item['config']->titulo_reporte ?? $item['config']->indicador->nombre_amigable }}
                                                 @if(isset($item['datos']['anio']) && $item['datos']['anio'])
@@ -235,15 +262,18 @@
                                                         <i class="fa-solid fa-chart-column"></i>
                                                     </a>
                                                 @endif
-                                                @if(isset($item['datos']['metodo_calculo']) || isset($item['datos']['fuente']))
+                                                @if(isset($item['datos']['metodo_calculo']) || isset($item['datos']['fuente']) || isset($item['datos']['correlacion']))
                                                     <i class="fa-solid fa-circle-info info-tooltip-trigger perfil-tarjeta__info-icon mb-0"
-                                                        data-bs-toggle="popover" data-bs-trigger="hover focus" title="Metodología y Fuente"
-                                                        data-bs-content="<strong>Método:</strong> {{ $item['datos']['metodo_calculo'] ?? 'No especificado' }}<br><strong>Fuente:</strong> {{ $item['datos']['fuente'] ?? 'No especificada' }}"
+                                                        data-bs-toggle="popover" data-bs-trigger="hover focus" title="Metodología y fuente"
+                                                        data-bs-content="<strong>Método:</strong> {{ $item['datos']['metodo_calculo'] ?? 'No especificado' }}@if(isset($item['datos']['correlacion_lectura']))<br><strong>Asociación lineal:</strong> {{ $item['datos']['correlacion_lectura'] }} <small>Es una medida descriptiva y no implica causalidad.</small>@endif<br><strong>Fuente:</strong> {{ $item['datos']['fuente'] ?? 'No especificada' }}"
                                                         data-bs-html="true"></i>
                                                 @endif
                                             </div>
                                         </div>
 
+                                        @if($item['config']->subtitulo_reporte)
+                                            <p class="text-muted small mb-2">{{ $item['config']->subtitulo_reporte }}</p>
+                                        @endif
                                         {{-- Insight Badge --}}
                                         @if(isset($item['datos']['ranking']) && isset($item['datos']['polaridad']) && !is_array($item['datos']['ranking']))
                                             @php
@@ -463,7 +493,7 @@
     </div>
 
     {{-- 5. SECCIÓN DE MUNICIPIOS SIMILARES --}}
-    <section class="similares-seccion py-5 bg-light border-top">
+    <section class="similares-seccion py-4 bg-light border-top">
         <div class="container">
             <div class="row align-items-center mb-4">
                 <div class="col-md-8 text-start">

@@ -1,10 +1,6 @@
 <x-admin-layout>
-    @section('title', 'Sociedades Civiles: Inicio')
-    <x-slot name="header">
-        <h2 class="h4 font-weight-bold">
-            {{ __('Gestión de Datos Históricos') }}
-        </h2>
-    </x-slot>
+    @section('title', 'Proponer Edición de Dato')
+    <x-page-header title="Proponer Edición de Dato" subtitle="El cambio será enviado a revisión antes de publicarse" icon="fa-solid fa-pen-to-square" />
     @if ($message = Session::get('success'))
         <script>
             document.addEventListener('DOMContentLoaded', function() {
@@ -15,9 +11,9 @@
             });
         </script>
     @endif
-    <div class="container">
-        <div class="card">
-            <div class="card-body">
+    <div class="container py-4">
+        <div class="card-panel">
+            <div class="card-body p-4">
                 <p><strong>Municipio:</strong> {{ $dato->municipio->nombre }}</p>
                 <p><strong>Variable:</strong> {{ $dato->variable->nombre_amigable }}</p>
                 <p><strong>Año:</strong> {{ $dato->anio }}</p>
@@ -35,8 +31,8 @@
                         @enderror
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Actualizar Dato</button>
-                    <a href="{{ route('admin.datos.index') }}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-custom-primary"><i class="fa-solid fa-paper-plane me-2"></i>Enviar a revisión</button>
+                    <a href="{{ route('admin.datos.index') }}" class="btn btn-outline-secondary"><i class="fa-solid fa-arrow-left me-1"></i>Cancelar</a>
                 </form>
             </div>
         </div>

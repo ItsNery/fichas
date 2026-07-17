@@ -4,11 +4,21 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Instrumento;
+use App\Models\Microrregion;
 use App\Models\Municipio;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class MunicipioController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:municipios.ver')->only(['index', 'show']);
+        $this->middleware('permission:municipios.editar')->only(['edit', 'update']);
+        $this->middleware('permission:municipios.instrumentos.ver')->only(['getInstrumentosJson']);
+        $this->middleware('permission:municipios.instrumentos.editar')->only(['syncInstrumentos']);
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -62,7 +72,9 @@ class MunicipioController extends Controller
      */
     public function edit(Municipio $municipio)
     {
-        return view('municipios.edit', compact('municipio'));
+        $microrregiones = Microrregion::with('macrorregion')->orderBy('nombre')->get();
+
+        return view('municipios.edit', compact('municipio', 'microrregiones'));
     }
 
     /**
@@ -74,19 +86,30 @@ class MunicipioController extends Controller
      */
     public function update(Request $request, Municipio $municipio)
     {
-        $request->validate([
-            'nombre'                => 'required|string|max:255',
-            'cvegeo'                => 'required|string|max:10',
-            'cabecera'              => 'nullable|string|max:255',
-            'presidente_municipal'  => 'nullable|string|max:255',
-            'periodo_gobierno'      => 'nullable|string|max:100',
-            'banner_image_url'      => 'nullable|url|max:255',
-            'logo_url'              => 'nullable|url|max:255',
-            'clima'                 => 'nullable|string|max:255',
-            'superficie'            => 'nullable|numeric',
+        $validated = $request->validate([
+            'nombre'                     => 'required|string|max:255',
+            'cvegeo'                     => 'required|string|max:10',
+            'cabecera'                   => 'nullable|string|max:255',
+            'microrregion_id'            => 'required|exists:microrregions,id',
+            'banner_image_url'           => 'nullable|url|max:1024',
+            'banner_attribution'         => 'nullable|array',
+            'banner_attribution.author'  => 'nullable|string|max:255',
+            'banner_attribution.license' => 'nullable|string|max:255',
+            'banner_attribution.source_url' => 'nullable|url|max:1024',
+            'clima'                      => ['nullable', Rule::in([
+                'Cálido húmedo',
+                'Cálido subhúmedo',
+                'Seco o muy seco',
+                'Templado o frío (húmedo o subhúmedo)',
+            ])],
+            'superficie'                 => 'nullable|numeric|min:0|max:9999999999.99',
         ]);
 
-        $municipio->update($request->all());
+        if ($request->has('banner_attribution') && empty(array_filter($validated['banner_attribution'] ?? []))) {
+            $validated['banner_attribution'] = null;
+        }
+
+        $municipio->update($validated);
 
         return redirect()->route('admin.municipios.index')
             ->with('success', 'Información del municipio ' . $municipio->nombre . ' actualizada correctamente.');

@@ -4,16 +4,29 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class DatoHistorico extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->setDescriptionForEvent(fn(string $eventName) =>
+                "El dato histórico fue {$eventName}"
+            );
+    }
     protected $fillable = [
         'municipio_id',
         'variable_id',
         'valor',
         'anio',
-        'motivo_sin_dato_id'
+        'motivo_sin_dato_id',
+        'lote_datos_id',
     ];
 
     public function municipio()
@@ -48,5 +61,10 @@ class DatoHistorico extends Model
     public function motivoSinDato()
     {
         return $this->belongsTo(CatMotivoSinDato::class, 'motivo_sin_dato_id');
+    }
+
+    public function loteDatos()
+    {
+        return $this->belongsTo(LoteDatos::class, 'lote_datos_id');
     }
 }

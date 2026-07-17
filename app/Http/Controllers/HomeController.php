@@ -18,7 +18,11 @@ class HomeController extends Controller
     public function index()
     {
         // 1. Buscamos directamente las VARIABLES marcadas como destacadas.
-        $variablesDestacadas = Variable::with('indicador')
+        $variablesDestacadas = Variable::where('visible_en_ficha', true)
+            ->whereHas('indicador', fn($indicador) => $indicador->where('visible_en_ficha', true)
+                ->whereHas('tematica', fn($tematica) => $tematica->where('visible_en_ficha', true)
+                    ->whereHas('dimension', fn($dimension) => $dimension->where('visible_en_ficha', true))))
+            ->with('indicador')
             ->where('es_destacada', true)
             ->get();
 
@@ -55,8 +59,9 @@ class HomeController extends Controller
 
     public function datosAbiertos()
     {
-        $indicadoresComplejos = Indicador::where('es_complejo', '1')->orderBy('nombre_amigable')->get();
-        $dimensiones = Dimension::orderBy('nombre')->get();
+        $indicadoresComplejos = Indicador::where('visible_en_ficha', true)
+            ->where('es_complejo', '1')->orderBy('nombre_amigable')->get();
+        $dimensiones = Dimension::where('visible_en_ficha', true)->orderBy('nombre')->get();
         return view('datos-abiertos', ['dimensiones' => $dimensiones], ['indicadoresComplejos' => $indicadoresComplejos]);
     }
 }

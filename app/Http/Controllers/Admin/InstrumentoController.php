@@ -7,6 +7,14 @@ use Illuminate\Http\Request;
 
 class InstrumentoController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:instrumentos.ver')->only(['index', 'show']);
+        $this->middleware('permission:instrumentos.crear')->only(['create', 'store']);
+        $this->middleware('permission:instrumentos.editar')->only(['edit', 'update']);
+        $this->middleware('permission:instrumentos.eliminar')->only(['destroy']);
+    }
+
     /**
      * Display a listing of the resource.
      *

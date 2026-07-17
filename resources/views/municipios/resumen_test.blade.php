@@ -54,9 +54,8 @@
                     </div>
 
                     <div class="hero-ficha__dato hero-ficha__dato--separador">
-                        <span class="hero-ficha__dato-etiqueta">Presidente Municipal</span>
-                        <span class="hero-ficha__dato-valor">{{ $municipio->presidente_municipal ?? 'N/D' }}</span>
-                        <span class="hero-ficha__dato-periodo">{{ $municipio->periodo_gobierno }}</span>
+                        <span class="hero-ficha__dato-etiqueta">Clima predominante</span>
+                        <span class="hero-ficha__dato-valor">{{ $municipio->clima ?? 'Información no disponible' }}</span>
                     </div>
                 </div>
             </div>
@@ -85,6 +84,26 @@
             </div>
         </div>
     </div>
+
+    @php
+        $attr = $municipio->banner_attribution;
+        $creditUrl = $attr['source_url'] ?? null;
+    @endphp
+    @if($attr && ($attr['author'] ?? null) && ($attr['license'] ?? null) && $creditUrl)
+        <a href="{{ $creditUrl }}" target="_blank" rel="noopener noreferrer"
+            class="hero-ficha__creditos"
+            data-bs-toggle="tooltip" data-bs-placement="left"
+            title="Foto por {{ $attr['author'] }} — {{ $attr['license'] }}">
+            <i class="fas fa-camera"></i>
+        </a>
+    @elseif($attr && $creditUrl)
+        <a href="{{ $creditUrl }}" target="_blank" rel="noopener noreferrer"
+            class="hero-ficha__creditos"
+            data-bs-toggle="tooltip" data-bs-placement="left"
+            title="Ver fuente de la imagen">
+            <i class="fas fa-camera"></i>
+        </a>
+    @endif
 </section>
 
 {{-- 2. ICON BAR --}}
@@ -141,21 +160,21 @@
     </div>
 </div>
 
-<section class="container py-5">
+<section class="container py-4">
     <div class="row">
         {{-- MAIN CONTENT --}}
         <div class="col-md-12">
             <div class="main-content-wrapper">
 
                 @foreach ($datosAgrupados as $dimensionData)
-                <div id="dim-{{ $dimensionData['slug'] }}" class="dimension-bloque mb-5">
+                <div id="dim-{{ $dimensionData['slug'] }}" class="dimension-bloque mb-4">
                     {{-- DIMENSION BANNER --}}
                     <header class="banner-dimension" style="background-image: url('{{ asset('img/fondos/' . $dimensionData['slug'] . '.webp') }}')">
                         <h2 class="banner-dimension__titulo">{{ $dimensionData['nombre'] }}</h2>
                     </header>
 
                     {{-- SUB-NAV FOR TEMATICAS --}}
-                    <nav class="sub-navegacion sticky-top py-3 mb-4">
+                    <nav class="sub-navegacion sticky-top py-2 mb-3">
                         <div class="container-fluid">
                             <ul class="nav nav-pills" id="nav-tem-{{ $dimensionData['slug'] }}">
                                 @foreach ($dimensionData['tematicas'] as $tematica => $kpis)
@@ -191,7 +210,7 @@
                         </div>
 
                         {{-- BENTO GRID --}}
-                        <div class="row g-4 mt-5">
+                        <div class="row g-4 mt-4">
                             @foreach ($kpis as $kpi)
                             <div class="col-md-6 col-lg-4">
                                 @include('municipios.components.kpi-card', ['kpi' => $kpi, 'dimensionData' => $dimensionData])

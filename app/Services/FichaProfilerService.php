@@ -20,7 +20,6 @@ class FichaProfilerService
         $variables = Variable::whereIn('nombre_amigable', [
             'Población total',
             'Grado de Marginación',
-            'Superficie territorial (Hectáreas)',
             'FORTAMUN APROBADO',
             'FAISMUN APROBADO',
             'Porcentaje de población en situación de pobreza',
@@ -29,7 +28,6 @@ class FichaProfilerService
 
         $varPob = $variables->first(fn($v) => $v->nombre_amigable === 'Población total');
         $varMarg = $variables->first(fn($v) => $v->nombre_amigable === 'Grado de Marginación');
-        $varSup = $variables->first(fn($v) => $v->nombre_amigable === 'Superficie territorial (Hectáreas)');
         $varPobreza = $variables->first(fn($v) => $v->nombre_amigable === 'Porcentaje de población en situación de pobreza');
         $varPea = $variables->first(fn($v) => $v->nombre_amigable === 'Población Económicamente Activa (PEA)');
         
@@ -53,15 +51,6 @@ class FichaProfilerService
         if ($varMarg) {
             $datoMarg = $datos->where('variable_id', $varMarg->id)->sortByDesc('anio')->first();
             $gradoMarginacion = $datoMarg->valor_display ?? 'N/D';
-        }
-
-        // Superficie territorial (Hectáreas) -> km2
-        $superficieKm2 = 0;
-        if ($varSup) {
-            $datoSup = $datos->where('variable_id', $varSup->id)->sortByDesc('anio')->first();
-            if ($datoSup && $datoSup->valor > 0) {
-                $superficieKm2 = $datoSup->valor / 100;
-            }
         }
 
         // Presupuesto (FORTAMUN + FAISMUN)
@@ -92,7 +81,7 @@ class FichaProfilerService
         return [
             'poblacionTotal' => $poblacionTotal,
             'gradoMarginacion' => $gradoMarginacion,
-            'superficieKm2' => $superficieKm2,
+            'superficieKm2' => (float) ($municipio->superficie ?? 0),
             'presupuesto' => $presupuesto,
             'ultimoAnioPres' => $ultimoAnioPres,
             'porcentajePobreza' => $porcentajePobreza,

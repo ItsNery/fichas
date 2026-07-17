@@ -16,10 +16,10 @@
                             @method('PUT')
 
                             <div class="row g-4">
-                                {{-- Información Básica --}}
+                                {{-- Información General --}}
                                 <div class="col-md-12">
                                     <h5 class="fw-bold text-vino mb-3 border-bottom pb-2">
-                                        <i class="fa-solid fa-circle-info me-2 text-dorado"></i>Información Básica
+                                        <i class="fa-solid fa-circle-info me-2 text-dorado"></i>Información General
                                     </h5>
                                 </div>
 
@@ -41,30 +41,49 @@
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label for="presidente_municipal" class="form-label fw-bold small text-secondary">Presidente Municipal</label>
-                                    <input type="text" name="presidente_municipal" id="presidente_municipal" class="form-control" value="{{ old('presidente_municipal', $municipio->presidente_municipal) }}">
+                                    <label for="microrregion_id" class="form-label fw-bold small text-secondary">Microrregión</label>
+                                    <select name="microrregion_id" id="microrregion_id" class="form-select" required>
+                                        <option value="">Seleccionar microrregión</option>
+                                        @php
+                                            $grupos = $microrregiones->groupBy(fn($mr) => $mr->macrorregion->nombre);
+                                        @endphp
+                                        @foreach ($grupos as $macroNombre => $mrs)
+                                            <optgroup label="{{ $macroNombre }}">
+                                                @foreach ($mrs as $mr)
+                                                    <option value="{{ $mr->id }}" @selected(old('microrregion_id', $municipio->microrregion_id) == $mr->id)>
+                                                        {{ $mr->nombre }}
+                                                    </option>
+                                                @endforeach
+                                            </optgroup>
+                                        @endforeach
+                                    </select>
+                                    @error('microrregion_id') <div class="text-danger small">{{ $message }}</div> @enderror
                                 </div>
 
-                                <div class="col-md-6">
-                                    <label for="periodo_gobierno" class="form-label fw-bold small text-secondary">Periodo de Gobierno</label>
-                                    <input type="text" name="periodo_gobierno" id="periodo_gobierno" class="form-control" value="{{ old('periodo_gobierno', $municipio->periodo_gobierno) }}" placeholder="Ej. 2024 - 2027">
-                                </div>
-
-                                {{-- Datos Técnicos --}}
+                                {{-- Datos Geográficos --}}
                                 <div class="col-md-12 mt-5">
                                     <h5 class="fw-bold text-vino mb-3 border-bottom pb-2">
-                                        <i class="fa-solid fa-gears me-2 text-dorado"></i>Datos Técnicos
+                                        <i class="fa-solid fa-earth-americas me-2 text-dorado"></i>Datos Geográficos
                                     </h5>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label for="clima" class="form-label fw-bold small text-secondary">Clima Predominante</label>
-                                    <input type="text" name="clima" id="clima" class="form-control" value="{{ old('clima', $municipio->clima) }}">
+                                    <select name="clima" id="clima" class="form-select">
+                                        <option value="">Sin clasificación</option>
+                                        @foreach (['Cálido húmedo', 'Cálido subhúmedo', 'Seco o muy seco', 'Templado o frío (húmedo o subhúmedo)'] as $clima)
+                                            <option value="{{ $clima }}" @selected(old('clima', $municipio->clima) === $clima)>{{ $clima }}</option>
+                                        @endforeach
+                                    </select>
+                                    <div class="form-text small">Clasificación de Köppen modificada por E. García, con fuente INEGI/CONAGUA.</div>
+                                    @error('clima') <div class="text-danger small">{{ $message }}</div> @enderror
                                 </div>
 
                                 <div class="col-md-6">
                                     <label for="superficie" class="form-label fw-bold small text-secondary">Superficie (km²)</label>
                                     <input type="number" step="0.01" name="superficie" id="superficie" class="form-control" value="{{ old('superficie', $municipio->superficie) }}">
+                                    <div class="form-text small">Se sincroniza desde el último dato oficial de superficie territorial.</div>
+                                    @error('superficie') <div class="text-danger small">{{ $message }}</div> @enderror
                                 </div>
 
                                 {{-- Identidad Visual --}}
@@ -83,12 +102,32 @@
                                     <div class="form-text small">Se utiliza en la cabecera de la ficha municipal.</div>
                                 </div>
 
-                                <div class="col-md-12">
-                                    <label for="logo_url" class="form-label fw-bold small text-secondary">URL del Logo Municipal</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fa-solid fa-link"></i></span>
-                                        <input type="url" name="logo_url" id="logo_url" class="form-control" value="{{ old('logo_url', $municipio->logo_url) }}" placeholder="https://ejemplo.com/logo.png">
+                                @php $attr = old('banner_attribution', $municipio->banner_attribution ?? []); @endphp
+                                <div class="col-md-12 attribution-fields">
+                                    <div class="border rounded p-3 bg-light bg-opacity-25">
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <label class="form-label fw-bold small text-secondary mb-0">
+                                                <i class="fa-regular fa-rectangle-ad me-1"></i>Atribución de imagen
+                                            </label>
+                                            <div class="form-check form-check-inline mb-0">
+                                                <input type="checkbox" class="form-check-input" id="sin_atribucion" autocomplete="off">
+                                                <label class="form-check-label small text-muted" for="sin_atribucion">Sin atribución</label>
+                                            </div>
+                                        </div>
+                                        <div class="row g-2">
+                                            <div class="col-md-5">
+                                                <input type="text" name="banner_attribution[author]" id="attr_author" class="form-control form-control-sm" placeholder="Autor / Fotógrafo" value="{{ old('banner_attribution.author', $attr['author'] ?? '') }}">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <input type="text" name="banner_attribution[license]" id="attr_license" class="form-control form-control-sm" placeholder="Licencia" value="{{ old('banner_attribution.license', $attr['license'] ?? '') }}">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input type="url" name="banner_attribution[source_url]" id="attr_source_url" class="form-control form-control-sm" placeholder="URL de la fuente" value="{{ old('banner_attribution.source_url', $attr['source_url'] ?? '') }}">
+                                            </div>
+                                        </div>
+                                        <div class="form-text small mt-1">Los créditos aparecen en la cabecera de la ficha municipal. Se obtienen automáticamente vía Wikimedia Commons al sincronizar banners.</div>
                                     </div>
+                                    @error('banner_attribution') <div class="text-danger small">{{ $message }}</div> @enderror
                                 </div>
                             </div>
 
@@ -106,4 +145,39 @@
             </div>
         </div>
     </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var check = document.getElementById('sin_atribucion');
+            var inputs = [
+                document.getElementById('attr_author'),
+                document.getElementById('attr_license'),
+                document.getElementById('attr_source_url'),
+            ];
+
+            function toggleInputs(clear) {
+                inputs.forEach(function (el) {
+                    if (clear) {
+                        el.value = '';
+                        el.disabled = true;
+                    } else {
+                        el.disabled = false;
+                    }
+                });
+            }
+
+            // If all are empty on load, disable them
+            var allEmpty = inputs.every(function (el) { return el.value === ''; });
+            if (allEmpty) {
+                check.checked = true;
+                toggleInputs(true);
+            }
+
+            check.addEventListener('change', function () {
+                toggleInputs(this.checked);
+            });
+        });
+    </script>
+    @endpush
 </x-admin-layout>

@@ -131,12 +131,19 @@ class PublicApiController extends Controller
 
     public function metadata()
     {
-        $dimensiones = Dimension::with(['tematicas' => function ($query) {
-            $query->orderBy('orden')->orderBy('nombre');
-        }])->orderBy('orden')->orderBy('nombre')->get();
+        $dimensiones = Dimension::where('visible_en_ficha', true)
+            ->with(['tematicas' => function ($query) {
+                $query->where('visible_en_ficha', true)->orderBy('orden')->orderBy('nombre');
+            }])->orderBy('orden')->orderBy('nombre')->get();
 
-        $indicadores = Indicador::with('variables')->orderBy('nombre_amigable')->get();
-        $variables   = Variable::select('id', 'indicador_id', 'nombre_amigable', 'unidad_medida', 'orden')->orderBy('nombre_amigable')->get();
+        $indicadores = Indicador::where('visible_en_ficha', true)
+            ->whereHas('tematica', fn($query) => $query->where('visible_en_ficha', true)
+                ->whereHas('dimension', fn($dimension) => $dimension->where('visible_en_ficha', true)))
+            ->with(['variables' => fn($variables) => $variables->where('visible_en_ficha', true)])
+            ->orderBy('nombre_amigable')->get();
+        $variables   = Variable::where('visible_en_ficha', true)
+            ->select('id', 'indicador_id', 'nombre_amigable', 'unidad_medida', 'orden')
+            ->orderBy('nombre_amigable')->get();
 
         return response()->json([
             'success' => true,
@@ -150,7 +157,11 @@ class PublicApiController extends Controller
 
     public function indicadores(Request $request)
     {
-        $query = Indicador::with('variables')->orderBy('nombre_amigable');
+        $query = Indicador::where('visible_en_ficha', true)
+            ->whereHas('tematica', fn($tematica) => $tematica->where('visible_en_ficha', true)
+                ->whereHas('dimension', fn($dimension) => $dimension->where('visible_en_ficha', true)))
+            ->with(['variables' => fn($variables) => $variables->where('visible_en_ficha', true)])
+            ->orderBy('nombre_amigable');
 
         if ($request->filled('tematica_id')) {
             $query->where('tematica_id', $request->input('tematica_id'));
@@ -170,7 +181,11 @@ class PublicApiController extends Controller
 
     public function indicador($id)
     {
-        $indicador = Indicador::with('variables')->find($id);
+        $indicador = Indicador::where('visible_en_ficha', true)
+            ->whereHas('tematica', fn($tematica) => $tematica->where('visible_en_ficha', true)
+                ->whereHas('dimension', fn($dimension) => $dimension->where('visible_en_ficha', true)))
+            ->with(['variables' => fn($variables) => $variables->where('visible_en_ficha', true)])
+            ->find($id);
 
         if (! $indicador) {
             return response()->json([

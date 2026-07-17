@@ -6,9 +6,9 @@
 @section('content')
 <section class="banner-directorio">
     <div class="container">
-        <h1 class="banner-directorio__titulo">Municipios</h1>
+        <h1 class="banner-directorio__titulo">Directorio de municipios</h1>
         <p class="banner-directorio__descripcion">
-            Explora la ficha con información estadística de cada uno de los 217 municipios del estado de Puebla
+            Explora las fichas estadísticas de los 217 municipios del estado de Puebla.
         </p>
         <div class="container d-flex justify-content-center align-items-center">
             <nav aria-label="breadcrumb">
@@ -19,7 +19,7 @@
                         </a>
                     </li>
                     <li class="breadcrumb-item text-white active" aria-current="page">
-                        Directorio
+                        Directorio de municipios
                     </li>
                 </ol>
             </nav>
@@ -28,59 +28,89 @@
 </section>
 
 <section class="contenedor-directorio container">
-
-    <div class="contenedor-directorio__buscador">
-        <input type="text" id="municipio-search" class="contenedor-directorio__input" placeholder="Buscar municipio por nombre...">
-    </div>
-
-    <div class="contenedor-directorio__encabezado">
-        <h4 class="contenedor-directorio__titulo-seccion">Macrorregiones</h4>
-        <span class="contenedor-directorio__etiqueta">Consulta los municipios agrupados por macrorregión.</span>
-    </div>
-
-    <div class="navegacion-regiones shadow-sm py-2">
-        <ul class="nav nav-pills justify-content-center" id="regionTabs" role="tablist">
-            @foreach ($macrorregiones as $index => $macro)
-            <li class="nav-item" role="presentation">
-                <button class="nav-link {{ $index === 0 ? 'active' : '' }} navegacion-regiones__enlace"
-                    id="macro-{{ $macro->id }}-tab"
-                    data-bs-toggle="pill"
-                    data-bs-target="#macro-{{ $macro->id }}"
-                    type="button"
-                    role="tab">
-                    {{ $macro->id }} - {{ $macro->nombre }}
-                </button>
-            </li>
-            @endforeach
-        </ul>
-    </div>
-
-    <div class="tab-content my-3" id="regionTabsContent">
-        @foreach ($macrorregiones as $index => $macro)
-        <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }}" id="macro-{{ $macro->id }}" role="tabpanel">
-            <div class="row g-4">
-                @foreach ($macro->microrregiones as $micro)
-                @foreach ($micro->municipios as $mun)
-                <div class="col-md-6 col-lg-3 item-municipio" data-name="{{ strtolower($mun->nombre) }}">
-
-                    <article class="tarjeta-municipio">
-                        <img class="tarjeta-municipio__imagen"
-                            src="{{ $mun->banner_image_url ? $mun->banner_image_url : "https://picsum.photos/seed/{$mun->id}/400/250" }}"
-                            alt="Foto de {{ $mun->nombre }}">
-
-                        <div class="tarjeta-municipio__capa">
-                            <h3 class="tarjeta-municipio__nombre">{{ $mun->nombre }}</h3>
-                            <p class="tarjeta-municipio__info">Microrregión: {{ $micro->nombre }}</p>
-                            <a href="{{ route('ficha-municipal.perfil', $mun) }}" class="tarjeta-municipio__boton">Ver Ficha</a>
-                        </div>
-                    </article>
-
-                </div>
-                @endforeach
-                @endforeach
+    <form class="directorio-filtros" id="directorio-filtros" role="search" aria-label="Buscar y filtrar municipios">
+        <div class="directorio-filtros__campo directorio-filtros__campo--busqueda">
+            <label for="municipio-search">Nombre del municipio</label>
+            <div class="directorio-filtros__control">
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input type="search" id="municipio-search" class="contenedor-directorio__input"
+                    placeholder="Ej. Tehuacán, Atlixco..." autocomplete="off" spellcheck="false">
             </div>
         </div>
+
+        <div class="directorio-filtros__campo">
+            <label for="macro-filter">Macrorregión</label>
+            <select id="macro-filter" class="directorio-filtros__select">
+                <option value="">Todas las macrorregiones</option>
+                @foreach ($macrorregiones as $macro)
+                    <option value="{{ $macro->id }}">{{ $macro->id }} - {{ $macro->nombre }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="directorio-filtros__campo">
+            <label for="micro-filter">Microrregión</label>
+            <select id="micro-filter" class="directorio-filtros__select">
+                <option value="">Todas las microrregiones</option>
+                @foreach ($macrorregiones as $macro)
+                    @foreach ($macro->microrregiones as $micro)
+                        <option value="{{ $micro->id }}" data-macro="{{ $macro->id }}">{{ $micro->nombre }}</option>
+                    @endforeach
+                @endforeach
+            </select>
+        </div>
+    </form>
+
+    <h2 class="visually-hidden">Listado de municipios</h2>
+
+    <div class="directorio-resultados__encabezado">
+        <p id="resultados-resumen" class="directorio-resultados__resumen" aria-live="polite">
+            Mostrando <strong>{{ min(24, $municipios->count()) }}</strong> de <strong>{{ $municipios->count() }}</strong> municipios
+        </p>
+        <button type="button" id="limpiar-filtros" class="directorio-filtros__limpiar" hidden>
+            <i class="bi bi-x-circle" aria-hidden="true"></i> Limpiar filtros
+        </button>
+    </div>
+
+    <div class="row g-4 directorio-resultados" id="municipios-grid">
+        @foreach ($municipios as $mun)
+            @php
+                $micro = $mun->microrregion;
+                $macro = $micro?->macrorregion;
+            @endphp
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3 item-municipio"
+                data-name="{{ $mun->nombre }}"
+                data-macro="{{ $macro?->id }}"
+                data-micro="{{ $micro?->id }}">
+                <article class="tarjeta-municipio">
+                    <img class="tarjeta-municipio__imagen"
+                        src="{{ $mun->banner_image_url ?: "https://picsum.photos/seed/{$mun->id}/400/250" }}"
+                        alt="Foto de {{ $mun->nombre }}"
+                        loading="lazy"
+                        decoding="async">
+
+                    <div class="tarjeta-municipio__capa">
+                        <span class="tarjeta-municipio__region">{{ $macro?->nombre ?? 'Sin macrorregión' }}</span>
+                        <h3 class="tarjeta-municipio__nombre">{{ $mun->nombre }}</h3>
+                        <p class="tarjeta-municipio__info">Microrregión: {{ $micro?->nombre ?? 'Sin asignar' }}</p>
+                        <a href="{{ route('ficha-municipal.perfil', $mun) }}" class="tarjeta-municipio__boton">Ver ficha</a>
+                    </div>
+                </article>
+            </div>
         @endforeach
+    </div>
+
+    <div class="directorio-resultados__vacio" id="sin-resultados" hidden>
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <h3>No encontramos municipios</h3>
+        <p>Prueba con otro nombre o limpia los filtros seleccionados.</p>
+        <button type="button" class="tarjeta-municipio__boton" data-reset-filters>Limpiar filtros</button>
+    </div>
+
+    <div class="directorio-resultados__acciones">
+        <button type="button" id="mostrar-mas" class="directorio-resultados__mas">
+            Mostrar más municipios <i class="bi bi-chevron-down" aria-hidden="true"></i>
+        </button>
     </div>
 </section>
 @endsection
@@ -88,52 +118,108 @@
 @section('jss')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const pageSize = 24;
+        const filtersForm = document.getElementById('directorio-filtros');
         const searchInput = document.getElementById('municipio-search');
-        const items = document.querySelectorAll('.item-municipio'); // Clase corregida
-        const tabPanes = document.querySelectorAll('.tab-pane');
-        const tabsNav = document.querySelector('.navegacion-regiones');
-        const headerMacro = document.querySelector('.contenedor-directorio__encabezado');
+        const macroFilter = document.getElementById('macro-filter');
+        const microFilter = document.getElementById('micro-filter');
+        const items = Array.from(document.querySelectorAll('.item-municipio'));
+        const resultsSummary = document.getElementById('resultados-resumen');
+        const emptyState = document.getElementById('sin-resultados');
+        const showMoreButton = document.getElementById('mostrar-mas');
+        const clearFiltersButton = document.getElementById('limpiar-filtros');
+        const resetButtons = document.querySelectorAll('[data-reset-filters]');
+        let visibleLimit = pageSize;
 
-        searchInput.addEventListener('input', function(e) {
-            const term = e.target.value.toLowerCase().trim();
-            
-            if (term.length > 0) {
-                // MODO BÚSQUEDA: Escondemos las pestañas para ver todo en una lista
-                tabsNav.style.display = 'none';
-                headerMacro.style.display = 'none';
+        const normalizeText = value => value
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLocaleLowerCase('es')
+            .trim();
 
-                items.forEach(item => {
-                    const name = item.getAttribute('data-name');
-                    // Usamos display: block o none según coincida
-                    item.style.display = name.includes(term) ? 'block' : 'none';
-                });
-
-                // Forzamos a que todos los paneles sean visibles
-                tabPanes.forEach(pane => {
-                    pane.classList.add('show', 'active');
-                    // Ocultamos el panel completo si no tiene resultados visibles
-                    const hasVisibleItems = pane.querySelector('.item-municipio[style="display: block;"]');
-                    pane.style.display = hasVisibleItems ? 'block' : 'none';
-                });
-
-            } else {
-                // MODO NORMAL: Restauramos el comportamiento de pestañas
-                tabsNav.style.display = 'block';
-                headerMacro.style.display = 'block';
-                
-                items.forEach(item => item.style.display = 'block');
-
-                tabPanes.forEach((pane, index) => {
-                    pane.style.display = 'block';
-                    // Restauramos solo la primera pestaña activa (o la que estaba)
-                    if (index === 0) {
-                        pane.classList.add('show', 'active');
-                    } else {
-                        pane.classList.remove('show', 'active');
-                    }
-                });
-            }
+        items.forEach(item => {
+            item.dataset.normalizedName = normalizeText(item.dataset.name);
         });
+
+        function updateMicroregions() {
+            const macroId = macroFilter.value;
+
+            Array.from(microFilter.options).forEach((option, index) => {
+                if (index === 0) return;
+
+                const isAvailable = !macroId || option.dataset.macro === macroId;
+                option.hidden = !isAvailable;
+                option.disabled = !isAvailable;
+            });
+
+            if (microFilter.selectedOptions[0]?.disabled) {
+                microFilter.value = '';
+            }
+        }
+
+        function applyFilters() {
+            const term = normalizeText(searchInput.value);
+            const macroId = macroFilter.value;
+            const microId = microFilter.value;
+            const matches = items.filter(item => {
+                const matchesName = !term || item.dataset.normalizedName.includes(term);
+                const matchesMacro = !macroId || item.dataset.macro === macroId;
+                const matchesMicro = !microId || item.dataset.micro === microId;
+
+                return matchesName && matchesMacro && matchesMicro;
+            });
+
+            const visibleItems = matches.slice(0, visibleLimit);
+            const visibleSet = new Set(visibleItems);
+
+            items.forEach(item => item.classList.toggle('d-none', !visibleSet.has(item)));
+
+            const visibleCount = visibleItems.length;
+            const totalMatches = matches.length;
+            const noun = totalMatches === 1 ? 'municipio' : 'municipios';
+            resultsSummary.innerHTML = `Mostrando <strong>${visibleCount}</strong> de <strong>${totalMatches}</strong> ${noun}`;
+
+            emptyState.hidden = totalMatches !== 0;
+            showMoreButton.parentElement.hidden = visibleCount >= totalMatches;
+            clearFiltersButton.hidden = !term && !macroId && !microId;
+        }
+
+        function resetFilters() {
+            filtersForm.reset();
+            visibleLimit = pageSize;
+            updateMicroregions();
+            applyFilters();
+            searchInput.focus();
+        }
+
+        filtersForm.addEventListener('submit', event => event.preventDefault());
+
+        searchInput.addEventListener('input', function() {
+            visibleLimit = pageSize;
+            applyFilters();
+        });
+
+        macroFilter.addEventListener('change', function() {
+            visibleLimit = pageSize;
+            updateMicroregions();
+            applyFilters();
+        });
+
+        microFilter.addEventListener('change', function() {
+            visibleLimit = pageSize;
+            applyFilters();
+        });
+
+        showMoreButton.addEventListener('click', function() {
+            visibleLimit += pageSize;
+            applyFilters();
+        });
+
+        clearFiltersButton.addEventListener('click', resetFilters);
+        resetButtons.forEach(button => button.addEventListener('click', resetFilters));
+
+        updateMicroregions();
+        applyFilters();
     });
 </script>
 @endsection

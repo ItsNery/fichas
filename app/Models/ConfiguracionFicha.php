@@ -3,9 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class ConfiguracionFicha extends Model
 {
+    use LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->setDescriptionForEvent(fn(string $eventName) =>
+                "La configuración fue {$eventName}"
+            );
+    }
     protected $table = 'configuracion_fichas';
 
     protected $fillable = [
@@ -37,6 +50,7 @@ class ConfiguracionFicha extends Model
 
     public function variables()
     {
-        return $this->belongsToMany(Variable::class);
+        return $this->belongsToMany(Variable::class)
+            ->orderBy('configuracion_ficha_variable.id');
     }
 }

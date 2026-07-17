@@ -36,6 +36,22 @@
                             class="form-control">
                     </div>
 
+                    <hr>
+                    @can('usuarios.asignar-roles')
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Rol</label>
+                        <select name="role" id="role" class="form-select @error('role') is-invalid @enderror">
+                            <option value="">Sin rol</option>
+                            @foreach($roles ?? [] as $role)
+                                <option value="{{ $role->name }}" @selected($user->hasRole($role->name))>{{ $role->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('role')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    @endcan
+
                     <button type="submit" class="btn btn-primary">Actualizar Usuario</button>
                     <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Cancelar</a>
                 </form>

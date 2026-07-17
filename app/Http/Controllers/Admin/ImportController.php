@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Exports\PlantillaExport;
 use App\Http\Controllers\Controller;
-use App\Imports\CultivosImport;
-use App\Imports\DatosImport;
 use App\Imports\DimensionesImport;
 use App\Imports\IndicadorsImport;
 use App\Imports\InstrumentoMunicipioImport;
@@ -16,15 +14,28 @@ use App\Models\Dimension;
 use App\Models\Indicador;
 use App\Models\Municipio;
 use App\Models\Variable;
-use App\Models\CatMotivoSinDato;
+use App\Models\LoteDatos;
+use App\Services\LoteDatosService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\CultivosExcelImport;
 
 class ImportController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:datos.importar|catalogos.importar|instrumentos.importar')->only(['index', 'descargarPlantilla']);
+        $this->middleware('permission:catalogos.importar')->only([
+            'importDimensiones', 'importTematicas', 'importIndicadores', 'importVariables',
+        ]);
+        $this->middleware('permission:datos.importar')->only([
+            'validateDatos', 'validateDatos1', 'importDatos', 'importDatosComplejos',
+        ]);
+        $this->middleware('permission:instrumentos.importar')->only([
+            'importInstrumentos', 'importInstrumentosAsignacion',
+        ]);
+    }
+
     /**
      * Display the resource import page.
      *
@@ -129,35 +140,14 @@ class ImportController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function importDatos(Request $request)
+    public function importDatos(Request $request, LoteDatosService $service)
     {
-        Log::info('--- ImportController: Iniciando importDatos (importación final) ---', $request->all());
+        $validated = $request->validate(['lote_id' => 'required|integer|exists:lotes_datos,id']);
+        $lote = LoteDatos::findOrFail($validated['lote_id']);
+        $service->enviarRevision($lote, auth()->user());
 
-        $validated = $request->validate(['temp_path' => 'required|string']);
-        $path      = $validated['temp_path'];
-
-        if (! Storage::disk('local')->exists($path)) {
-            Log::error('--- ImportController: El archivo temporal no existe en la ruta: ' . $path . ' ---');
-            return back()->withErrors(['error' => 'Error: El archivo validado no fue encontrado.']);
-        }
-
-        try {
-            Log::info('--- ImportController: Ejecutando Excel::import en el archivo: ' . $path . ' ---');
-            Excel::import(new DatosImport, $path, 'local');
-
-            Log::info('--- ImportController: Eliminando archivo temporal: ' . $path . ' ---');
-            Storage::disk('local')->delete($path);
-
-            Log::info('--- ImportController: ¡IMPORTACIÓN EXITOSA! ---');
-            return back()->with('success', '¡Datos históricos importados correctamente!');
-        } catch (\Exception $e) {
-            Log::error('--- ImportController: ERROR DURANTE LA IMPORTACIÓN FINAL ---', [
-                'message' => $e->getMessage(),
-                'trace'   => $e->getTraceAsString(),
-            ]);
-            Storage::disk('local')->delete($path);
-            return back()->withErrors(['error' => 'Ocurrió un error durante la importación final: ' . $e->getMessage()]);
-        }
+        return redirect()->route('admin.lotes-datos.show', $lote)
+            ->with('success', 'El lote fue enviado a revisión. Los datos aún no son públicos.');
     }
 
     /**
@@ -228,7 +218,7 @@ class ImportController extends Controller
                 break;
 
             case 'datos-historicos':
-                $headings           = ['municipio_cvegeo', 'variable_tecnico', 'anio', 'valor'];
+                $headings           = ['municipio_cvegeo', 'variable_tecnico', 'anio', 'valor', 'motivo_sin_dato'];
                 $fileName           = 'plantilla_datos_historicos.xlsx';
                 $diccionarioDeDatos = [
                     ['municipio_cvegeo', 'Clave Geoestadística del municipio (ej. 21001).', 'Obtener del catálogo de Municipios'],
@@ -281,23 +271,30 @@ class ImportController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function importDatosComplejos(Request $request)
+    public function importDatosComplejos(Request $request, LoteDatosService $service)
     {
         $request->validate([
             'indicador_id' => 'required|integer|exists:indicadors,id',
             'archivo'      => 'required|file|mimes:xlsx,xls,csv',
         ]);
 
-        $indicadorId = $request->input('indicador_id');
-        $file        = $request->file('archivo');
-
-        try {
-            Excel::import(new CultivosExcelImport($indicadorId), $file);
-
-            return back()->with('success', '¡Los datos de cultivos se han importado con éxito!');
-        } catch (\Exception $e) {
-            return back()->withErrors(['msg' => 'Ocurrió un error durante la importación: ' . $e->getMessage()]);
+        $indicador = Indicador::whereKey($request->integer('indicador_id'))
+            ->where('es_complejo', true)
+            ->first();
+        if (!$indicador) {
+            return back()->withErrors(['indicador_id' => 'El indicador seleccionado no es complejo.']);
         }
+
+        $result = $service->crearBorradorComplejo($request->file('archivo'), $indicador, auth()->user());
+        if (isset($result['errors'])) {
+            return back()->withErrors(['archivo' => collect($result['errors'])->pluck('error')->implode(' ')]);
+        }
+
+        $lote = $result['lote'];
+        $service->enviarRevision($lote, auth()->user());
+
+        return redirect()->route('admin.lotes-datos.show', $lote)
+            ->with('success', 'El lote de datos complejos fue validado y enviado a revisión.');
     }
 
     // public function descargarPlantilla($tipo)
@@ -349,102 +346,32 @@ class ImportController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function validateDatos(Request $request)
+    public function validateDatos(Request $request, LoteDatosService $service)
     {
-        Log::info('--- ImportController: Iniciando validateDatos ---');
-        $request->validate(['archivo_datos' => 'required|file|mimes:xlsx,xls']);
-
-        $file     = $request->file('archivo_datos');
-        $rows     = Excel::toCollection(null, $file)->first();
-
-        // Obtener encabezados y normalizarlos (trim y lowercase) para evitar errores de " dedazo"
-        $rawHeadings = $rows->shift()->toArray();
-        $headings = array_map(function ($h) {
-            return strtolower(trim($h));
-        }, $rawHeadings);
-
-        Log::info('--- ImportController: Encabezados detectados ---', ['raw' => $rawHeadings, 'normalized' => $headings]);
-
-        $errors   = [];
-        // Cache de validaciones existentes
-        $validCvegeos = Municipio::pluck('cvegeo')->all();
-        $validIds     = Municipio::pluck('id')->all();
-        $validVariables = Variable::pluck('nombre_tecnico')->all();
-        $validVariableIds = Variable::pluck('id')->all(); // Cache ids
-        $validMotivos = CatMotivoSinDato::pluck('codigo')->map(fn($code) => strtoupper($code))->toArray();
-
-        foreach ($rows as $rowIndex => $row) {
-            $rowData = array_combine($headings, $row->toArray());
-
-            // Validar municipio
-            $municipioValido = false;
-            if (! empty($rowData['municipio_cvegeo']) && in_array($rowData['municipio_cvegeo'], $validCvegeos)) {
-                $municipioValido = true;
-            } elseif (! empty($rowData['municipio_id']) && in_array($rowData['municipio_id'], $validIds)) {
-                $municipioValido = true;
-            }
-
-            if (! $municipioValido) {
-                $detalle = "";
-                if (!empty($rowData['municipio_cvegeo'])) $detalle .= "cvegeo='" . $rowData['municipio_cvegeo'] . "'";
-                if (!empty($rowData['municipio_id'])) $detalle .= ($detalle ? ", " : "") . "id='" . $rowData['municipio_id'] . "'";
-                $errors[] = ['fila' => $rowIndex + 2, 'error' => "Municipio no válido/identificado (Datos proporcionados: " . ($detalle ?: 'Ninguno') . ")."];
-            }
-
-            // Validar variable
-            $variableValido = false;
-            if (! empty($rowData['variable_tecnico']) && in_array($rowData['variable_tecnico'], $validVariables)) {
-                $variableValido = true;
-            } elseif (! empty($rowData['variable_id']) && in_array($rowData['variable_id'], $validVariableIds)) {
-                $variableValido = true;
-            }
-
-            if (! $variableValido) {
-                $detalle = "";
-                if (!empty($rowData['variable_tecnico'])) $detalle .= "tecnico='" . $rowData['variable_tecnico'] . "'";
-                if (!empty($rowData['variable_id'])) $detalle .= ($detalle ? ", " : "") . "id='" . $rowData['variable_id'] . "'";
-                $errors[] = ['fila' => $rowIndex + 2, 'error' => "Variable no válida/identificada (Datos proporcionados: " . ($detalle ?: 'Ninguno') . ")."];
-            }
-
-            // --- VALIDACIÓN DE VALOR ---
-            if (isset($rowData['valor'])) {
-                $valor = $rowData['valor'];
-
-                // 1. Limpiamos el valor (string, mayúsculas, sin espacios)
-                $valorLimpio = strtoupper(trim((string)$valor));
-
-                // 2. Verificamos:
-                //    - Es numérico?
-                //    - O está en la lista de motivos válidos (ND, C, NA...)?
-                //    - O está vacío (se tratará como null)?
-                $esValido = is_numeric($valor) || in_array($valorLimpio, $validMotivos) || $valorLimpio === '';
-
-                if (!$esValido) {
-                    // Generamos mensaje dinámico con los códigos permitidos
-                    $codigosPermitidos = implode(', ', $validMotivos);
-                    $errors[] = [
-                        'fila' => $rowIndex + 2,
-                        'error' => "El 'valor' (" . ($valor ?? 'vacío') . ") no es válido. Debe ser un número o un código de motivo registrado ($codigosPermitidos)."
-                    ];
-                }
-            } else {
-                Log::warning("Fila " . ($rowIndex + 2) . ": Columna 'valor' no encontrada.");
-                $errors[] = ['fila' => $rowIndex + 2, 'error' => "La columna 'valor' es requerida."];
-            }
-            // --- FIN DE LA VALIDACIÓN ---
+        $request->validate(['archivo_datos' => 'required|file|mimes:xlsx,xls,csv']);
+        $file = $request->file('archivo_datos');
+        if (!$file || !$file->isValid() || !$file->getPathname() || !is_file($file->getPathname())) {
+            return response()->json([
+                'success' => false,
+                'errors' => [[
+                    'fila' => 1,
+                    'error' => 'El archivo no pudo ser recibido correctamente. Vuelve a seleccionarlo e inténtalo de nuevo.',
+                ]],
+            ], 422);
         }
 
-        if (count($errors) > 0) {
-            Log::warning('--- ImportController: Se encontraron errores de validación. ---', $errors);
-            return response()->json(['success' => false, 'errors' => $errors], 422);
+        $result = $service->crearBorrador($file, auth()->user());
+
+        if (isset($result['errors'])) {
+            return response()->json(['success' => false, 'errors' => $result['errors']], 422);
         }
 
-        $path = $file->store('temp_imports', 'local');
-        Log::info('--- ImportController: Validación exitosa. Archivo temporal guardado en: ' . $path . ' ---');
+        $lote = $result['lote'];
         return response()->json([
             'success' => true,
-            'message' => '¡Archivo validado con éxito! Se encontraron ' . count($rows) . ' registros listos para importar.',
-            'path'    => $path,
+            'message' => "Archivo validado. Se creó el lote #{$lote->id} con {$lote->total_filas} registros.",
+            'lote_id' => $lote->id,
+            'detalle_url' => route('admin.lotes-datos.show', $lote),
         ]);
     }
 

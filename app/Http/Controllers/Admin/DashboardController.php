@@ -7,109 +7,135 @@ use App\Models\Indicador;
 use App\Models\Dimension;
 use App\Models\Tematica;
 use App\Models\Variable;
+use App\Models\Municipio;
+use App\Models\LoteDatos;
 use App\Models\SiteEvaluation;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Spatie\Activitylog\Models\Activity;
 
 class DashboardController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:dashboard.ejecutivo')->only(['dashboard']);
+        $this->middleware('permission:salud-datos.ver')->only(['dataHealth']);
+    }
 
-    public function dashboard(){
-// 1. Estadísticas Generales (KPIs)
-        // Usamos cache para no saturar la BD si hay muchos datos
+    public function dashboard()
+    {
         $stats = [
             'total_datos'       => DatoHistorico::count(),
             'total_indicadores' => Indicador::count(),
-            'total_variables' => Variable::count(),
+            'total_variables'   => Variable::count(),
             'total_dimensiones' => Dimension::count(),
-            'total_tematicas' => Tematica::count(),
+            'total_tematicas'   => Tematica::count(),
             'total_usuarios'    => User::count(),
+            'total_municipios'  => Municipio::count(),
+            'lotes_pendientes'  => LoteDatos::where('estado', LoteDatos::EN_REVISION)->count(),
         ];
 
-        // 2. Actividad Reciente (Últimos datos subidos o modificados)
         $datosRecientes = DatoHistorico::with(['variable', 'municipio'])
             ->latest('updated_at')
             ->take(5)
             ->get();
 
-        // 3. Evaluación del Sitio (Feedback)
-        $votosFeliz     = SiteEvaluation::where('score', '3')->count();
-        $votosNeutral   = SiteEvaluation::where('score', '2')->count();
-        $votosTriste    = SiteEvaluation::where('score', '1')->count();
-        return view('dashboard', compact('stats', 'datosRecientes', 'votosFeliz','votosNeutral','votosTriste'));
+        $votosFeliz   = SiteEvaluation::where('score', '3')->count();
+        $votosNeutral = SiteEvaluation::where('score', '2')->count();
+        $votosTriste  = SiteEvaluation::where('score', '1')->count();
+
+        $latestYear = DatoHistorico::max('anio');
+
+        $datosPorAnio = DatoHistorico::select('anio', DB::raw('COUNT(*) as total'))
+            ->whereNotNull('anio')
+            ->groupBy('anio')
+            ->orderBy('anio')
+            ->pluck('total', 'anio');
+
+        $dimensionConteo = Dimension::select('dimensions.nombre', DB::raw('COUNT(indicadors.id) as total'))
+            ->join('tematicas', 'dimensions.id', '=', 'tematicas.dimension_id')
+            ->join('indicadors', 'tematicas.id', '=', 'indicadors.tematica_id')
+            ->groupBy('dimensions.id', 'dimensions.nombre')
+            ->get();
+
+        $metadataFields = ['responsable', 'periodicidad', 'metodologia', 'cobertura_geografica', 'unidad_responsable', 'norma_tecnica'];
+        $totalIndicadores = Indicador::count();
+        $metadataCompletos = Indicador::all()->filter(function ($ind) use ($metadataFields) {
+            foreach ($metadataFields as $field) {
+                if (empty($ind->$field)) return false;
+            }
+            return true;
+        })->count();
+
+        $estadosPublicacion = Indicador::select('estado_publicacion', DB::raw('COUNT(*) as total'))
+            ->groupBy('estado_publicacion')
+            ->pluck('total', 'estado_publicacion');
+
+        $actividadReciente = Activity::with('causer')
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(fn($log) => [
+                'usuario' => $log->causer?->name ?? 'Sistema',
+                'evento' => $log->description,
+                'fecha' => $log->created_at->diffForHumans(),
+            ]);
+
+        $dataCompletitud = 0;
+        if ($latestYear && $stats['total_indicadores'] > 0) {
+            $conDatos = Indicador::whereHas('variables.datosHistoricos', fn($q) => $q->where('anio', $latestYear))
+                ->count();
+            $dataCompletitud = $stats['total_indicadores'] > 0
+                ? round(($conDatos / $stats['total_indicadores']) * 100)
+                : 0;
+        }
+
+        return view('dashboard', compact(
+            'stats', 'datosRecientes', 'votosFeliz', 'votosNeutral', 'votosTriste',
+            'datosPorAnio', 'dimensionConteo', 'metadataCompletos', 'totalIndicadores',
+            'estadosPublicacion', 'actividadReciente', 'dataCompletitud', 'latestYear'
+        ));
     }
-    /**
-     * Executes a series of data health checks (empty indicators, orphan variables,
-     * outdated indicators, and atypical data) and displays the results.
-     *
-     * @return \Illuminate\View\View
-     */
+
     public function dataHealth()
     {
-        //    indicadores que NO TIENEN ('doesntHave') ninguna relación con 'variables'.
         $indicadoresVacios = Indicador::doesntHave('variables')->get();
-
-        // Chequeo 2: Variables Huérfanas
         $variablesHuerfanas = Variable::whereNull('indicador_id')->get();
-
-                                                 // Chequeo 3: Indicadores Desactualizados
-        $indicadoresDesactualizados = collect(); // Inicializamos como colección vacía
-
-        // Primero, encontramos cuál es el año más reciente con datos en TODO el sistema.
+        $indicadoresDesactualizados = collect();
         $latestYear = DatoHistorico::max('anio');
 
         if ($latestYear) {
-            // Luego, obtenemos los IDs de los indicadores que SÍ tienen datos para ese año.
             $updatedIndicatorIds = Indicador::whereHas('variables.datosHistoricos', function ($query) use ($latestYear) {
                 $query->where('anio', $latestYear);
             })->pluck('id');
 
-            // Finalmente, buscamos los indicadores cuyo ID NO ESTÁ en la lista anterior.
-            // También nos aseguramos de que no sean indicadores vacíos para no duplicar alertas.
             $indicadoresDesactualizados = Indicador::whereNotIn('id', $updatedIndicatorIds)
-                ->has('variables') // Solo checa indicadores que sí tienen variables
+                ->has('variables')
                 ->get();
         }
 
-        // --- Chequeo 4: Datos Atípicos ---
-        // Definimos un umbral. Alertaremos si un dato crece más de 1000% en un año.
-        // Puedes ajustar este valor según tus necesidades.
         $threshold = 1000;
-        // 2. Escribimos la consulta para encontrar los datos atípicos
-        $query = "
+        $datosAtipicos = DB::select("
             SELECT
-                current.id as dato_id,
-                current.anio,
-                current.valor as valor_actual,
+                current.id as dato_id, current.anio, current.valor as valor_actual,
                 previous.valor as valor_anterior,
                 v.nombre_amigable as variable_nombre,
                 m.nombre as municipio_nombre
-            FROM
-                dato_historicos AS current
-            JOIN
-                dato_historicos AS previous ON current.variable_id = previous.variable_id
-                                           AND current.municipio_id = previous.municipio_id
-                                           AND current.anio = previous.anio + 1
-            JOIN
-                variables AS v ON current.variable_id = v.id
-            JOIN
-                municipios AS m ON current.municipio_id = m.id
-            WHERE
-                previous.valor IS NOT NULL
-                AND previous.valor > 0 -- Evitamos la división por cero
+            FROM dato_historicos AS current
+            JOIN dato_historicos AS previous
+                ON current.variable_id = previous.variable_id
+                AND current.municipio_id = previous.municipio_id
+                AND current.anio = previous.anio + 1
+            JOIN variables AS v ON current.variable_id = v.id
+            JOIN municipios AS m ON current.municipio_id = m.id
+            WHERE previous.valor IS NOT NULL AND previous.valor > 0
                 AND (((current.valor - previous.valor) / previous.valor) * 100) > ?
-        ";
+        ", [$threshold]);
 
-        // 3. Ejecutamos la consulta
-        $datosAtipicos = DB::select($query, [$threshold]);
-
-        return view('datos.data_health', [
-            'indicadoresVacios'          => $indicadoresVacios,
-            'variablesHuerfanas'         => $variablesHuerfanas,
-            'indicadoresDesactualizados' => $indicadoresDesactualizados,
-            'latestYear'                 => $latestYear,
-            'datosAtipicos'              => $datosAtipicos,
-            'threshold'                  => $threshold,
-        ]);
+        return view('datos.data_health', compact(
+            'indicadoresVacios', 'variablesHuerfanas',
+            'indicadoresDesactualizados', 'latestYear',
+            'datosAtipicos', 'threshold'
+        ));
     }
 }

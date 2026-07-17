@@ -13,9 +13,18 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Models\Dimension;
 use App\Exports\DatosComplejosExport;
 use App\Models\Indicador;
+use App\Services\LoteDatosService;
 
 class DatoHistoricoController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:datos.ver')->only(['index', 'show', 'export']);
+        $this->middleware('permission:datos.crear')->only(['create', 'store']);
+        $this->middleware('permission:datos.editar')->only(['edit', 'update']);
+        $this->middleware('permission:datos.eliminar')->only(['destroy']);
+    }
+
     /**
      * Display a listing of the resource.
      * @param  \Illuminate\Http\Request  $request
@@ -104,21 +113,28 @@ class DatoHistoricoController extends Controller
     /**
      * Actualiza un dato histórico en la base de datos.
      */
-    public function update(Request $request, DatoHistorico $dato)
+    public function update(Request $request, DatoHistorico $dato, LoteDatosService $service)
     {
         // Validamos que el valor sea numérico
         $validated = $request->validate([
             'valor' => 'required|numeric',
         ]);
 
-        // Actualizamos el registro
-        $dato->update($validated);
+        $lote = $service->crearEdicionManual($dato, (float) $validated['valor'], auth()->user());
 
         // Devolvemos una respuesta JSON para la petición AJAX
-        return response()->json([
-            'success'  => '¡Dato actualizado correctamente!',
-            'newValue' => $dato->valor,
-        ]);
+        $response = [
+            'success' => 'La propuesta fue enviada a revisión. El valor publicado no cambió.',
+            'lote_id' => $lote->id,
+            'detail_url' => route('admin.lotes-datos.show', $lote),
+        ];
+
+        if ($request->expectsJson()) {
+            return response()->json($response, 202);
+        }
+
+        return redirect()->route('admin.lotes-datos.show', $lote)
+            ->with('success', $response['success']);
     }
 
     /**

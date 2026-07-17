@@ -34,10 +34,12 @@
                 
                 {{-- Barra Superior --}}
                 <div class="d-flex justify-content-end mb-4">
+                    @can('instrumentos.crear')
                     <button class="btn btn-custom-primary shadow-sm px-4" 
                         data-bs-toggle="modal" data-bs-target="#instrumentoModal" type="button">
                         <i class="fa-solid fa-plus me-2"></i>Añadir Instrumento
                     </button>
+                    @endcan
                 </div>
 
                 {{-- 3. TABLA --}}
@@ -47,7 +49,9 @@
                             <tr>
                                 <th class="ps-4">Nombre del Instrumento</th>
                                 <th>Descripción</th>
+                                @if(auth()->user()->can('instrumentos.editar') || auth()->user()->can('instrumentos.eliminar'))
                                 <th class="text-center pe-4" style="width: 120px;">Acciones</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -63,9 +67,11 @@
                                             {{ Str::limit($instrumento->descripcion, 80) ?? 'Sin descripción registrada.' }}
                                         </span>
                                     </td>
+                                    @if(auth()->user()->can('instrumentos.editar') || auth()->user()->can('instrumentos.eliminar'))
                                     <td class="text-center pe-4">
                                         <div class="d-flex justify-content-center gap-2">
                                             {{-- Editar --}}
+                                            @can('instrumentos.editar')
                                             <button type="button" class="btn-icon-square edit"
                                                 data-bs-toggle="modal" data-bs-target="#instrumentoModal"
                                                 data-id="{{ $instrumento->id }}" 
@@ -73,8 +79,10 @@
                                                 data-descripcion="{{ $instrumento->descripcion }}">
                                                 <i class="fa-regular fa-pen-to-square" data-bs-toggle="tooltip" title="Editar"></i>
                                             </button>
+                                            @endcan
 
                                             {{-- Eliminar --}}
+                                            @can('instrumentos.eliminar')
                                             <form action="{{ route('admin.instrumentos.destroy', $instrumento) }}" method="POST" class="delete-form d-inline">
                                                 @csrf
                                                 @method('DELETE')
@@ -82,12 +90,14 @@
                                                     <i class="fa-solid fa-trash" data-bs-toggle="tooltip" title="Eliminar"></i>
                                                 </button>
                                             </form>
+                                            @endcan
                                         </div>
                                     </td>
+                                    @endif
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="text-center py-5">
+                                    <td colspan="{{ auth()->user()->can('instrumentos.editar') || auth()->user()->can('instrumentos.eliminar') ? 3 : 2 }}" class="text-center py-5">
                                         <div class="mb-3 opacity-25">
                                             <i class="fa-solid fa-file-circle-xmark fa-4x text-muted"></i>
                                         </div>

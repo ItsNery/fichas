@@ -14,7 +14,7 @@ class SuperAdminSeeder extends Seeder
  */
     public function run()
     {
-        User::firstOrCreate(
+        $user = User::firstOrCreate(
             [
                 'email' => 'estadistica@puebla.gob.mx', 
             ],
@@ -23,5 +23,6 @@ class SuperAdminSeeder extends Seeder
                 'password' => Hash::make('dei-2025'),
             ]
         );
+        $user->assignRole('super_admin');
     }
 }

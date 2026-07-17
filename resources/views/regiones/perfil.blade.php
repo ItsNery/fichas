@@ -127,20 +127,26 @@
                                     <i class="fa-solid fa-chart-column"></i>
                                 </a>
                                 @endif
-                                @if(isset($item['datos']['metodo_calculo']) || isset($item['datos']['fuente']))
+                                @if(isset($item['datos']['metodo_calculo']) || isset($item['datos']['fuente']) || isset($item['datos']['correlacion']))
                                 <i class="fa-solid fa-circle-info info-tooltip-trigger perfil-tarjeta__info-icon mb-0"
                                     data-bs-toggle="popover"
                                     data-bs-trigger="hover focus"
-                                    title="Metodología y Fuente"
-                                    data-bs-content="<strong>Método:</strong> {{ $item['datos']['metodo_calculo'] ?? 'No especificado' }}<br><strong>Fuente:</strong> {{ $item['datos']['fuente'] ?? 'No especificada' }}"
+                                    title="Metodología y fuente"
+                                    data-bs-content="<strong>Método:</strong> {{ $item['datos']['metodo_calculo'] ?? 'No especificado' }}@if($item['config']->tipo_visualizacion === 'scatter' && !empty($item['datos']['variables']))<br><strong>Medianas regionales:</strong>@foreach($item['datos']['variables'] as $variableResumen)<br>{{ $variableResumen['nombre'] }}: <strong>{{ number_format($variableResumen['valor'], 2) }} {{ $variableResumen['unidad'] }}</strong>@endforeach @endif @if(isset($item['datos']['correlacion_lectura']))<br><strong>Asociación regional:</strong> {{ $item['datos']['correlacion_lectura'] }} <small>No implica causalidad.</small>@endif<br><strong>Fuente:</strong> {{ $item['datos']['fuente'] ?? 'No especificada' }}"
                                     data-bs-html="true"></i>
                                 @endif
                             </div>
                         </div>
 
+                        @if($item['config']->subtitulo_reporte)
+                        <p class="text-muted small mb-3">{{ $item['config']->subtitulo_reporte }}</p>
+                        @endif
+
                         <div class="row mb-4 align-items-center">
                             <div class="col-md-4 text-center border-end">
-                                <h5 class="text-uppercase small fw-bold text-muted mb-2">Valor Regional</h5>
+                                <h5 class="text-uppercase small fw-bold text-muted mb-2">
+                                    {{ $item['config']->tipo_visualizacion === 'scatter' ? 'Municipios analizados' : 'Valor Regional' }}
+                                </h5>
                                 <h4 class="perfil-tarjeta__kpi-value text-vino" style="font-size: 2.5rem;">
                                     {{ $item['datos']['valor_actual'] ?? $item['datos']['total'] ?? 0 }}
                                 </h4>
@@ -157,15 +163,14 @@
                             </div>
                         </div>
 
-                        @if(!empty($item['datos']['echarts']['series']))
-                        {{-- Gráfico de Ranking Interno --}}
+                        @if(($item['config']->tipo_visualizacion === 'piramide' && !empty($item['datos']['series'])) || !empty($item['datos']['echarts']['series']))
                         <div class="perfil-tarjeta__chart-wrapper perfil-tarjeta__chart-wrapper--full">
                             <div class="perfil-tarjeta__skeleton" id="skeleton-{{ $item['config']->id }}">
                                 <div class="spinner-border perfil-tarjeta__spinner" role="status">
                                     <span class="visually-hidden">Cargando gráfico...</span>
                                 </div>
                             </div>
-                            <div class="perfil-tarjeta__chart-box lazy-chart perfil-tarjeta__chart-box--full" id="chart-{{ $item['config']->id }}" data-chart-id="{{ $item['config']->id }}" style="height: 400px;"></div>
+                            <div class="perfil-tarjeta__chart-box lazy-chart perfil-tarjeta__chart-box--full" id="chart-{{ $item['config']->id }}" data-chart-id="{{ $item['config']->id }}" style="height: {{ $item['config']->tipo_visualizacion === 'piramide' ? '560px' : ($item['config']->tipo_visualizacion === 'scatter' ? '500px' : '400px') }};"></div>
                         </div>
                         @endif
 
@@ -273,7 +278,83 @@
         var myChart = echarts.getInstanceByDom(chartDom) || echarts.init(chartDom);
         var echartsData = itemData.datos.echarts;
 
-        if (echartsData && echartsData.type === "bar-horizontal") {
+        if (itemData.config.tipo_visualizacion === "piramide") {
+            const data = itemData.datos;
+            const hombres = data.series && data.series[0] ? data.series[0].data : [];
+            const mujeres = data.series && data.series[1] ? data.series[1].data : [];
+            const categorias = data.eje_x ? data.eje_x.categorias : [];
+            const option = {
+                tooltip: {
+                    trigger: "axis",
+                    axisPointer: { type: "shadow" },
+                    confine: true,
+                    formatter: params => params[0].name + "<br/>" + params.map(item =>
+                        item.marker + item.seriesName + ": " + Math.abs(item.value).toLocaleString("es-MX")
+                    ).join("<br/>")
+                },
+                legend: { data: ["Hombres", "Mujeres"], bottom: 0 },
+                grid: { left: "3%", right: "4%", bottom: "10%", containLabel: true },
+                xAxis: [{
+                    type: "value",
+                    axisLabel: { formatter: value => Math.abs(value).toLocaleString("es-MX") }
+                }],
+                yAxis: [{ type: "category", data: categorias, axisTick: { show: false }, inverse: true }],
+                series: [
+                    {
+                        name: "Hombres", type: "bar", stack: "total",
+                        data: hombres.map(value => -Math.abs(value)),
+                        itemStyle: { color: "#0a192f" }
+                    },
+                    {
+                        name: "Mujeres", type: "bar", stack: "total",
+                        data: mujeres.map(value => Math.abs(value)),
+                        itemStyle: { color: "#c79b66" }
+                    }
+                ]
+            };
+            myChart.setOption(option);
+            window.addEventListener('resize', () => myChart.resize());
+        } else if (echartsData && echartsData.type === "scatter") {
+            const option = {
+                tooltip: {
+                    trigger: "item",
+                    confine: true,
+                    formatter: params => {
+                        if (!params.data || params.data.length < 3) return params.value;
+                        const xTitle = echartsData.eje_x?.titulo || "Eje X";
+                        const yTitle = echartsData.eje_y?.titulo || "Eje Y";
+                        return `<strong>${params.data[2]}</strong><br>`
+                            + `${xTitle}: <strong>${Number(params.data[0]).toLocaleString("es-MX", { maximumFractionDigits: 2 })}</strong><br>`
+                            + `${yTitle}: <strong>${Number(params.data[1]).toLocaleString("es-MX", { maximumFractionDigits: 2 })}</strong>`
+                            + (params.data[3] ? '<br><small>Haz clic para abrir la ficha municipal</small>' : '');
+                    }
+                },
+                legend: { bottom: 0 },
+                grid: { top: 45, bottom: 75, left: 75, right: 45 },
+                xAxis: {
+                    type: "value",
+                    name: echartsData.eje_x?.titulo || "Eje X",
+                    nameLocation: "middle",
+                    nameGap: 35,
+                    splitLine: { show: true, lineStyle: { type: "dashed" } }
+                },
+                yAxis: {
+                    type: "value",
+                    name: echartsData.eje_y?.titulo || "Eje Y",
+                    nameLocation: "middle",
+                    nameGap: 50,
+                    splitLine: { show: true, lineStyle: { type: "dashed" } }
+                },
+                series: echartsData.series || []
+            };
+            myChart.setOption(option);
+            myChart.off('click');
+            myChart.on('click', params => {
+                const slug = params.data && params.data[3];
+                if (slug) window.location.href = `/ficha/municipio/${encodeURIComponent(slug)}/perfil`;
+            });
+            window.addEventListener('resize', () => myChart.resize());
+        } else if (echartsData && echartsData.type === "bar-horizontal") {
             let option = {
                 tooltip: {
                     trigger: "axis",

@@ -24,7 +24,12 @@
     </div>
     @endif
 
-    <div class="container py-4">
+    <div class="container py-4" id="catalog-admin">
+        <style>
+            @cannot('catalogos.crear') #catalog-admin .create-action { display: none !important; } @endcannot
+            @cannot('catalogos.editar') #catalog-admin .edit, #catalog-admin .edit-btn { display: none !important; } @endcannot
+            @cannot('catalogos.eliminar') #catalog-admin .delete-btn { display: none !important; } @endcannot
+        </style>
 
         {{-- BARRA DE ACCIONES SUPERIOR --}}
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 gap-3">
@@ -50,7 +55,7 @@
             </div>
 
             {{-- Botón Añadir Dimensión --}}
-            <button class="btn btn-custom-primary shadow-sm px-4"
+            <button class="btn btn-custom-primary shadow-sm px-4 create-action"
                 data-bs-toggle="modal" data-bs-target="#catalogModal"
                 data-tipo="Dimension" data-template="dimension"
                 data-url="{{ route('admin.catalogos.dimensions.store') }}">
@@ -61,6 +66,25 @@
         {{-- CONTENEDOR PRINCIPAL --}}
         <div class="card-panel">
             <div class="card-body p-4">
+
+                {{-- BARRA DE HERRAMIENTAS: Buscador + Expandir/Colapsar --}}
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+                    <div class="input-group input-group-sm" style="max-width: 380px;">
+                        <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-search text-muted"></i></span>
+                        <input type="text" id="catalogSearch" class="form-control border-start-0 ps-0" placeholder="Buscar dimensiones, temáticas, indicadores, variables...">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-secondary" id="expandAllBtn" title="Expandir todas las variables">
+                            <i class="fa-solid fa-plus-circle me-1"></i>Expandir todo
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="collapseAllBtn" title="Colapsar todas las variables">
+                            <i class="fa-solid fa-minus-circle me-1"></i>Colapsar todo
+                        </button>
+                    </div>
+                </div>
+                <div id="searchNoResults" class="alert alert-info d-none py-2 text-center" style="font-size:0.9rem;">
+                    <i class="fa-solid fa-search me-1"></i> No se encontraron resultados para <strong id="searchTermDisplay"></strong>
+                </div>
 
                 {{-- PESTAÑAS DE DIMENSIONES --}}
                 <ul class="nav nav-tabs nav-tabs-clean mb-4" id="dimensionTab" role="tablist">
@@ -85,6 +109,7 @@
                             <div class="d-flex align-items-center">
                                 <span class="badge rounded-pill bg-light text-dark border me-3 px-3 py-2">ID: {{ $dimension->id }}</span>
                                 <h4 class="mb-0 text-vino">{{ $dimension->nombre }}</h4>
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary ms-2">{{ $dimension->tematicas->count() }} temáticas</span>
                                 <span class="ms-3 badge" style="background-color: {{ $dimension->color }}; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">
                                     Color Etiqueta
                                 </span>
@@ -93,8 +118,9 @@
                                 <button class="btn-icon-square edit" data-bs-toggle="modal"
                                     data-bs-target="#catalogModal" data-nombre="{{ $dimension->nombre }}"
                                     data-nombre-tecnico="{{ $dimension->nombre_tecnico }}"
-                                    data-color="{{ $dimension->color }}"
-                                    data-orden="{{ $dimension->orden }}"
+                                     data-color="{{ $dimension->color }}"
+                                     data-orden="{{ $dimension->orden }}"
+                                     data-visible-en-ficha="{{ $dimension->visible_en_ficha ? '1' : '0' }}"
                                     data-tipo="Dimension" data-template="dimension"
                                     data-url="{{ route('admin.catalogos.dimensions.update', $dimension) }}">
                                     <i class="fa-solid fa-pen" data-bs-toggle="tooltip" title="Editar Dimensión"></i>
@@ -109,7 +135,7 @@
 
                         {{-- Botón Añadir Temática --}}
                         <div class="text-end mb-4">
-                            <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal"
+                            <button class="btn btn-outline-secondary btn-sm create-action" data-bs-toggle="modal"
                                 data-bs-target="#catalogModal" data-tipo="Temática" data-template="tematica"
                                 data-parent-id="{{ $dimension->id }}"
                                 data-url="{{ route('admin.catalogos.tematicas.store') }}">
@@ -125,21 +151,24 @@
                                 <div class="d-flex align-items-center">
                                     <span class="id-badge">#{{ $tematica->id }}</span>
                                     <h5 class="mb-0 text-secondary fw-bold">{{ $tematica->nombre }}</h5>
+                                    <span class="badge bg-light text-muted border ms-2" style="font-size:0.65rem;">{{ $tematica->indicadores->count() }} indicadores</span>
+                                    @php $totalVars = $tematica->indicadores->sum(fn($i) => $i->variables->count()); @endphp
+                                    @if($totalVars > 0)
+                                    <span class="badge bg-light text-muted border ms-1" style="font-size:0.65rem;">{{ $totalVars }} vars.</span>
+                                    @endif
                                 </div>
                                 <div class="d-flex gap-2 align-items-center">
-                                    <button class="btn btn-link text-decoration-none btn-sm p-0 me-2" data-bs-toggle="modal"
-                                        data-bs-target="#catalogModal" data-tipo="Indicador" data-template="indicador"
-                                        data-parent-id="{{ $tematica->id }}"
-                                        data-url="{{ route('admin.catalogos.indicadores.store') }}">
+                                    <a href="{{ route('admin.catalogos.indicadores.crear') }}?tematica_id={{ $tematica->id }}" class="btn btn-link text-decoration-none btn-sm p-0 me-2 create-action">
                                         <i class="fa-solid fa-plus me-1"></i>Indicador
-                                    </button>
+                                    </a>
                                     <div class="vr mx-2"></div>
                                     <button class="btn-icon-square edit sm" style="width: 32px; height: 32px;"
                                         data-bs-toggle="modal" data-bs-target="#catalogModal"
                                         data-tipo="Temática" data-template="tematica"
                                         data-nombre="{{ $tematica->nombre }}"
-                                        data-nombre-tecnico="{{ $tematica->nombre_tecnico }}"
-                                        data-orden="{{ $tematica->orden }}"
+                                         data-nombre-tecnico="{{ $tematica->nombre_tecnico }}"
+                                         data-orden="{{ $tematica->orden }}"
+                                         data-visible-en-ficha="{{ $tematica->visible_en_ficha ? '1' : '0' }}"
                                         data-url="{{ route('admin.catalogos.tematicas.update', $tematica) }}">
                                         <i class="fa-solid fa-pen small"></i>
                                     </button>
@@ -161,8 +190,8 @@
                                             <div>
                                                 <span class="fw-medium text-dark">{{ $indicador->nombre_amigable }}</span>
                                                 @if($indicador->es_complejo)
-                                                <span class="badge bg-light text-secondary border ms-2" style="font-size: 0.65rem;">Complejo</span>
-                                                @endif
+                                            <span class="badge bg-light text-secondary border ms-2" style="font-size: 0.65rem;">Complejo</span>
+                                            @endif
                                             </div>
                                         </div>
 
@@ -175,24 +204,9 @@
                                                 <i class="fa-solid fa-chevron-down ms-1 small"></i>
                                             </button>
 
-                                            <button class="btn-icon-square edit sm" style="width: 30px; height: 30px;"
-                                                data-bs-toggle="modal" data-bs-target="#catalogModal"
-                                                data-tipo="Indicador" data-template="indicador"
-                                                data-url="{{ route('admin.catalogos.indicadores.update', $indicador) }}"
-                                                data-nombre-amigable="{{ $indicador->nombre_amigable }}"
-                                                data-nombre-tecnico="{{ $indicador->nombre_tecnico }}"
-                                                data-tematica-id="{{ $indicador->tematica_id }}"
-                                                data-descripcion="{{ $indicador->descripcion }}"
-                                                data-fuente="{{ $indicador->fuente }}"
-                                                data-metodo-calculo="{{ $indicador->metodo_calculo }}"
-                                                data-tipo-grafico-default="{{ $indicador->tipo_grafico_default }}"
-                                                data-solo-resumen="{{ $indicador->solo_resumen ? '1' : '0' }}"
-                                                data-es_complejo="{{ $indicador->es_complejo ? '1' : '0' }}"
-                                                data-priorizar_total="{{ $indicador->priorizar_total ? '1' : '0' }}"
-                                                data-polaridad="{{ $indicador->polaridad }}"
-                                                data-orden="{{ $indicador->orden }}">
+                                            <a href="{{ route('admin.catalogos.indicadores.editar', $indicador) }}" class="btn-icon-square edit sm" style="width: 30px; height: 30px;" title="Editar indicador">
                                                 <i class="fa-solid fa-pen" style="font-size: 0.7rem;"></i>
-                                            </button>
+                                            </a>
                                             <button class="btn-icon-square danger sm delete-btn" style="width: 30px; height: 30px;"
                                                 data-name="{{ $indicador->nombre_amigable }}"
                                                 data-url="{{ route('admin.catalogos.indicadores.destroy', $indicador) }}">
@@ -206,7 +220,7 @@
                                         <div class="variables-container p-3 rounded-3">
                                             <div class="d-flex justify-content-between align-items-center mb-2">
                                                 <small class="text-uppercase fw-bold text-muted" style="font-size: 0.7rem; letter-spacing: 1px;">Variables Asociadas</small>
-                                                <button class="btn btn-sm btn-outline-success py-0" style="font-size: 0.8rem;"
+                                                <button class="btn btn-sm btn-outline-success py-0 create-action" style="font-size: 0.8rem;"
                                                     data-bs-toggle="modal" data-bs-target="#catalogModal"
                                                     data-tipo="Variable" data-template="variable"
                                                     data-indicador-id="{{ $indicador->id }}"
@@ -222,6 +236,13 @@
                                                     <span class="fw-bold text-dark">{{ $variable->nombre_amigable }}</span>
                                                     <span class="text-muted fst-italic ms-1">({{ $variable->nombre_tecnico }})</span>
                                                     @if($variable->es_kpi) <i class="fa-solid fa-star text-warning ms-1" title="KPI"></i> @endif
+                                                    @if($variable->mapeo_valores && is_array($variable->mapeo_valores))
+                                                        <div class="mt-1 d-flex gap-1 flex-wrap">
+                                                            @foreach($variable->mapeo_valores as $key => $label)
+                                                                <span class="badge bg-light text-dark border" style="font-size:0.65rem;">{{ $key }}: {{ $label }}</span>
+                                                            @endforeach
+                                                        </div>
+                                                    @endif
                                                 </div>
                                                 <div class="d-flex gap-1">
                                                     <button class="btn btn-link text-secondary p-0 edit-btn" {{-- <--- AGREGAR "edit-btn" AQUÍ --}}
@@ -231,11 +252,14 @@
                                                         data-nombre-amigable="{{ $variable->nombre_amigable }}"
                                                         data-nombre-tecnico="{{ $variable->nombre_tecnico }}"
                                                         data-unidad-medida="{{ $variable->unidad_medida }}"
-                                                        data-es-kpi="{{ $variable->es_kpi ? '1' : '0' }}"
-                                                        data-es-destacada="{{ $variable->es_destacada ? '1' : '0' }}"
-                                                        data-indicador-tipo-dato="{{ $variable->indicador->tipo_dato }}"
-                                                        data-indicador-id="{{ $variable->indicador_id }}"
-                                                        data-orden="{{ $variable->orden }}">
+                                                         data-es-kpi="{{ $variable->es_kpi ? '1' : '0' }}"
+                                                         data-es-destacada="{{ $variable->es_destacada ? '1' : '0' }}"
+                                                         data-visible-en-ficha="{{ $variable->visible_en_ficha ? '1' : '0' }}"
+                                                         data-indicador-tipo-dato="{{ $variable->indicador->tipo_dato }}"
+                                                         data-indicador-id="{{ $variable->indicador_id }}"
+                                                         data-orden="{{ $variable->orden }}"
+                                                         data-mapeo-valores="{{ json_encode($variable->mapeo_valores ?? '') }}"
+                                                         data-tipo-valor="{{ $variable->tipo_valor ?? '' }}">
                                                         <i class="fa-solid fa-pen" style="font-size: 0.8rem;"></i>
                                                     </button>
                                                     <button class="btn btn-link text-danger p-0 delete-btn"
@@ -314,6 +338,12 @@
                                     <label class="form-label fw-bold text-secondary small">Orden</label>
                                     <input type="number" name="orden" id="dim_orden" class="form-control" placeholder="0">
                                 </div>
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="visible_en_ficha" value="1" id="dim_visible_en_ficha" checked>
+                                        <label class="form-check-label small" for="dim_visible_en_ficha">Visible en fichas públicas</label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -331,6 +361,12 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold text-secondary small">Orden</label>
                                     <input type="number" name="orden" id="tem_orden" class="form-control" placeholder="0">
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="visible_en_ficha" value="1" id="tem_visible_en_ficha" checked>
+                                        <label class="form-check-label small" for="tem_visible_en_ficha">Visible en fichas públicas</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -407,6 +443,10 @@
                                         <input class="form-check-input" type="checkbox" name="priorizar_total" value="1" id="ind_priorizar_total">
                                         <label class="form-check-label small" for="ind_priorizar_total">Priorizar "Total"</label>
                                     </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="visible_en_ficha" value="1" id="ind_visible_en_ficha" checked>
+                                        <label class="form-check-label small" for="ind_visible_en_ficha">Visible en fichas públicas</label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -441,6 +481,23 @@
                                         <input class="form-check-input" type="checkbox" name="es_kpi" value="1" id="var_es_kpi">
                                         <label class="form-check-label small" for="var_es_kpi">Es KPI</label>
                                     </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" name="visible_en_ficha" value="1" id="var_visible_en_ficha" checked>
+                                        <label class="form-check-label small" for="var_visible_en_ficha">Visible en fichas públicas</label>
+                                    </div>
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <label class="form-label fw-bold text-secondary small">Tipo de Valor</label>
+                                    <select name="tipo_valor" id="var_tipo_valor" class="form-select">
+                                        <option value="">Automático (numérico)</option>
+                                        <option value="categorica">Categórica</option>
+                                        <option value="numerica">Numérica</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold text-secondary small">Mapeo de Valores (JSON)</label>
+                                    <textarea name="mapeo_valores" id="var_mapeo_valores" class="form-control font-monospace" rows="3" placeholder='{"1": "Urbano", "2": "Rural"}'></textarea>
+                                    <div class="form-text small text-muted">Solo para variables categóricas. Formato: {"clave": "etiqueta", ...}</div>
                                 </div>
                             </div>
                         </div>
@@ -559,7 +616,8 @@
                         parentIdInput.value = button.dataset.parentId;
                     }
                 }
-            });
+
+                });
 
             // 4. Evento: Enviar Formulario (AJAX)
             form.addEventListener('submit', function(e) {
@@ -707,6 +765,96 @@
                         }
                     });
                 }
+            });
+
+            // --- BUSCADOR GLOBAL ---
+            const searchInput = document.getElementById('catalogSearch');
+            const noResults = document.getElementById('searchNoResults');
+            const searchTermDisplay = document.getElementById('searchTermDisplay');
+
+            function filterCatalog() {
+                const q = (searchInput.value || '').toLowerCase().trim();
+                const allPanes = document.querySelectorAll('.tab-pane');
+                let anyVisible = false;
+
+                allPanes.forEach(pane => {
+                    const themeBoxes = pane.querySelectorAll('.theme-box');
+                    let paneHasMatch = false;
+
+                    themeBoxes.forEach(box => {
+                        const indicatorRows = box.querySelectorAll('.indicator-row');
+                        let boxHasMatch = false;
+
+                        indicatorRows.forEach(row => {
+                            const text = (row.textContent || '').toLowerCase();
+                            const varRows = row.querySelectorAll('.variables-container > .d-flex');
+                            let rowHasMatch = false;
+
+                            varRows.forEach(vRow => {
+                                const vText = (vRow.textContent || '').toLowerCase();
+                                if (!q || vText.includes(q)) {
+                                    vRow.style.display = '';
+                                    rowHasMatch = true;
+                                } else {
+                                    vRow.style.display = 'none';
+                                }
+                            });
+
+                            if (!q || text.includes(q)) {
+                                row.style.display = '';
+                                rowHasMatch = true;
+                            } else {
+                                row.style.display = 'none';
+                            }
+
+                            if (rowHasMatch) boxHasMatch = true;
+                        });
+
+                        const boxText = (box.textContent || '').toLowerCase();
+                        if (!q || boxText.includes(q)) boxHasMatch = true;
+
+                        box.style.display = boxHasMatch ? '' : 'none';
+                        if (boxHasMatch) paneHasMatch = true;
+                    });
+
+                    pane.style.display = paneHasMatch ? '' : 'none';
+                    if (paneHasMatch) anyVisible = true;
+                });
+
+                if (q && !anyVisible) {
+                    searchTermDisplay.textContent = q;
+                    noResults.classList.remove('d-none');
+                } else {
+                    noResults.classList.add('d-none');
+                }
+            }
+
+            searchInput.addEventListener('input', filterCatalog);
+
+            // --- EXPANDIR / COLAPSAR TODO ---
+            function toggleAllCollapses(action, scope) {
+                const panes = scope ? [scope] : document.querySelectorAll('.tab-pane');
+                panes.forEach(pane => {
+                    if (pane.style.display === 'none') return;
+                    const collapses = pane.querySelectorAll('.indicator-row .collapse');
+                    collapses.forEach(el => {
+                        const bsCollapse = bootstrap.Collapse.getInstance(el) || new bootstrap.Collapse(el, { toggle: false });
+                        if (action === 'show') bsCollapse.show();
+                        else bsCollapse.hide();
+                    });
+                });
+            }
+
+            document.getElementById('expandAllBtn').addEventListener('click', function() {
+                const tab = document.querySelector('#dimensionTab .nav-link.active');
+                const target = tab ? document.querySelector(tab.dataset.bsTarget) : null;
+                toggleAllCollapses('show', target);
+            });
+
+            document.getElementById('collapseAllBtn').addEventListener('click', function() {
+                const tab = document.querySelector('#dimensionTab .nav-link.active');
+                const target = tab ? document.querySelector(tab.dataset.bsTarget) : null;
+                toggleAllCollapses('hide', target);
             });
 
             // 6. RESTAURAR ESTADO (Pestaña y Acordeones)

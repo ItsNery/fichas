@@ -29,6 +29,9 @@ let processingQueue = false;
 function processNextInQueue() {
     if (renderQueue.length === 0) {
         processingQueue = false;
+        if (window.isPdfExport) {
+            window.__pdfReady = true;
+        }
         return;
     }
     processingQueue = true;
@@ -56,64 +59,83 @@ function processNextInQueue() {
 function setupLazyCharts() {
     if (!window.FichaConfig || !window.FichaConfig.perfilData) return;
 
-    // 1. Observer para gráficos principales
+    // 1. Gráficos principales
     const lazyCharts = document.querySelectorAll(".lazy-chart");
-    const chartObserver = new IntersectionObserver(
-        (entries, observer) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    const chartElement = entry.target;
-                    const chartId = chartElement.getAttribute("data-chart-id");
-                    const itemData = findChartDataById(chartId);
 
-                    if (itemData) {
-                        // Agregar a la cola de renderizado diferido
-                        renderQueue.push({ itemData, chartElement, chartId });
-                        if (!processingQueue) {
-                            processNextInQueue();
+    if (window.isPdfExport) {
+        lazyCharts.forEach((chartElement) => {
+            const chartId = chartElement.getAttribute("data-chart-id");
+            const itemData = findChartDataById(chartId);
+            if (itemData) {
+                renderQueue.push({ itemData, chartElement, chartId });
+            }
+        });
+        if (!processingQueue) {
+            processNextInQueue();
+        }
+    } else {
+        const chartObserver = new IntersectionObserver(
+            (entries, observer) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        const chartElement = entry.target;
+                        const chartId = chartElement.getAttribute("data-chart-id");
+                        const itemData = findChartDataById(chartId);
+                        if (itemData) {
+                            renderQueue.push({ itemData, chartElement, chartId });
+                            if (!processingQueue) {
+                                processNextInQueue();
+                            }
                         }
+                        observer.unobserve(chartElement);
                     }
-                    observer.unobserve(chartElement);
-                }
-            });
-        },
-        {
-            root: null,
-            rootMargin: "150px 0px 150px 0px",
-            threshold: 0.05,
-        },
-    );
+                });
+            },
+            {
+                root: null,
+                rootMargin: "150px 0px 150px 0px",
+                threshold: 0.05,
+            },
+        );
+        lazyCharts.forEach((chart) => chartObserver.observe(chart));
+    }
 
-    lazyCharts.forEach((chart) => chartObserver.observe(chart));
+    // 2. Micrográficas (Sparklines)
+    const lazySparklines = document.querySelectorAll(".perfil-tarjeta__sparkline");
 
-    // 2. Observer para micrográficas (Sparklines)
-    const lazySparklines = document.querySelectorAll(
-        ".perfil-tarjeta__sparkline",
-    );
-    const sparkObserver = new IntersectionObserver(
-        (entries, observer) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    const sparkElement = entry.target;
-                    const chartId = sparkElement.getAttribute("data-chart-id");
-                    const itemData = findChartDataById(chartId);
-
-                    if (itemData) {
-                        renderSparkline(itemData);
-                        sparkElement.style.opacity = "1";
+    if (window.isPdfExport) {
+        lazySparklines.forEach((sparkElement) => {
+            const chartId = sparkElement.getAttribute("data-chart-id");
+            const itemData = findChartDataById(chartId);
+            if (itemData) {
+                renderSparkline(itemData);
+                sparkElement.style.opacity = "1";
+            }
+        });
+    } else {
+        const sparkObserver = new IntersectionObserver(
+            (entries, observer) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        const sparkElement = entry.target;
+                        const chartId = sparkElement.getAttribute("data-chart-id");
+                        const itemData = findChartDataById(chartId);
+                        if (itemData) {
+                            renderSparkline(itemData);
+                            sparkElement.style.opacity = "1";
+                        }
+                        observer.unobserve(sparkElement);
                     }
-                    observer.unobserve(sparkElement);
-                }
-            });
-        },
-        {
-            root: null,
-            rootMargin: "50px 0px 50px 0px",
-            threshold: 0.05,
-        },
-    );
-
-    lazySparklines.forEach((spark) => sparkObserver.observe(spark));
+                });
+            },
+            {
+                root: null,
+                rootMargin: "50px 0px 50px 0px",
+                threshold: 0.05,
+            },
+        );
+        lazySparklines.forEach((spark) => sparkObserver.observe(spark));
+    }
 }
 
 function findChartDataById(id) {
@@ -585,7 +607,7 @@ function initPopovers() {
                             .then((data) => {
                                 if (data.success) {
                                     let html = `<div class="similarity-popover text-start" style="min-width: 200px;">`;
-                                    html += `<p class="mb-1 border-bottom pb-1 small" style="font-size: 11px;">Variable: <strong class="text-vino">${data.variable}</strong> (${data.anio})</p>`;
+                                    html += `<p class="mb-1 border-bottom pb-1 small" style="font-size: 11px;">Variable: <strong class="text-vino">${data.variable}</strong>${data.anio ? ` (${data.anio})` : ''}</p>`;
                                     html += `<p class="mb-2 small" style="font-size: 11px;">Valor actual: <strong class="text-gold" style="color: #c79b66;">${data.valor_actual}</strong></p>`;
                                     html += `<ul class="list-unstyled mb-0 d-flex flex-column gap-2" style="padding-left: 0;">`;
 

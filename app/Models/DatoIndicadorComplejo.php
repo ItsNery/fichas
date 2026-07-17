@@ -3,10 +3,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class DatoIndicadorComplejo extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
     /**
      * The table associated with the model.
      *
@@ -24,6 +26,7 @@ class DatoIndicadorComplejo extends Model
         'municipio_id',
         'anio',
         'datos',
+        'lote_datos_id',
     ];
 
     /**
@@ -49,5 +52,15 @@ class DatoIndicadorComplejo extends Model
     public function municipio()
     {
         return $this->belongsTo(Municipio::class);
+    }
+
+    public function loteDatos()
+    {
+        return $this->belongsTo(LoteDatos::class, 'lote_datos_id');
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()->logAll()->logOnlyDirty();
     }
 }

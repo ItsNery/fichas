@@ -76,7 +76,9 @@
                                 <th>Variable</th>
                                 <th class="text-center">Año</th>
                                 <th class="text-end">Valor</th>
+                                @can('datos.editar')
                                 <th class="text-center">Acciones</th>
+                                @endcan
                             </tr>
                         </thead>
                         <tbody>
@@ -97,8 +99,9 @@
                                     <span class="badge bg-light text-dark border fw-normal px-3">{{ $dato->anio }}</span>
                                 </td>
                                 <td class="valor-col text-end fw-bold text-dark fs-6">
-                                    {{ number_format($dato->valor, 2) }}
+                                    {{ $dato->motivoSinDato?->codigo ?? number_format((float) $dato->valor, 2) }}
                                 </td>
+                                @can('datos.editar')
                                 <td class="text-center">
                                     {{-- Botón Cuadrado Dorado (Estilo Edit) --}}
                                     <button type="button" class="btn-icon-square edit edit-btn"
@@ -109,10 +112,11 @@
                                         <i class="fa-regular fa-pen-to-square" data-bs-toggle="tooltip" title="Editar valor"></i>
                                     </button>
                                 </td>
+                                @endcan
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="5" class="text-center py-5">
+                                <td colspan="{{ auth()->user()->can('datos.editar') ? 5 : 4 }}" class="text-center py-5">
                                     <div class="opacity-50 mb-3">
                                         <i class="fa-solid fa-folder-open fa-3x text-muted"></i>
                                     </div>
@@ -139,7 +143,7 @@
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-white border-bottom">
                     <h5 class="modal-title fw-bold text-vino" id="editModalLabel">
-                        <i class="fa-solid fa-pen-to-square me-2 text-dorado"></i>Editar Dato Histórico
+                        <i class="fa-solid fa-pen-to-square me-2 text-dorado"></i>Proponer Edición
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -168,7 +172,9 @@
                     </div>
                     <div class="modal-footer border-0 bg-light">
                         <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-custom-primary px-4">Guardar Cambios</button>
+                        <button type="submit" class="btn btn-custom-primary px-4">
+                            <i class="fa-solid fa-paper-plane me-2"></i>Enviar a revisión
+                        </button>
                     </div>
                 </form>
             </div>
@@ -227,21 +233,11 @@
                         editModal.hide();
                         Swal.fire({
                             icon: 'success',
-                            title: '¡Actualizado!',
-                            text: data.success,
-                            timer: 1500,
-                            showConfirmButton: false,
+                            title: 'Enviado a revisión',
+                            html: `${data.success}<br><a href="${data.detail_url}" class="fw-bold">Ver lote #${data.lote_id}</a>`,
+                            showConfirmButton: true,
                             confirmButtonColor: '#5f1b2d'
                         });
-
-                        // Actualizar tabla dinámicamente
-                        const rowId = this.action.split('/').pop();
-                        const valorCell = document.querySelector(`#dato-row-${rowId} .valor-col`);
-                        if (valorCell) {
-                            valorCell.textContent = parseFloat(data.newValue).toLocaleString('es-MX', {
-                                minimumFractionDigits: 2
-                            });
-                        }
                     })
                     .catch(errorData => {
                         if (errorData.errors && errorData.errors.valor) {

@@ -15,9 +15,11 @@
 
                 {{-- Barra Superior (Buscador o Botón Añadir) --}}
                 <div class="d-flex justify-content-end mb-4">
+                    @can('usuarios.crear')
                     <button class="btn btn-custom-primary shadow-sm px-4" data-bs-toggle="modal" data-bs-target="#userModal" id="addUserBtn">
                         <i class="fa-solid fa-user-plus me-2"></i>Añadir Nuevo Usuario
                     </button>
+                    @endcan
                 </div>
 
                 {{-- 3. TABLA ESTILIZADA --}}
@@ -28,7 +30,9 @@
                                 <th class="ps-4">Usuario</th>
                                 <th>Credenciales</th>
                                 <th>Estado</th>
-                                <th class="text-center pe-4">Acciones</th>
+                                @if(auth()->user()->can('usuarios.editar') || auth()->user()->can('usuarios.eliminar'))
+                                    <th class="text-center pe-4">Acciones</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody id="users-table-body">
@@ -44,6 +48,9 @@
                                         <div>
                                             <h6 class="mb-0 fw-bold text-vino user-name">{{ $user->name }}</h6>
                                             <small class="text-muted">ID: {{ $user->id }}</small>
+                                            @if($user->roles->isNotEmpty())
+                                                <br><small class="badge bg-info mt-1">{{ $user->roles->first()->name }}</small>
+                                            @endif
                                         </div>
                                     </div>
                                 </td>
@@ -59,30 +66,37 @@
                                         Activo
                                     </span>
                                 </td>
+                                @if(auth()->user()->can('usuarios.editar') || auth()->user()->can('usuarios.eliminar'))
                                 <td class="text-center pe-4">
                                     <div class="d-flex justify-content-center gap-2">
                                         {{-- Botón Editar --}}
+                                        @can('usuarios.editar')
                                         <button class="btn-icon-square edit edit-btn"
                                             data-bs-toggle="modal" data-bs-target="#userModal"
-                                            data-id="{{ $user->id }}"
-                                            data-name="{{ $user->name }}"
-                                            data-email="{{ $user->email }}">
+                            data-id="{{ $user->id }}"
+                            data-name="{{ $user->name }}"
+                            data-email="{{ $user->email }}"
+                            data-role="{{ $user->roles->first()?->name }}">
                                             <i class="fa-regular fa-pen-to-square" data-bs-toggle="tooltip" title="Editar Usuario"></i>
                                         </button>
+                                        @endcan
 
                                         {{-- Botón Eliminar --}}
+                                        @can('usuarios.eliminar')
                                         <button class="btn-icon-square danger delete-btn"
                                             data-id="{{ $user->id }}"
                                             data-name="{{ $user->name }}">
                                             <i class="fa-solid fa-trash" data-bs-toggle="tooltip" title="Eliminar Usuario"></i>
                                         </button>
+                                        @endcan
                                     </div>
                                 </td>
+                                @endif
                             </tr>
                             @empty
                             {{-- ESTADO VACÍO (Empty State) --}}
                             <tr>
-                                <td colspan="4" class="text-center py-5">
+                                <td colspan="{{ auth()->user()->can('usuarios.editar') || auth()->user()->can('usuarios.eliminar') ? 4 : 3 }}" class="text-center py-5">
                                     <div class="py-4">
                                         <div class="mb-3 text-muted opacity-25">
                                             {{-- Icono de usuarios desvanecido --}}
@@ -139,7 +153,7 @@
                             </div>
                         </div>
 
-                        <div class="bg-light p-3 rounded border">
+                        <div class="bg-light p-3 rounded border mb-3">
                             <h6 class="small fw-bold text-uppercase text-muted mb-3"><i class="fa-solid fa-lock me-1"></i> Seguridad</h6>
 
                             <p class="text-muted small mb-2 fst-italic" id="password-help-text"></p>
@@ -153,6 +167,18 @@
                                 <input type="password" name="password_confirmation" id="password_confirmation" class="form-control">
                             </div>
                         </div>
+
+                        @can('usuarios.asignar-roles')
+                        <div class="bg-light p-3 rounded border">
+                            <h6 class="small fw-bold text-uppercase text-muted mb-3"><i class="fa-solid fa-shield-halved me-1"></i> Rol</h6>
+                            <select name="role" id="role" class="form-select">
+                                <option value="">Sin rol</option>
+                                @foreach($roles as $role)
+                                    <option value="{{ $role->name }}">{{ $role->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        @endcan
                     </div>
 
                     <div class="modal-footer border-0 bg-light">
@@ -191,7 +217,7 @@
             const modalTitle = document.getElementById('modalTitle');
 
             // Configurar modal para "Crear"
-            document.getElementById('addUserBtn').addEventListener('click', () => {
+            document.getElementById('addUserBtn')?.addEventListener('click', () => {
                 form.reset();
                 form.action = "{{ route('admin.users.store') }}";
                 document.getElementById('formMethod').value = 'POST';
@@ -220,6 +246,8 @@
 
                     document.getElementById('name').value = button.dataset.name;
                     document.getElementById('email').value = button.dataset.email;
+                    const roleSelect = document.getElementById('role');
+                    if (roleSelect) roleSelect.value = button.dataset.role || '';
 
                     document.getElementById('password').required = false;
                     document.getElementById('password_confirmation').required = false;

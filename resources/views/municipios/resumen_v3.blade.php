@@ -41,6 +41,11 @@
                     <span class="hero-ficha__etiqueta badge mb-3 px-3 py-2 text-uppercase ">
                         Ficha Municipal
                     </span>
+                    <a href="{{ route('ficha-municipal.v3.pdf', $municipio->slug) }}"
+                       class="btn btn-outline-light btn-sm fw-bold px-3 py-1 rounded-pill ms-2"
+                       target="_blank">
+                        <i class="fa-solid fa-file-pdf me-1"></i> PDF
+                    </a>
 
                     <h1 class="hero-ficha__titulo">{{ $municipio->nombre }}</h1>
 
@@ -55,9 +60,8 @@
                         </div>
 
                         <div class="hero-ficha__dato hero-ficha__dato--separador">
-                            <span class="hero-ficha__dato-etiqueta">Presidente Municipal</span>
-                            <span class="hero-ficha__dato-valor">{{ $municipio->presidente_municipal ?? 'N/D' }}</span>
-                            <span class="hero-ficha__dato-periodo">{{ $municipio->periodo_gobierno }}</span>
+                            <span class="hero-ficha__dato-etiqueta">Clima predominante</span>
+                            <span class="hero-ficha__dato-valor">{{ $municipio->clima ?? 'Información no disponible' }}</span>
                         </div>
                     </div>
                 </div>
@@ -88,6 +92,26 @@
                 </div>
             </div>
         </div>
+
+        @php
+            $attr = $municipio->banner_attribution;
+            $creditUrl = $attr['source_url'] ?? null;
+        @endphp
+        @if($attr && ($attr['author'] ?? null) && ($attr['license'] ?? null) && $creditUrl)
+            <a href="{{ $creditUrl }}" target="_blank" rel="noopener noreferrer"
+                class="hero-ficha__creditos"
+                data-bs-toggle="tooltip" data-bs-placement="left"
+                title="Foto por {{ $attr['author'] }} — {{ $attr['license'] }}">
+                <i class="fas fa-camera"></i>
+            </a>
+        @elseif($attr && $creditUrl)
+            <a href="{{ $creditUrl }}" target="_blank" rel="noopener noreferrer"
+                class="hero-ficha__creditos"
+                data-bs-toggle="tooltip" data-bs-placement="left"
+                title="Ver fuente de la imagen">
+                <i class="fas fa-camera"></i>
+            </a>
+        @endif
     </section>
 
     {{-- 2. ICON BAR --}}
@@ -126,7 +150,7 @@
         </div>
     </section>
 
-    <section class="container py-5">
+    <section class="container py-4">
         <div class="row">
             {{-- SIDEBAR NAVIGATION (DIMENSIONES) --}}
             <div class="col-md-4 d-none d-md-block">
@@ -153,7 +177,7 @@
                 <div class="main-content-wrapper">
 
                     @foreach ($datosAgrupados as $dimensionData)
-                        <div id="dim-{{ $dimensionData['slug'] }}" class="dimension-bloque mb-5">
+                        <div id="dim-{{ $dimensionData['slug'] }}" class="dimension-bloque mb-4">
                             {{-- DIMENSION BANNER --}}
                             <header class="banner-dimension"
                                 style="background-image: url('{{ asset('img/fondos/' . $dimensionData['slug'] . '.webp') }}')">
@@ -161,7 +185,7 @@
                             </header>
 
                             {{-- SUB-NAV FOR TEMATICAS --}}
-                            <nav class="sub-navegacion sticky-top py-3 mb-4">
+                            <nav class="sub-navegacion sticky-top py-2 mb-3">
                                 <div class="container-fluid">
                                     <ul class="nav nav-pills" id="nav-tem-{{ $dimensionData['slug'] }}">
                                         @foreach ($dimensionData['tematicas'] as $tematica => $kpis)
@@ -204,7 +228,7 @@
                                     </div>
 
                                     {{-- BENTO GRID --}}
-                                    <div class="row g-4 mt-5">
+                                    <div class="row g-4 mt-4">
                                         @foreach ($kpis as $kpi)
                                             <div class="col-md-6 col-lg-4">
                                                 @include('municipios.components.kpi-card', [
@@ -522,6 +546,10 @@
                     }]
                 });
             });
+
+            if (window.isPdfExport) {
+                window.__pdfReady = true;
+            }
         });
     </script>
 @endsection

@@ -1,10 +1,15 @@
 <?php
 
+use App\Http\Controllers\Admin\AuditoriaController;
 use App\Http\Controllers\Admin\CatalogoController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DatoHistoricoController;
+use App\Http\Controllers\Admin\DiccionarioController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\InstrumentoController;
+use App\Http\Controllers\Admin\LoteDatosController;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\MunicipioController as AdminMunicipioController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\FichaController;
@@ -48,6 +53,8 @@ Route::prefix('ficha/municipio')->name('ficha-municipal.')->group(function () {
     Route::get('/{municipio:slug}/test', [FichaController::class, 'resumenMunicipalTest'])->name('test');
     Route::get('/{municipio:slug}/v3', [FichaController::class, 'resumenMunicipalV3'])->name('v3');
     Route::get('/{municipio:slug}/perfil', [FichaController::class, 'perfilMunicipal'])->name('perfil');
+    Route::get('/{municipio:slug}/v3/pdf', [FichaController::class, 'exportarResumenV3PDF'])->name('v3.pdf');
+    Route::get('/{municipio:slug}/perfil/pdf', [FichaController::class, 'exportarPerfilPDF'])->name('perfil.pdf');
     Route::get('/{municipio:slug}/pdf', [FichaController::class, 'exportarResumenPDF'])->name('pdf');
 });
 
@@ -91,9 +98,14 @@ Route::get('/api/docs', [App\Http\Controllers\ApiDocumentationController::class,
 
 require __DIR__ . '/auth.php'; // Inhabilitar registro desde este archivo
 Route::get('/dashboard', function () {
-    // Redirigir a la ruta nombrada de tu admin
-    return redirect()->route('admin.dashboard');
-})->middleware(['auth']);
+    $user = auth()->user();
+    if ($user->can('dashboard.ejecutivo')) return redirect()->route('admin.dashboard');
+    if ($user->can('datos.ver')) return redirect()->route('admin.datos.index');
+    if ($user->can('catalogos.ver')) return redirect()->route('admin.catalogos.index');
+    if ($user->can('auditoria.ver')) return redirect()->route('admin.auditoria.index');
+
+    return redirect()->route('inicio');
+})->middleware(['auth'])->name('dashboard');
 /*
 |--------------------------------------------------------------------------
 | Rutas del Panel de Administración
@@ -105,13 +117,16 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
     // CRUDs principales
     Route::get('/datos/exportar', [DatoHistoricoController::class, 'export'])->name('datos.export');
     Route::resource('datos', DatoHistoricoController::class);
-    Route::resource('users', UserController::class);
-    Route::resource('instrumentos', InstrumentoController::class);
-    Route::resource('municipios', AdminMunicipioController::class);
-    Route::resource('configuracion-fichas', ConfiguracionFichaController::class);
+    Route::resource('users', UserController::class)->except(['show']);
+    Route::resource('instrumentos', InstrumentoController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::resource('municipios', AdminMunicipioController::class)->only(['index', 'edit', 'update']);
+    Route::resource('configuracion-fichas', ConfiguracionFichaController::class)->except(['show']);
+    Route::resource('roles', RoleController::class)->except(['show']);
+    Route::resource('permissions', PermissionController::class)->except(['show'])->parameters(['permissions' => 'permission']);
     Route::get('/configuracion-fichas/api/variables-por-indicador/{indicador}', [ConfiguracionFichaController::class, 'getVariablesPorIndicador'])->name('configuracion-fichas.api-variables');
     Route::get('/configuracion-fichas/api/todas-las-variables', [ConfiguracionFichaController::class, 'getAllVariables'])->name('configuracion-fichas.api-todas-variables');
     Route::get('/configuracion-fichas/api/anios-disponibles', [ConfiguracionFichaController::class, 'getAniosDisponibles'])->name('configuracion-fichas.api-anios');
+    Route::get('/configuracion-fichas/api/correlacion', [ConfiguracionFichaController::class, 'calcularCorrelacion'])->name('configuracion-fichas.api-correlacion');
 
     Route::get('/municipios/{municipio}/instrumentos', [AdminMunicipioController::class, 'getInstrumentosJson'])->name('municipios.getInstrumentos');
     Route::post('/municipios/{municipio}/instrumentos', [AdminMunicipioController::class, 'syncInstrumentos'])->name('municipios.syncInstrumentos');
@@ -134,9 +149,18 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
         Route::put('/indicadores/{indicador}', [CatalogoController::class, 'updateIndicador'])->name('indicadores.update');
         Route::delete('/indicadores/{indicador}', [CatalogoController::class, 'destroyIndicador'])->name('indicadores.destroy');
 
+        Route::get('/indicadores/crear', [CatalogoController::class, 'crearIndicador'])->name('indicadores.crear');
+        Route::post('/indicadores/crear', [CatalogoController::class, 'guardarIndicador'])->name('indicadores.guardar');
+        Route::get('/indicadores/{indicador}/editar', [CatalogoController::class, 'editarIndicador'])->name('indicadores.editar');
+        Route::put('/indicadores/{indicador}/editar', [CatalogoController::class, 'actualizarIndicador'])->name('indicadores.actualizar');
+
         Route::post('/variables', [CatalogoController::class, 'storeVariable'])->name('variables.store');
         Route::put('/variables/{variable}', [CatalogoController::class, 'updateVariable'])->name('variables.update');
         Route::delete('/variables/{variable}', [CatalogoController::class, 'destroyVariable'])->name('variables.destroy');
+
+        Route::get('/variables/{variable}/preview', [CatalogoController::class, 'previewConstruido'])->name('variables.preview');
+        Route::post('/variables/{variable}/generar', [CatalogoController::class, 'generarConstruido'])->name('variables.generar');
+        Route::post('/variables/{variable}/regenerar', [CatalogoController::class, 'regenerarConstruido'])->name('variables.regenerar');
     });
 
     // Grupo de rutas para las Importaciones
@@ -155,6 +179,15 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
         Route::post('/instrumentos', [ImportController::class, 'importInstrumentos'])->name('instrumentos');
         Route::post('/instrumentos-asignacion', [ImportController::class, 'importInstrumentosAsignacion'])->name('instrumentos_asignacion');
     });
+    Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
+    Route::get('/lotes-datos', [LoteDatosController::class, 'index'])->name('lotes-datos.index');
+    Route::get('/lotes-datos/{lote}', [LoteDatosController::class, 'show'])->name('lotes-datos.show');
+    Route::post('/lotes-datos/{lote}/aprobar', [LoteDatosController::class, 'aprobar'])->name('lotes-datos.aprobar');
+    Route::post('/lotes-datos/{lote}/rechazar', [LoteDatosController::class, 'rechazar'])->name('lotes-datos.rechazar');
+    Route::get('/diccionario', [DiccionarioController::class, 'index'])->name('diccionario.index');
+    Route::get('/diccionario/{indicador}/editar', [DiccionarioController::class, 'edit'])->name('diccionario.edit');
+    Route::put('/diccionario/{indicador}', [DiccionarioController::class, 'update'])->name('diccionario.update');
+
     Route::get('/salud-datos', [DashboardController::class, 'dataHealth'])->name('salud-datos');
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
 

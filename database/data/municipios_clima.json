@@ -1,0 +1,2229 @@
+{
+  "source": {
+    "name": "INEGI. Conjunto de datos de Unidades Climáticas 1:1 000 000",
+    "url": "https://www.inegi.org.mx/app/biblioteca/ficha.html?upc=702825267568",
+    "classification": "Köppen modificada por E. García (INEGI, 2008)",
+    "mapeo_categorias": {
+      "Cálido húmedo": "Cálido húmedo",
+      "Cálido subhúmedo": "Cálido subhúmedo",
+      "Seco cálido": "Seco o muy seco",
+      "Seco muy cálido": "Seco o muy seco",
+      "Seco semicálido": "Seco o muy seco",
+      "Seco templado": "Seco o muy seco",
+      "Muy seco cálido": "Seco o muy seco",
+      "Muy seco muy cálido": "Seco o muy seco",
+      "Muy seco semicálido": "Seco o muy seco",
+      "Muy seco templado": "Seco o muy seco",
+      "Semiseco cálido": "Seco o muy seco",
+      "Semiseco muy cálido": "Seco o muy seco",
+      "Semiseco semicálido": "Seco o muy seco",
+      "Semiseco semifrío": "Seco o muy seco",
+      "Semiseco templado": "Seco o muy seco",
+      "Templado húmedo": "Templado o frío (húmedo o subhúmedo)",
+      "Templado subhúmedo": "Templado o frío (húmedo o subhúmedo)",
+      "Semicálido húmedo": "Templado o frío (húmedo o subhúmedo)",
+      "Semicálido subhúmedo": "Templado o frío (húmedo o subhúmedo)",
+      "Semifrío subhúmedo": "Templado o frío (húmedo o subhúmedo)",
+      "Frío": "Templado o frío (húmedo o subhúmedo)"
+    }
+  },
+  "methodology": "Se intersectó la capa de Unidades Climáticas de INEGI con los polígonos municipales de Puebla (WGS84). Para cada municipio se calculó el área de intersección por tipo climático original (TIPO_C) y se asignó la categoría agregada con mayor cobertura.",
+  "generated_at": "2026-07-14T20:45:08.380Z",
+  "municipios": [
+    {
+      "cvegeo": "21086",
+      "nombre": "Jalpan",
+      "clima": "Cálido húmedo",
+      "cobertura_porcentaje": 71.92,
+      "categorias": {
+        "Cálido húmedo": 71.92,
+        "Semicálido húmedo": 28.08
+      }
+    },
+    {
+      "cvegeo": "21088",
+      "nombre": "Jonotla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 56.11,
+      "categorias": {
+        "Cálido húmedo": 43.89,
+        "Semicálido húmedo": 56.11
+      }
+    },
+    {
+      "cvegeo": "21120",
+      "nombre": "San Antonio Cañada",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 64.51,
+      "categorias": {
+        "Templado subhúmedo": 35.49,
+        "Semiseco templado": 32.04,
+        "Semiseco semicálido": 31.3,
+        "Seco semicálido": 1.17
+      }
+    },
+    {
+      "cvegeo": "21201",
+      "nombre": "Xochiltepec",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 64.51,
+      "categorias": {
+        "Cálido subhúmedo": 64.51,
+        "Semicálido subhúmedo": 35.49
+      }
+    },
+    {
+      "cvegeo": "21077",
+      "nombre": "Hueytlalpan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21177",
+      "nombre": "Tlacotepec de Benito Juárez",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 61.08,
+      "categorias": {
+        "Templado subhúmedo": 38.92,
+        "Semiseco templado": 61.08
+      }
+    },
+    {
+      "cvegeo": "21217",
+      "nombre": "Zoquitlán",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 84.02,
+      "categorias": {
+        "Templado húmedo": 37.11,
+        "Templado subhúmedo": 8.47,
+        "Semicálido húmedo": 38.44,
+        "Semiseco semicálido": 6.31,
+        "Cálido húmedo": 9.55,
+        "Seco muy cálido": 0.12
+      }
+    },
+    {
+      "cvegeo": "21113",
+      "nombre": "Piaxtla",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 60.34,
+      "categorias": {
+        "Cálido subhúmedo": 60.34,
+        "Semiseco muy cálido": 39.66
+      }
+    },
+    {
+      "cvegeo": "21136",
+      "nombre": "San Miguel Xoxtla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21210",
+      "nombre": "Zapotitlán de Méndez",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21089",
+      "nombre": "Jopala",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 99.3,
+      "categorias": {
+        "Cálido húmedo": 0.7,
+        "Semicálido húmedo": 99.3
+      }
+    },
+    {
+      "cvegeo": "21131",
+      "nombre": "San Juan Atzompa",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 93.59,
+      "categorias": {
+        "Cálido subhúmedo": 6.41,
+        "Semicálido subhúmedo": 93.59
+      }
+    },
+    {
+      "cvegeo": "21018",
+      "nombre": "Atexcal",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 76.48,
+      "categorias": {
+        "Templado subhúmedo": 51.45,
+        "Semicálido subhúmedo": 25.03,
+        "Semiseco semicálido": 23.52
+      }
+    },
+    {
+      "cvegeo": "21054",
+      "nombre": "Chignautla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 33.9,
+        "Templado subhúmedo": 65.2,
+        "Semifrío subhúmedo": 0.9
+      }
+    },
+    {
+      "cvegeo": "21213",
+      "nombre": "Zihuateutla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 53.9,
+      "categorias": {
+        "Cálido húmedo": 46.1,
+        "Semicálido húmedo": 53.9
+      }
+    },
+    {
+      "cvegeo": "21127",
+      "nombre": "San Jerónimo Xayacatlán",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 59.24,
+      "categorias": {
+        "Cálido subhúmedo": 59.24,
+        "Semicálido subhúmedo": 40.76
+      }
+    },
+    {
+      "cvegeo": "21129",
+      "nombre": "San José Miahuatlán",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Seco semicálido": 20.13,
+        "Seco muy cálido": 58.04,
+        "Semiseco templado": 18.23,
+        "Semiseco semicálido": 3.6
+      }
+    },
+    {
+      "cvegeo": "21130",
+      "nombre": "San Juan Atenco",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21174",
+      "nombre": "Teziutlán",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 68.72,
+        "Semicálido húmedo": 31.28
+      }
+    },
+    {
+      "cvegeo": "21176",
+      "nombre": "Tilapa",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 99.83,
+      "categorias": {
+        "Cálido subhúmedo": 99.83,
+        "Semicálido subhúmedo": 0.17
+      }
+    },
+    {
+      "cvegeo": "21115",
+      "nombre": "Quecholac",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 99.31,
+      "categorias": {
+        "Templado subhúmedo": 99.31,
+        "Semiseco templado": 0.69
+      }
+    },
+    {
+      "cvegeo": "21110",
+      "nombre": "Palmar de Bravo",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 87.38,
+      "categorias": {
+        "Templado subhúmedo": 12.62,
+        "Semiseco templado": 87.38
+      }
+    },
+    {
+      "cvegeo": "21169",
+      "nombre": "Tepexi de Rodríguez",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 99.53,
+      "categorias": {
+        "Cálido subhúmedo": 0.47,
+        "Templado subhúmedo": 34.95,
+        "Semicálido subhúmedo": 64.58
+      }
+    },
+    {
+      "cvegeo": "21172",
+      "nombre": "Tetela de Ocampo",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 58.25,
+        "Semicálido húmedo": 0.57,
+        "Templado subhúmedo": 41.19
+      }
+    },
+    {
+      "cvegeo": "21179",
+      "nombre": "Tlachichuca",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 52.9,
+        "Semifrío subhúmedo": 37.19,
+        "Templado húmedo": 4.39,
+        "Frío": 5.52
+      }
+    },
+    {
+      "cvegeo": "21124",
+      "nombre": "San Gabriel Chilac",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Seco semicálido": 52.56,
+        "Seco muy cálido": 22.1,
+        "Semiseco templado": 25.34
+      }
+    },
+    {
+      "cvegeo": "21121",
+      "nombre": "San Diego la Mesa Tochimiltzingo",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 96.45,
+      "categorias": {
+        "Templado subhúmedo": 31.5,
+        "Cálido subhúmedo": 3.55,
+        "Semicálido subhúmedo": 64.95
+      }
+    },
+    {
+      "cvegeo": "21122",
+      "nombre": "San Felipe Teotlalcingo",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 72.33,
+        "Semifrío subhúmedo": 27.67
+      }
+    },
+    {
+      "cvegeo": "21123",
+      "nombre": "San Felipe Tepatlán",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21044",
+      "nombre": "Cuyoaco",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 99.77,
+      "categorias": {
+        "Templado subhúmedo": 98.22,
+        "Semifrío subhúmedo": 1.55,
+        "Semiseco templado": 0.23
+      }
+    },
+    {
+      "cvegeo": "21082",
+      "nombre": "Ixcaquixtla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21085",
+      "nombre": "Izúcar de Matamoros",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 92.08,
+      "categorias": {
+        "Cálido subhúmedo": 92.08,
+        "Semicálido subhúmedo": 7.92
+      }
+    },
+    {
+      "cvegeo": "21036",
+      "nombre": "Coyomeapan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 96.39,
+      "categorias": {
+        "Templado húmedo": 52.29,
+        "Templado subhúmedo": 25.49,
+        "Semicálido húmedo": 18.61,
+        "Semiseco semicálido": 0.13,
+        "Cálido húmedo": 3.48
+      }
+    },
+    {
+      "cvegeo": "21202",
+      "nombre": "Xochitlán de Vicente Suárez",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 31.62,
+        "Semicálido húmedo": 68.38
+      }
+    },
+    {
+      "cvegeo": "21203",
+      "nombre": "Xochitlán Todos Santos",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21061",
+      "nombre": "Eloxochitlán",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 70.43,
+      "categorias": {
+        "Cálido húmedo": 29.57,
+        "Templado húmedo": 16.44,
+        "Semicálido húmedo": 53.99
+      }
+    },
+    {
+      "cvegeo": "21062",
+      "nombre": "Epatlán",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 89.54,
+      "categorias": {
+        "Cálido subhúmedo": 89.54,
+        "Semicálido subhúmedo": 10.46
+      }
+    },
+    {
+      "cvegeo": "21143",
+      "nombre": "San Salvador el Verde",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 42.91,
+        "Semifrío subhúmedo": 44.51,
+        "Frío": 12.59
+      }
+    },
+    {
+      "cvegeo": "21060",
+      "nombre": "Domingo Arenas",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21104",
+      "nombre": "Nopalucan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21075",
+      "nombre": "Hueyapan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 76.07,
+        "Templado húmedo": 23.93
+      }
+    },
+    {
+      "cvegeo": "21078",
+      "nombre": "Huitzilan de Serdán",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 59.14,
+        "Templado húmedo": 40.86
+      }
+    },
+    {
+      "cvegeo": "21079",
+      "nombre": "Huitziltepec",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21072",
+      "nombre": "Huehuetla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21073",
+      "nombre": "Huehuetlán el Chico",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Cálido subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21074",
+      "nombre": "Huejotzingo",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 83.05,
+        "Semifrío subhúmedo": 13.77,
+        "Frío": 3.17
+      }
+    },
+    {
+      "cvegeo": "21068",
+      "nombre": "Hermenegildo Galeana",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21070",
+      "nombre": "Huatlatlauca",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 64.41,
+      "categorias": {
+        "Cálido subhúmedo": 35.59,
+        "Templado subhúmedo": 0.96,
+        "Semicálido subhúmedo": 63.44
+      }
+    },
+    {
+      "cvegeo": "21071",
+      "nombre": "Huauchinango",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 86.04,
+        "Semicálido húmedo": 13.96
+      }
+    },
+    {
+      "cvegeo": "21063",
+      "nombre": "Esperanza",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 85.64,
+      "categorias": {
+        "Templado subhúmedo": 14.36,
+        "Semiseco templado": 85.64
+      }
+    },
+    {
+      "cvegeo": "21064",
+      "nombre": "Francisco Z. Mena",
+      "clima": "Cálido húmedo",
+      "cobertura_porcentaje": 52.77,
+      "categorias": {
+        "Cálido subhúmedo": 47.23,
+        "Cálido húmedo": 52.77
+      }
+    },
+    {
+      "cvegeo": "21067",
+      "nombre": "Guadalupe Victoria",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 77.32,
+      "categorias": {
+        "Templado subhúmedo": 17.66,
+        "Semiseco templado": 77.32,
+        "Semifrío subhúmedo": 5.03
+      }
+    },
+    {
+      "cvegeo": "21013",
+      "nombre": "Altepexi",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Seco semicálido": 3.39,
+        "Seco muy cálido": 96.61
+      }
+    },
+    {
+      "cvegeo": "21015",
+      "nombre": "Amozoc",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21016",
+      "nombre": "Aquixtla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21012",
+      "nombre": "Aljojuca",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21197",
+      "nombre": "Xicotepec",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 83.67,
+      "categorias": {
+        "Cálido húmedo": 16.33,
+        "Semicálido húmedo": 83.51,
+        "Templado húmedo": 0.15
+      }
+    },
+    {
+      "cvegeo": "21194",
+      "nombre": "Venustiano Carranza",
+      "clima": "Cálido húmedo",
+      "cobertura_porcentaje": 64.46,
+      "categorias": {
+        "Cálido subhúmedo": 35.54,
+        "Cálido húmedo": 64.46
+      }
+    },
+    {
+      "cvegeo": "21195",
+      "nombre": "Vicente Guerrero",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 92.03,
+      "categorias": {
+        "Templado subhúmedo": 87.88,
+        "Semiseco templado": 3.31,
+        "Templado húmedo": 4.15,
+        "Semiseco semicálido": 4.66
+      }
+    },
+    {
+      "cvegeo": "21188",
+      "nombre": "Tochimilco",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 68.88,
+        "Semifrío subhúmedo": 23.65,
+        "Frío": 5.19,
+        "Semicálido subhúmedo": 2.28
+      }
+    },
+    {
+      "cvegeo": "21189",
+      "nombre": "Tochtepec",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21190",
+      "nombre": "Totoltepec de Guerrero",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 84.75,
+      "categorias": {
+        "Cálido subhúmedo": 15.25,
+        "Templado subhúmedo": 0.74,
+        "Semicálido subhúmedo": 84.01
+      }
+    },
+    {
+      "cvegeo": "21185",
+      "nombre": "Tlapanalá",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 65.47,
+      "categorias": {
+        "Cálido subhúmedo": 65.47,
+        "Semicálido subhúmedo": 34.53
+      }
+    },
+    {
+      "cvegeo": "21186",
+      "nombre": "Tlatlauquitepec",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 47.15,
+        "Semicálido húmedo": 28.22,
+        "Templado subhúmedo": 22.31,
+        "Semifrío subhúmedo": 2.31
+      }
+    },
+    {
+      "cvegeo": "21187",
+      "nombre": "Tlaxco",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21183",
+      "nombre": "Tlaola",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 99.45,
+        "Templado húmedo": 0.55
+      }
+    },
+    {
+      "cvegeo": "21184",
+      "nombre": "Tlapacoya",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21142",
+      "nombre": "San Salvador el Seco",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 78.14,
+      "categorias": {
+        "Templado subhúmedo": 78.14,
+        "Semiseco templado": 21.86
+      }
+    },
+    {
+      "cvegeo": "21140",
+      "nombre": "San Pedro Cholula",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21141",
+      "nombre": "San Pedro Yeloixtlahuaca",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 50.96,
+      "categorias": {
+        "Cálido subhúmedo": 50.96,
+        "Semicálido subhúmedo": 9.07,
+        "Semiseco muy cálido": 39.97
+      }
+    },
+    {
+      "cvegeo": "21139",
+      "nombre": "San Pablo Anicano",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 61.21,
+      "categorias": {
+        "Cálido subhúmedo": 61.21,
+        "Semiseco muy cálido": 38.79
+      }
+    },
+    {
+      "cvegeo": "21137",
+      "nombre": "San Nicolás Buenos Aires",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 61,
+      "categorias": {
+        "Templado subhúmedo": 59.21,
+        "Semiseco templado": 39,
+        "Semifrío subhúmedo": 1.79
+      }
+    },
+    {
+      "cvegeo": "21138",
+      "nombre": "San Nicolás de los Ranchos",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 38.14,
+        "Semifrío subhúmedo": 56.02,
+        "Frío": 5.83
+      }
+    },
+    {
+      "cvegeo": "21134",
+      "nombre": "San Matías Tlalancaleca",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21135",
+      "nombre": "San Miguel Ixitlán",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido subhúmedo": 90.36,
+        "Templado subhúmedo": 9.64
+      }
+    },
+    {
+      "cvegeo": "21126",
+      "nombre": "San Jerónimo Tecuanipan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21058",
+      "nombre": "Chilchotla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 0.07,
+        "Semifrío subhúmedo": 43.2,
+        "Templado húmedo": 56.73
+      }
+    },
+    {
+      "cvegeo": "21059",
+      "nombre": "Chinantla",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 99.13,
+      "categorias": {
+        "Cálido subhúmedo": 99.13,
+        "Semicálido subhúmedo": 0.87
+      }
+    },
+    {
+      "cvegeo": "21055",
+      "nombre": "Chila",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21056",
+      "nombre": "Chila de la Sal",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semiseco muy cálido": 100
+      }
+    },
+    {
+      "cvegeo": "21057",
+      "nombre": "Honey",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 96.57,
+        "Templado subhúmedo": 3.43
+      }
+    },
+    {
+      "cvegeo": "21049",
+      "nombre": "Chiconcuautla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 47.78,
+        "Templado húmedo": 52.22
+      }
+    },
+    {
+      "cvegeo": "21050",
+      "nombre": "Chichiquila",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 77.05,
+        "Templado húmedo": 22.95
+      }
+    },
+    {
+      "cvegeo": "21051",
+      "nombre": "Chietla",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 89.35,
+      "categorias": {
+        "Cálido subhúmedo": 89.35,
+        "Semicálido subhúmedo": 10.65
+      }
+    },
+    {
+      "cvegeo": "21042",
+      "nombre": "Cuayuca de Andrade",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 89.13,
+      "categorias": {
+        "Cálido subhúmedo": 89.13,
+        "Semicálido subhúmedo": 8.97,
+        "Semiseco muy cálido": 1.9
+      }
+    },
+    {
+      "cvegeo": "21043",
+      "nombre": "Cuetzalan del Progreso",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 99.12,
+      "categorias": {
+        "Cálido húmedo": 0.88,
+        "Semicálido húmedo": 99.12
+      }
+    },
+    {
+      "cvegeo": "21045",
+      "nombre": "Chalchicomula de Sesma",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 62.34,
+      "categorias": {
+        "Templado subhúmedo": 53.46,
+        "Semifrío subhúmedo": 8.26,
+        "Frío": 0.63,
+        "Semiseco templado": 37.66
+      }
+    },
+    {
+      "cvegeo": "21039",
+      "nombre": "Cuautempan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 72.86,
+        "Semicálido húmedo": 27.14
+      }
+    },
+    {
+      "cvegeo": "21040",
+      "nombre": "Cuautinchán",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21041",
+      "nombre": "Cuautlancingo",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21020",
+      "nombre": "Atoyatempan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21116",
+      "nombre": "Quimixtlán",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 30.05,
+        "Templado húmedo": 69.37,
+        "Semifrío subhúmedo": 0.58
+      }
+    },
+    {
+      "cvegeo": "21111",
+      "nombre": "Pantepec",
+      "clima": "Cálido húmedo",
+      "cobertura_porcentaje": 99.97,
+      "categorias": {
+        "Cálido húmedo": 99.97,
+        "Semicálido húmedo": 0.03
+      }
+    },
+    {
+      "cvegeo": "21112",
+      "nombre": "Petlalcingo",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 51.56,
+      "categorias": {
+        "Cálido subhúmedo": 48.44,
+        "Semicálido subhúmedo": 51.56
+      }
+    },
+    {
+      "cvegeo": "21114",
+      "nombre": "Puebla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 95.9,
+        "Semifrío subhúmedo": 4.1,
+        "Frío": 0.01
+      }
+    },
+    {
+      "cvegeo": "21107",
+      "nombre": "Olintla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21108",
+      "nombre": "Oriental",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 93,
+      "categorias": {
+        "Templado subhúmedo": 7,
+        "Semiseco templado": 93
+      }
+    },
+    {
+      "cvegeo": "21109",
+      "nombre": "Pahuatlán",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 54.23,
+        "Semicálido húmedo": 45.77
+      }
+    },
+    {
+      "cvegeo": "21102",
+      "nombre": "Nealtican",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21103",
+      "nombre": "Nicolás Bravo",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 61.9,
+      "categorias": {
+        "Templado subhúmedo": 60.76,
+        "Semiseco templado": 36.6,
+        "Semifrío subhúmedo": 1.14,
+        "Semiseco semicálido": 1.51
+      }
+    },
+    {
+      "cvegeo": "21106",
+      "nombre": "Ocoyucan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 99.32,
+        "Semicálido subhúmedo": 0.68
+      }
+    },
+    {
+      "cvegeo": "21099",
+      "nombre": "Cañada Morelos",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 99.94,
+      "categorias": {
+        "Templado subhúmedo": 0.06,
+        "Semiseco templado": 99.94
+      }
+    },
+    {
+      "cvegeo": "21100",
+      "nombre": "Naupan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 8.72,
+        "Templado húmedo": 91.28
+      }
+    },
+    {
+      "cvegeo": "21101",
+      "nombre": "Nauzontla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21098",
+      "nombre": "Molcaxac",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 77.71,
+        "Semicálido subhúmedo": 22.29
+      }
+    },
+    {
+      "cvegeo": "21167",
+      "nombre": "Tepetzintla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 53.52,
+        "Semicálido húmedo": 46.48
+      }
+    },
+    {
+      "cvegeo": "21164",
+      "nombre": "Tepeaca",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21165",
+      "nombre": "Tepemaxalco",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 90.43,
+      "categorias": {
+        "Cálido subhúmedo": 9.57,
+        "Semicálido subhúmedo": 90.43
+      }
+    },
+    {
+      "cvegeo": "21166",
+      "nombre": "Tepeojuma",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 88.13,
+      "categorias": {
+        "Cálido subhúmedo": 11.87,
+        "Semicálido subhúmedo": 88.13
+      }
+    },
+    {
+      "cvegeo": "21160",
+      "nombre": "Teotlalco",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Cálido subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21161",
+      "nombre": "Tepanco de López",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 64.28,
+      "categorias": {
+        "Templado subhúmedo": 35.72,
+        "Semiseco templado": 33.72,
+        "Semiseco semicálido": 30.57
+      }
+    },
+    {
+      "cvegeo": "21163",
+      "nombre": "Tepatlaxco de Hidalgo",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 47.8,
+        "Semifrío subhúmedo": 50.23,
+        "Frío": 1.97
+      }
+    },
+    {
+      "cvegeo": "21155",
+      "nombre": "Tecomatlán",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 84.77,
+      "categorias": {
+        "Cálido subhúmedo": 12.02,
+        "Semicálido subhúmedo": 3.21,
+        "Semiseco muy cálido": 84.77
+      }
+    },
+    {
+      "cvegeo": "21156",
+      "nombre": "Tehuacán",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 59.81,
+      "categorias": {
+        "Templado subhúmedo": 40.19,
+        "Semiseco templado": 10.81,
+        "Semiseco semicálido": 28.31,
+        "Seco semicálido": 19.72,
+        "Seco muy cálido": 0.97
+      }
+    },
+    {
+      "cvegeo": "21159",
+      "nombre": "Teopantlán",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 83.86,
+      "categorias": {
+        "Templado subhúmedo": 28.03,
+        "Cálido subhúmedo": 16.14,
+        "Semicálido subhúmedo": 55.83
+      }
+    },
+    {
+      "cvegeo": "21150",
+      "nombre": "Huehuetlán el Grande",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 69.81,
+      "categorias": {
+        "Templado subhúmedo": 12.85,
+        "Cálido subhúmedo": 30.19,
+        "Semicálido subhúmedo": 56.96
+      }
+    },
+    {
+      "cvegeo": "21153",
+      "nombre": "Tecali de Herrera",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21154",
+      "nombre": "Tecamachalco",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21119",
+      "nombre": "San Andrés Cholula",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21145",
+      "nombre": "San Sebastián Tlacotepec",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 52.25,
+      "categorias": {
+        "Cálido húmedo": 47.75,
+        "Templado húmedo": 4.84,
+        "Semicálido húmedo": 47.41
+      }
+    },
+    {
+      "cvegeo": "21149",
+      "nombre": "Santiago Miahuatlán",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 99.59,
+      "categorias": {
+        "Templado subhúmedo": 0.41,
+        "Semiseco templado": 34.37,
+        "Semiseco semicálido": 65.22
+      }
+    },
+    {
+      "cvegeo": "21094",
+      "nombre": "Libres",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 95.14,
+      "categorias": {
+        "Templado subhúmedo": 88.57,
+        "Semiseco templado": 4.86,
+        "Semifrío subhúmedo": 6.57
+      }
+    },
+    {
+      "cvegeo": "21096",
+      "nombre": "Mazapiltepec de Juárez",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21128",
+      "nombre": "San José Chiapa",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 81.1,
+      "categorias": {
+        "Templado subhúmedo": 81.1,
+        "Semiseco templado": 18.9
+      }
+    },
+    {
+      "cvegeo": "21087",
+      "nombre": "Jolalpan",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Cálido subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21092",
+      "nombre": "Juan N. Méndez",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 95.94,
+        "Semicálido subhúmedo": 4.06
+      }
+    },
+    {
+      "cvegeo": "21093",
+      "nombre": "Lafragua",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 88.77,
+      "categorias": {
+        "Templado subhúmedo": 25.27,
+        "Semiseco templado": 11.23,
+        "Semifrío subhúmedo": 63.45,
+        "Templado húmedo": 0.05
+      }
+    },
+    {
+      "cvegeo": "21081",
+      "nombre": "Ixcamilpa de Guerrero",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 82.21,
+      "categorias": {
+        "Cálido subhúmedo": 13,
+        "Semiseco muy cálido": 82.21,
+        "Semicálido subhúmedo": 4.78
+      }
+    },
+    {
+      "cvegeo": "21083",
+      "nombre": "Ixtacamaxtitlán",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 89.52,
+        "Semifrío subhúmedo": 10.48
+      }
+    },
+    {
+      "cvegeo": "21084",
+      "nombre": "Ixtepec",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21033",
+      "nombre": "Cohuecan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 76.21,
+      "categorias": {
+        "Cálido subhúmedo": 23.79,
+        "Templado subhúmedo": 2.53,
+        "Semicálido subhúmedo": 73.68
+      }
+    },
+    {
+      "cvegeo": "21035",
+      "nombre": "Coxcatlán",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 76.04,
+      "categorias": {
+        "Templado subhúmedo": 23.96,
+        "Semiseco semicálido": 28.06,
+        "Seco muy cálido": 47.93,
+        "Semiseco muy cálido": 0.05
+      }
+    },
+    {
+      "cvegeo": "21037",
+      "nombre": "Coyotepec",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 83.26,
+        "Semicálido subhúmedo": 16.74
+      }
+    },
+    {
+      "cvegeo": "21029",
+      "nombre": "Caxhuacan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21031",
+      "nombre": "Coatzingo",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 97.94,
+      "categorias": {
+        "Cálido subhúmedo": 97.94,
+        "Semicálido subhúmedo": 2.06
+      }
+    },
+    {
+      "cvegeo": "21032",
+      "nombre": "Cohetzala",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 93.65,
+      "categorias": {
+        "Cálido subhúmedo": 93.65,
+        "Semiseco muy cálido": 6.35
+      }
+    },
+    {
+      "cvegeo": "21025",
+      "nombre": "Ayotoxco de Guerrero",
+      "clima": "Cálido húmedo",
+      "cobertura_porcentaje": 56.01,
+      "categorias": {
+        "Cálido húmedo": 56.01,
+        "Semicálido húmedo": 43.99
+      }
+    },
+    {
+      "cvegeo": "21026",
+      "nombre": "Calpan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 85.11,
+        "Semifrío subhúmedo": 14.89
+      }
+    },
+    {
+      "cvegeo": "21027",
+      "nombre": "Caltepec",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 97.56,
+      "categorias": {
+        "Semicálido subhúmedo": 1.95,
+        "Seco semicálido": 9.52,
+        "Semiseco semicálido": 27.54,
+        "Semiseco templado": 60.5,
+        "Templado subhúmedo": 0.5
+      }
+    },
+    {
+      "cvegeo": "21022",
+      "nombre": "Atzitzihuacán",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 50.37,
+        "Semicálido subhúmedo": 49.63
+      }
+    },
+    {
+      "cvegeo": "21011",
+      "nombre": "Albino Zertuche",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 91.92,
+      "categorias": {
+        "Semiseco muy cálido": 91.92,
+        "Semicálido subhúmedo": 8.08
+      }
+    },
+    {
+      "cvegeo": "21065",
+      "nombre": "General Felipe Ángeles",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21066",
+      "nombre": "Guadalupe",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 93.86,
+      "categorias": {
+        "Cálido subhúmedo": 6.14,
+        "Semiseco muy cálido": 93.86
+      }
+    },
+    {
+      "cvegeo": "21007",
+      "nombre": "Ahuatlán",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 94.87,
+      "categorias": {
+        "Cálido subhúmedo": 94.87,
+        "Semicálido subhúmedo": 5.13
+      }
+    },
+    {
+      "cvegeo": "21008",
+      "nombre": "Ahuazotepec",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 93.02,
+        "Templado subhúmedo": 6.98
+      }
+    },
+    {
+      "cvegeo": "21004",
+      "nombre": "Acatzingo",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21005",
+      "nombre": "Acteopan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 90.33,
+      "categorias": {
+        "Cálido subhúmedo": 9.67,
+        "Templado subhúmedo": 0.04,
+        "Semicálido subhúmedo": 90.28
+      }
+    },
+    {
+      "cvegeo": "21006",
+      "nombre": "Ahuacatlán",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 23.93,
+        "Semicálido húmedo": 76.07
+      }
+    },
+    {
+      "cvegeo": "21001",
+      "nombre": "Acajete",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 95.78,
+        "Semifrío subhúmedo": 4.22
+      }
+    },
+    {
+      "cvegeo": "21002",
+      "nombre": "Acateno",
+      "clima": "Cálido húmedo",
+      "cobertura_porcentaje": 91.84,
+      "categorias": {
+        "Cálido húmedo": 91.84,
+        "Semicálido húmedo": 8.16
+      }
+    },
+    {
+      "cvegeo": "21003",
+      "nombre": "Acatlán",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 52.33,
+      "categorias": {
+        "Cálido subhúmedo": 52.33,
+        "Semicálido subhúmedo": 21.08,
+        "Semiseco muy cálido": 26.59
+      }
+    },
+    {
+      "cvegeo": "21010",
+      "nombre": "Ajalpan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 54.29,
+      "categorias": {
+        "Templado subhúmedo": 16.63,
+        "Semiseco templado": 4.66,
+        "Templado húmedo": 30.27,
+        "Semicálido húmedo": 7.39,
+        "Semiseco semicálido": 22.39,
+        "Seco semicálido": 3.16,
+        "Seco muy cálido": 15.5
+      }
+    },
+    {
+      "cvegeo": "21076",
+      "nombre": "Hueytamalco",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 64.96,
+      "categorias": {
+        "Cálido húmedo": 35.04,
+        "Semicálido húmedo": 63.95,
+        "Templado húmedo": 1.02
+      }
+    },
+    {
+      "cvegeo": "21014",
+      "nombre": "Amixtlán",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21178",
+      "nombre": "Tlacuilotepec",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 98.72,
+      "categorias": {
+        "Cálido húmedo": 1.28,
+        "Semicálido húmedo": 98.51,
+        "Templado húmedo": 0.21
+      }
+    },
+    {
+      "cvegeo": "21180",
+      "nombre": "Tlahuapan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 61.02,
+        "Semifrío subhúmedo": 38.98
+      }
+    },
+    {
+      "cvegeo": "21196",
+      "nombre": "Xayacatlán de Bravo",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 72.42,
+      "categorias": {
+        "Cálido subhúmedo": 27.58,
+        "Semicálido subhúmedo": 72.42
+      }
+    },
+    {
+      "cvegeo": "21207",
+      "nombre": "Zacapoaxtla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 76.05,
+        "Semicálido húmedo": 10.36,
+        "Templado subhúmedo": 13.59
+      }
+    },
+    {
+      "cvegeo": "21208",
+      "nombre": "Zacatlán",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 74.1,
+        "Semicálido húmedo": 2.04,
+        "Templado subhúmedo": 23.86
+      }
+    },
+    {
+      "cvegeo": "21017",
+      "nombre": "Atempan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 97.89,
+        "Templado subhúmedo": 2.11
+      }
+    },
+    {
+      "cvegeo": "21019",
+      "nombre": "Atlixco",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 57.48,
+        "Semifrío subhúmedo": 0.86,
+        "Semicálido subhúmedo": 41.66
+      }
+    },
+    {
+      "cvegeo": "21173",
+      "nombre": "Teteles de Ávila Castillo",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21175",
+      "nombre": "Tianguismanalco",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 94.15,
+        "Semifrío subhúmedo": 5.85
+      }
+    },
+    {
+      "cvegeo": "21158",
+      "nombre": "Tenampulco",
+      "clima": "Cálido húmedo",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Cálido húmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21069",
+      "nombre": "Huaquechula",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 84.35,
+      "categorias": {
+        "Templado subhúmedo": 3.73,
+        "Cálido subhúmedo": 15.65,
+        "Semicálido subhúmedo": 80.61
+      }
+    },
+    {
+      "cvegeo": "21209",
+      "nombre": "Zapotitlán",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 89.75,
+      "categorias": {
+        "Templado subhúmedo": 6.93,
+        "Semicálido subhúmedo": 3.32,
+        "Seco semicálido": 16.72,
+        "Semiseco semicálido": 29.47,
+        "Semiseco templado": 43.56
+      }
+    },
+    {
+      "cvegeo": "21157",
+      "nombre": "Tehuitzingo",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 77.02,
+      "categorias": {
+        "Cálido subhúmedo": 77.02,
+        "Semicálido subhúmedo": 4.74,
+        "Semiseco muy cálido": 18.24
+      }
+    },
+    {
+      "cvegeo": "21162",
+      "nombre": "Tepango de Rodríguez",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21053",
+      "nombre": "Chignahuapan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 94.99,
+        "Semifrío subhúmedo": 5.01
+      }
+    },
+    {
+      "cvegeo": "21181",
+      "nombre": "Tlaltenango",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21206",
+      "nombre": "Zacapala",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 59.24,
+      "categorias": {
+        "Cálido subhúmedo": 40.76,
+        "Templado subhúmedo": 17.14,
+        "Semicálido subhúmedo": 42.1
+      }
+    },
+    {
+      "cvegeo": "21211",
+      "nombre": "Zaragoza",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 11.57,
+        "Templado subhúmedo": 88.43
+      }
+    },
+    {
+      "cvegeo": "21212",
+      "nombre": "Zautla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 2.82,
+        "Templado subhúmedo": 97.18
+      }
+    },
+    {
+      "cvegeo": "21152",
+      "nombre": "Soltepec",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21205",
+      "nombre": "Yehualtepec",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 74.42,
+      "categorias": {
+        "Templado subhúmedo": 74.42,
+        "Semiseco templado": 25.58
+      }
+    },
+    {
+      "cvegeo": "21024",
+      "nombre": "Axutla",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 55.19,
+      "categorias": {
+        "Cálido subhúmedo": 55.19,
+        "Semiseco muy cálido": 44.53,
+        "Semicálido subhúmedo": 0.28
+      }
+    },
+    {
+      "cvegeo": "21097",
+      "nombre": "Mixtla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21046",
+      "nombre": "Chapulco",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 96.09,
+      "categorias": {
+        "Templado subhúmedo": 3.91,
+        "Semiseco templado": 96.05,
+        "Semiseco semicálido": 0.04
+      }
+    },
+    {
+      "cvegeo": "21047",
+      "nombre": "Chiautla",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 65.17,
+      "categorias": {
+        "Cálido subhúmedo": 65.17,
+        "Semicálido subhúmedo": 10.51,
+        "Semiseco muy cálido": 24.32
+      }
+    },
+    {
+      "cvegeo": "21091",
+      "nombre": "Juan Galindo",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 99.09,
+        "Templado húmedo": 0.91
+      }
+    },
+    {
+      "cvegeo": "21048",
+      "nombre": "Chiautzingo",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 67.35,
+        "Semifrío subhúmedo": 32.65
+      }
+    },
+    {
+      "cvegeo": "21095",
+      "nombre": "La Magdalena Tlatlauquitepec",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 67.71,
+      "categorias": {
+        "Cálido subhúmedo": 67.71,
+        "Semicálido subhúmedo": 32.29
+      }
+    },
+    {
+      "cvegeo": "21193",
+      "nombre": "Tzicatlacoyan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 79.29,
+        "Semicálido subhúmedo": 20.71
+      }
+    },
+    {
+      "cvegeo": "21009",
+      "nombre": "Ahuehuetitla",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 89.45,
+      "categorias": {
+        "Cálido subhúmedo": 89.45,
+        "Semicálido subhúmedo": 10.55
+      }
+    },
+    {
+      "cvegeo": "21117",
+      "nombre": "Rafael Lara Grajales",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21118",
+      "nombre": "Los Reyes de Juárez",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21125",
+      "nombre": "San Gregorio Atzompa",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21133",
+      "nombre": "San Martín Totoltepec",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 90.29,
+      "categorias": {
+        "Cálido subhúmedo": 90.29,
+        "Semicálido subhúmedo": 9.71
+      }
+    },
+    {
+      "cvegeo": "21144",
+      "nombre": "San Salvador Huixcolotla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21151",
+      "nombre": "Santo Tomás Hueyotlipan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21171",
+      "nombre": "Tepeyahualco de Cuauhtémoc",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21182",
+      "nombre": "Tlanepantla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21214",
+      "nombre": "Zinacatepec",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semiseco semicálido": 8.76,
+        "Seco muy cálido": 91.24
+      }
+    },
+    {
+      "cvegeo": "21021",
+      "nombre": "Atzala",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Cálido subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21028",
+      "nombre": "Camocuautla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21030",
+      "nombre": "Coatepec",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21034",
+      "nombre": "Coronango",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21038",
+      "nombre": "Cuapiaxtla de Madero",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21080",
+      "nombre": "Atlequizayan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21090",
+      "nombre": "Juan C. Bonilla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21170",
+      "nombre": "Tepeyahualco",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 70.37,
+      "categorias": {
+        "Templado subhúmedo": 29.63,
+        "Semiseco templado": 70.37
+      }
+    },
+    {
+      "cvegeo": "21168",
+      "nombre": "Tepexco",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 99.94,
+      "categorias": {
+        "Cálido subhúmedo": 99.94,
+        "Semicálido subhúmedo": 0.06
+      }
+    },
+    {
+      "cvegeo": "21052",
+      "nombre": "Chigmecatitlán",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 51.46,
+      "categorias": {
+        "Cálido subhúmedo": 51.46,
+        "Semicálido subhúmedo": 48.54
+      }
+    },
+    {
+      "cvegeo": "21023",
+      "nombre": "Atzitzintla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 96.33,
+      "categorias": {
+        "Templado subhúmedo": 75.92,
+        "Semifrío subhúmedo": 19.88,
+        "Frío": 0.53,
+        "Semiseco templado": 3.67
+      }
+    },
+    {
+      "cvegeo": "21204",
+      "nombre": "Yaonáhuac",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 31.54,
+        "Semicálido húmedo": 68.46
+      }
+    },
+    {
+      "cvegeo": "21147",
+      "nombre": "Santa Inés Ahuatempan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 85.98,
+      "categorias": {
+        "Cálido subhúmedo": 14.02,
+        "Semicálido subhúmedo": 85.98
+      }
+    },
+    {
+      "cvegeo": "21148",
+      "nombre": "Santa Isabel Cholula",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21200",
+      "nombre": "Xochiapulco",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 97.8,
+        "Semicálido húmedo": 2.2
+      }
+    },
+    {
+      "cvegeo": "21132",
+      "nombre": "San Martín Texmelucan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 100
+      }
+    },
+    {
+      "cvegeo": "21146",
+      "nombre": "Santa Catarina Tlaltempan",
+      "clima": "Cálido subhúmedo",
+      "cobertura_porcentaje": 50.58,
+      "categorias": {
+        "Cálido subhúmedo": 50.58,
+        "Semicálido subhúmedo": 49.42
+      }
+    },
+    {
+      "cvegeo": "21198",
+      "nombre": "Xicotlán",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 93.41,
+      "categorias": {
+        "Cálido subhúmedo": 6.59,
+        "Semiseco muy cálido": 93.41
+      }
+    },
+    {
+      "cvegeo": "21199",
+      "nombre": "Xiutetelco",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado húmedo": 35.61,
+        "Semicálido húmedo": 3.15,
+        "Templado subhúmedo": 61.24
+      }
+    },
+    {
+      "cvegeo": "21105",
+      "nombre": "Ocotepec",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Templado subhúmedo": 82.77,
+        "Semifrío subhúmedo": 17.23
+      }
+    },
+    {
+      "cvegeo": "21216",
+      "nombre": "Zoquiapan",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 76.59,
+      "categorias": {
+        "Cálido húmedo": 23.41,
+        "Semicálido húmedo": 76.59
+      }
+    },
+    {
+      "cvegeo": "21215",
+      "nombre": "Zongozotla",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 100,
+      "categorias": {
+        "Semicálido húmedo": 72.14,
+        "Templado húmedo": 27.86
+      }
+    },
+    {
+      "cvegeo": "21191",
+      "nombre": "Tulcingo",
+      "clima": "Seco o muy seco",
+      "cobertura_porcentaje": 48.75,
+      "categorias": {
+        "Cálido subhúmedo": 39.23,
+        "Semicálido subhúmedo": 12.02,
+        "Semiseco muy cálido": 48.75
+      }
+    },
+    {
+      "cvegeo": "21192",
+      "nombre": "Tuzamapan de Galeana",
+      "clima": "Templado o frío (húmedo o subhúmedo)",
+      "cobertura_porcentaje": 59.57,
+      "categorias": {
+        "Cálido húmedo": 40.43,
+        "Semicálido húmedo": 59.57
+      }
+    }
+  ]
+}

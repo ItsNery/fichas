@@ -6,9 +6,17 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:usuarios.ver')->only(['index']);
+        $this->middleware('permission:usuarios.crear')->only(['create', 'store']);
+        $this->middleware('permission:usuarios.editar')->only(['edit', 'update']);
+        $this->middleware('permission:usuarios.eliminar')->only(['destroy']);
+    }
     /**
      * Display a paginated listing of users, excluding the user with ID 1.
      *
@@ -16,8 +24,9 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::where('id', '>', 1)->latest()->paginate(15);
-        return view('users.index', ['users' => $users]);
+        $users = User::with('roles')->latest()->paginate(15);
+        $roles = auth()->user()->can('usuarios.asignar-roles') ? Role::orderBy('name')->get() : collect();
+        return view('users.index', compact('users', 'roles'));
     }
 
     /**
@@ -26,7 +35,8 @@ class UserController extends Controller
      */
     public function create()
     {
-        //
+        $roles = auth()->user()->can('usuarios.asignar-roles') ? Role::orderBy('name')->get() : collect();
+        return view('users.create', compact('roles'));
     }
 
     /**
@@ -37,10 +47,12 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorizeRoleAssignment($request);
         $validated = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
+            'role'     => 'nullable|string|exists:roles,name',
         ]);
 
         $user = User::create([
@@ -48,6 +60,10 @@ class UserController extends Controller
             'email'    => $validated['email'],
             'password' => Hash::make($validated['password']),
         ]);
+
+        if (!empty($validated['role'])) {
+            $user->assignRole($validated['role']);
+        }
 
         return response()->json(['success' => '¡Usuario creado correctamente!', 'user' => $user]);
     }
@@ -71,7 +87,9 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        return view('users.edit', ['user' => $user]);
+        $this->ensureCanManageTarget($user);
+        $roles = auth()->user()->can('usuarios.asignar-roles') ? Role::orderBy('name')->get() : collect();
+        return view('users.edit', compact('user', 'roles'));
     }
 
     /**
@@ -83,10 +101,13 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
+        $this->ensureCanManageTarget($user);
+        $this->authorizeRoleAssignment($request, $user);
         $validated = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'password' => 'nullable|string|min:8|confirmed',
+            'role'     => 'nullable|string|exists:roles,name',
         ]);
 
         $user->name  = $validated['name'];
@@ -96,6 +117,14 @@ class UserController extends Controller
             $user->password = Hash::make($validated['password']);
         }
         $user->save();
+
+        if ($request->user()->can('usuarios.asignar-roles')) {
+            if (!empty($validated['role'])) {
+                $user->syncRoles([$validated['role']]);
+            } else {
+                $user->syncRoles([]);
+            }
+        }
 
         return response()->json(['success' => '¡Usuario actualizado correctamente!', 'user' => $user]);
     }
@@ -112,7 +141,37 @@ class UserController extends Controller
             return response()->json(['error' => 'No puedes eliminar tu propio usuario.'], 403);
         }
 
+        $this->ensureCanManageTarget($user);
+        if ($user->hasRole('super_admin') && User::role('super_admin')->count() <= 1) {
+            return response()->json(['error' => 'No puedes eliminar al último superadministrador.'], 422);
+        }
+
         $user->delete();
         return response()->json(['success' => '¡Usuario eliminado correctamente!']);
+    }
+
+    private function authorizeRoleAssignment(Request $request, ?User $target = null): void
+    {
+        if (!$request->has('role')) {
+            return;
+        }
+        abort_unless($request->user()->can('usuarios.asignar-roles'), 403);
+        if ($request->input('role') === 'super_admin') {
+            abort_unless($request->user()->hasRole('super_admin'), 403);
+        }
+        if ($target?->hasRole('super_admin')
+            && $request->input('role') !== 'super_admin'
+            && User::role('super_admin')->count() <= 1) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'role' => 'No puedes degradar al último superadministrador.',
+            ]);
+        }
+    }
+
+    private function ensureCanManageTarget(User $target): void
+    {
+        if ($target->hasRole('super_admin')) {
+            abort_unless(auth()->user()->hasRole('super_admin'), 403);
+        }
     }
 }

@@ -7,6 +7,8 @@ use App\Models\Microrregion;
 use App\Models\Municipio;
 use App\Models\ConfiguracionFicha;
 use App\Models\DatoHistorico;
+use App\Services\IndicadorQueryService;
+use App\Services\FichaComposerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -83,14 +85,11 @@ class RegionController extends Controller
         $variablesNecesarias = array_unique($variablesNecesarias);
 
         // 2. Obtener todos los datos históricos más recientes de los municipios en la región
-        // Buscamos explícitamente variables de Población y Superficie
+        // Buscamos explícitamente la variable de población.
         $varPobId = \App\Models\Variable::where('nombre_amigable', 'Población total')
             ->whereHas('indicador', fn($q) => $q->where('nombre_amigable', 'Población total según sexo'))
             ->value('id');
-        $varSupId = \App\Models\Variable::where('nombre_amigable', 'Superficie territorial (Hectáreas)')->value('id');
-        
         if ($varPobId) $variablesNecesarias[] = $varPobId;
-        if ($varSupId) $variablesNecesarias[] = $varSupId;
         $variablesNecesarias = array_unique($variablesNecesarias);
 
         $datosBrutos = DatoHistorico::with('variable.indicador')
@@ -111,15 +110,11 @@ class RegionController extends Controller
 
         // Datos básicos para el Hero
         $poblacionTotal = $varPobId ? $datosRecientes->where('variable_id', $varPobId)->sum('valor') : 0;
-        $superficieKm2 = $varSupId ? $datosRecientes->where('variable_id', $varSupId)->sum('valor') / 100 : 0;
-
-        $indicadoresProcesados = [];
+        $superficieKm2 = $municipios->sum(fn($municipio) => (float) ($municipio->superficie ?? 0));
 
         foreach ($configuraciones as $config) {
             $indicador = $config->indicador;
-            if (!$indicador || in_array($indicador->id, $indicadoresProcesados)) continue;
-            
-            $indicadoresProcesados[] = $indicador->id;
+            if (!$indicador) continue;
 
             $dimension = $indicador->tematica->dimension->nombre ?? 'Sin Dimensión';
             $dimensionKey = str_replace(' ', '_', strtolower($dimension));
@@ -136,6 +131,46 @@ class RegionController extends Controller
             $datosIndicador = $datosRecientes->whereIn('variable_id', $variables->pluck('id'));
 
             if ($datosIndicador->isEmpty()) continue;
+
+            if ($config->tipo_visualizacion === 'scatter') {
+                $datosScatter = app(FichaComposerService::class)
+                    ->obtenerScatterRegional($config, $region, $municipios);
+                if (!$datosScatter) continue;
+
+                $perfil[$dimensionKey][] = [
+                    'config' => $config,
+                    'datos' => $datosScatter,
+                    'narrativa' => $datosScatter['descripcion'],
+                ];
+                continue;
+            }
+
+            if ($config->tipo_visualizacion === 'piramide') {
+                $datosPiramide = app(IndicadorQueryService::class)->handlePiramideChart(
+                    $indicador,
+                    [
+                        'ids' => $municipiosIds,
+                        'titulo' => $region->nombre,
+                        'nombres_municipios' => $municipios->pluck('nombre')->all(),
+                    ],
+                    $variables->pluck('id')->all()
+                );
+                $totalHombres = abs(array_sum($datosPiramide['series'][0]['data'] ?? []));
+                $totalMujeres = array_sum($datosPiramide['series'][1]['data'] ?? []);
+                $totalPoblacion = $totalHombres + $totalMujeres;
+                $datosPiramide['valor_actual'] = number_format($totalPoblacion);
+                $datosPiramide['total'] = $totalPoblacion;
+                $datosPiramide['unidad'] = 'Habitantes';
+                $datosPiramide['variables'] = [['unidad' => 'Habitantes']];
+
+                $perfil[$dimensionKey][] = [
+                    'config' => $config,
+                    'datos' => $datosPiramide,
+                    'narrativa' => "La pirámide agrega la estructura por edad y sexo de los "
+                        . count($municipiosIds) . " municipios que integran {$region->nombre}.",
+                ];
+                continue;
+            }
 
             // Determinar si sumar o promediar basándose en la unidad
             $primeraVar = $variables->first();
