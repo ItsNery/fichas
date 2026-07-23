@@ -1,0 +1,79 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - beta
+      - main
+
+jobs:
+  deploy-beta:
+    if: github.ref == 'refs/heads/beta'
+    runs-on: [self-hosted, pimrep]
+
+    steps:
+      - name: Deploy BETA
+        run: |
+
+          cd /var/www/html/betafichas
+
+          git fetch origin
+          git reset --hard origin/beta
+          mkdir -p storage/framework/views
+          mkdir -p storage/framework/cache
+          mkdir -p storage/framework/sessions
+          sudo chown -R user_planeacion:www-data storage bootstrap/cache
+          sudo chmod -R 775 storage bootstrap/cache
+
+          npm ci
+          npm run build
+
+          composer install --no-dev --optimize-autoloader
+
+          php artisan migrate --force
+
+          php artisan config:clear
+          php artisan cache:clear
+          php artisan route:clear
+          php artisan view:clear
+
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+
+          php artisan storage:link
+
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, pimrep]
+
+    steps:
+      - name: Deploy PRODUCCION
+        run: |
+
+          cd /var/www/html/fichas
+
+          git fetch origin
+          git reset --hard origin/main
+          sudo chown -R user_planeacion:www-data storage bootstrap/cache
+          sudo chmod -R 775 storage bootstrap/cache
+          sudo chmod -R g+s storage bootstrap/cache
+          npm ci
+          npm run build
+
+          composer install --no-dev --optimize-autoloader
+
+          php artisan migrate --force
+
+          php artisan config:clear
+          php artisan cache:clear
+          php artisan route:clear
+          php artisan view:clear
+
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+
+          php artisan storage:link
+
+
