@@ -137,4 +137,36 @@ class IndicadorQueryServiceTest extends TestCase
         $this->assertSame(40.0, $result['series'][1]['data'][$index]);
         $this->assertSame(2020, $result['anio']);
     }
+
+    public function test_aggregated_percentage_view_averages_municipal_values(): void
+    {
+        $dummy = $this->makeIndicador('Población por grupos de edad según sexo');
+        $ind = Indicador::create([
+            'nombre_amigable' => 'Porcentaje regional',
+            'tematica_id' => $dummy->tematica_id,
+            'tipo_grafico_default' => 'lineas',
+        ]);
+        $var = Variable::create([
+            'indicador_id' => $ind->id,
+            'nombre_amigable' => 'Porcentaje',
+            'nombre_tecnico' => 'porcentaje',
+            'unidad_medida' => '%',
+        ]);
+        $municipioA = $this->makeMunicipio('A');
+        $municipioB = $this->makeMunicipio('B');
+        $municipioB->microrregion_id = $municipioA->microrregion_id;
+        $municipioB->save();
+        foreach ([[$municipioA, 10], [$municipioB, 30]] as [$municipio, $valor]) {
+            DatoHistorico::create(['municipio_id' => $municipio->id, 'variable_id' => $var->id, 'anio' => 2020, 'valor' => $valor]);
+        }
+
+        $result = $this->service->getChartData([
+            'indicador_id' => $ind->id,
+            'nivel_de_agregacion' => 'microrregion',
+            'region_id' => $municipioA->microrregion_id,
+            'anios' => [2020],
+        ]);
+
+        $this->assertSame(20.0, $result['series'][0]['data'][0][1]);
+    }
 }

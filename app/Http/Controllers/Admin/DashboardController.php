@@ -101,6 +101,12 @@ class DashboardController extends Controller
     {
         $indicadoresVacios = Indicador::doesntHave('variables')->get();
         $variablesHuerfanas = Variable::whereNull('indicador_id')->get();
+        $polaridadResumen = Indicador::select('polaridad', DB::raw('COUNT(*) as total'))
+            ->groupBy('polaridad')
+            ->pluck('total', 'polaridad');
+        $indicadoresSinPolaridad = Indicador::whereNull('polaridad')
+            ->orWhere('polaridad', '')
+            ->count();
         $indicadoresDesactualizados = collect();
         $latestYear = DatoHistorico::max('anio');
 
@@ -134,6 +140,7 @@ class DashboardController extends Controller
 
         return view('datos.data_health', compact(
             'indicadoresVacios', 'variablesHuerfanas',
+            'polaridadResumen', 'indicadoresSinPolaridad',
             'indicadoresDesactualizados', 'latestYear',
             'datosAtipicos', 'threshold'
         ));

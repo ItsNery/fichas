@@ -56,6 +56,7 @@ class ConfiguracionFichaController extends Controller
 
         $configuraciones = $query
             ->orderBy('orden')
+            ->orderBy('id')
             ->paginate(10)
             ->withQueryString();
 

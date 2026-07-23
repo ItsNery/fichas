@@ -10,6 +10,14 @@
             <td>{{ number_format($datos['poblacionTotal']) }} habitantes</td>
         </tr>
         <tr>
+            <td style="font-weight: bold;">Año de población</td>
+            <td>{{ $datos['poblacionAnio'] ?? 'N/D' }}</td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Cobertura de población</td>
+            <td>{{ $datos['poblacionCobertura']['con_dato'] ?? 0 }} de {{ $datos['poblacionCobertura']['total'] ?? 0 }} municipios</td>
+        </tr>
+        <tr>
             <td style="font-weight: bold;">Superficie Total</td>
             <td>{{ number_format($datos['superficieTotal'], 2) }} km²</td>
         </tr>
@@ -20,6 +28,20 @@
         <tr>
             <td colspan="2"></td>
         </tr>
+        @if($datos['tipoRegion'] === 'Estatal')
+        <tr>
+            <th colspan="2" style="font-weight: bold; background-color: #f3f3f3;">Resumen por Macrorregión</th>
+        </tr>
+        @foreach($datos['resumenTerritorial'] as $macro)
+            <tr>
+                <td>{{ $macro['nombre'] }}</td>
+                <td>{{ $macro['municipios'] }} municipios · {{ number_format($macro['poblacion']) }} habitantes</td>
+            </tr>
+        @endforeach
+        <tr>
+            <td colspan="2"></td>
+        </tr>
+        @endif
         <tr>
             <th colspan="2" style="font-weight: bold; background-color: #f3f3f3;">Lista de Municipios Integrantes</th>
         </tr>

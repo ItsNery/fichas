@@ -5,8 +5,13 @@
     "isEntry": true
   },
   "resources/css/estilos.css": {
-    "file": "assets/estilos-CQLUd2vt.css",
+    "file": "assets/estilos-CcsnVMyj.css",
     "src": "resources/css/estilos.css",
+    "isEntry": true
+  },
+  "resources/css/ficha-municipal-v4.css": {
+    "file": "assets/ficha-municipal-v4-CxWLnqyG.css",
+    "src": "resources/css/ficha-municipal-v4.css",
     "isEntry": true
   },
   "resources/css/fuentes/Gilroy/Gilroy-Black.ttf": {
@@ -77,6 +82,12 @@
     "file": "assets/app-CqMTjJhC.js",
     "name": "app",
     "src": "resources/js/app.js",
+    "isEntry": true
+  },
+  "resources/js/ficha-municipal-v4.js": {
+    "file": "assets/ficha-municipal-v4-CbDKMyvG.js",
+    "name": "ficha-municipal-v4",
+    "src": "resources/js/ficha-municipal-v4.js",
     "isEntry": true
   },
   "resources/js/scripts.js": {

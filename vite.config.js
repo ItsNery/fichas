@@ -22,7 +22,9 @@ export default defineConfig(({ mode }) => {
                     'resources/css/app.css', 
                     'resources/js/app.js', 
                     'resources/css/estilos.css',
-                    'resources/js/scripts.js'
+                    'resources/js/scripts.js',
+                    'resources/css/ficha-municipal-v4.css',
+                    'resources/js/ficha-municipal-v4.js'
                 ],
                 refresh: true,
             }),

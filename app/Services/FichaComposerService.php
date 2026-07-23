@@ -18,6 +18,7 @@ class FichaComposerService
     public function obtenerDatosParaConfig($config, Municipio $municipio, FichaDataStore $dataStore = null, $anioForzado = null)
     {
         $indicador = $config->indicador;
+        $aggregation = app(GeographicAggregationService::class);
         $variablesConfig = $config->variables->where('visible_en_ficha', true);
 
         $variableIds = $variablesConfig->isNotEmpty()
@@ -244,7 +245,8 @@ class FichaComposerService
                 ->get();
         }
 
-        $valorTotal = $datos->sum('valor');
+        $aggregationMethod = $aggregation->method($config, $variablesConfig->isNotEmpty() ? $variablesConfig : $indicador->variables);
+        $valorTotal = $aggregation->aggregate($datos, $aggregationMethod) ?? 0;
 
         $aniosLimite = $config->anios_historial ?? 5;
         if ($dataStore) {
@@ -253,7 +255,7 @@ class FichaComposerService
                 ->groupBy('anio')
                 ->map(fn($group) => [
                     'anio' => $group->first()->anio,
-                    'total' => (float)$group->sum('valor')
+                    'total' => (float) ($aggregation->aggregate($group, $aggregationMethod) ?? 0)
                 ])
                 ->sortByDesc('anio')
                 ->take($aniosLimite)
@@ -264,7 +266,7 @@ class FichaComposerService
         } else {
             $tendencia = DatoHistorico::whereIn('variable_id', $variableIds)
                 ->where('municipio_id', $municipio->id)
-                ->select('anio', \DB::raw('SUM(valor) as total'))
+                        ->select('anio', \DB::raw($aggregationMethod === 'average' ? 'AVG(valor) as total' : 'SUM(valor) as total'))
                 ->groupBy('anio')
                 ->orderBy('anio', 'desc')
                 ->limit($aniosLimite)
@@ -286,6 +288,7 @@ class FichaComposerService
         $ajustes = $config->ajustes_visuales ?? [];
         $benchmarkMode = $ajustes['benchmark_mode'] ?? 'avg';
         $method = $benchmarkMode === 'sum' ? 'sum' : 'avg';
+        $benchmarkAggregation = $benchmarkMode === 'sum' ? 'sum' : 'average';
 
         if ($config->mostrar_comparativa) {
             if (!$dataStore && $macrorregionId) {
@@ -299,24 +302,37 @@ class FichaComposerService
                     $stateData = $dataStore->globalData
                         ->where('variable_id', $d->variable_id)
                         ->where('anio', $anioMax);
-                    $promediosEstado[$d->variable_id] = $benchmarkMode === 'sum' ? $stateData->sum('valor') : $stateData->avg('valor');
+                    $stateIds = $stateData->pluck('municipio_id')->unique()->all();
+                    $promediosEstado[$d->variable_id] = $aggregation->aggregateAcrossMunicipalities($stateData, $stateIds, $aggregationMethod, $benchmarkAggregation);
 
                     if ($municipiosMacrorregionIds->isNotEmpty()) {
                         $regionData = $stateData->whereIn('municipio_id', $municipiosMacrorregionIds);
-                        $promediosMacrorregion[$d->variable_id] = $benchmarkMode === 'sum' ? $regionData->sum('valor') : $regionData->avg('valor');
+                        $promediosMacrorregion[$d->variable_id] = $aggregation->aggregateAcrossMunicipalities($regionData, $municipiosMacrorregionIds->all(), $aggregationMethod, $benchmarkAggregation);
                     } else {
                         $promediosMacrorregion[$d->variable_id] = 0;
                     }
                 } else {
-                    $promediosEstado[$d->variable_id] = DatoHistorico::where('variable_id', $d->variable_id)
+                    $stateRows = DatoHistorico::where('variable_id', $d->variable_id)
                         ->where('anio', $anioMax)
-                        ->$method('valor') ?? 0;
+                        ->get(['municipio_id', 'valor']);
+                    $promediosEstado[$d->variable_id] = $aggregation->aggregateAcrossMunicipalities(
+                        $stateRows,
+                        $stateRows->pluck('municipio_id')->unique()->all(),
+                        $aggregationMethod,
+                        $benchmarkAggregation
+                    ) ?? 0;
 
                     if ($municipiosMacrorregionIds->isNotEmpty()) {
-                        $promediosMacrorregion[$d->variable_id] = DatoHistorico::where('variable_id', $d->variable_id)
+                        $regionRows = DatoHistorico::where('variable_id', $d->variable_id)
                             ->whereIn('municipio_id', $municipiosMacrorregionIds)
                             ->where('anio', $anioMax)
-                            ->$method('valor') ?? 0;
+                            ->get(['municipio_id', 'valor']);
+                        $promediosMacrorregion[$d->variable_id] = $aggregation->aggregateAcrossMunicipalities(
+                            $regionRows,
+                            $municipiosMacrorregionIds->all(),
+                            $aggregationMethod,
+                            $benchmarkAggregation
+                        ) ?? 0;
                     } else {
                         $promediosMacrorregion[$d->variable_id] = 0;
                     }
@@ -331,8 +347,13 @@ class FichaComposerService
                         ->whereIn('variable_id', $variableIds)
                         ->whereIn('anio', $anios)
                         ->groupBy('anio')
-                        ->mapWithKeys(function($group, $yr) use ($benchmarkMode) {
-                            $total = $benchmarkMode === 'sum' ? $group->sum('valor') : $group->avg('valor');
+                        ->mapWithKeys(function($group, $yr) use ($aggregation, $aggregationMethod, $benchmarkAggregation) {
+                            $total = $aggregation->aggregateAcrossMunicipalities(
+                                $group,
+                                $group->pluck('municipio_id')->unique()->all(),
+                                $aggregationMethod,
+                                $benchmarkAggregation
+                            );
                             return [$yr => (float)$total];
                         })
                         ->toArray();
@@ -340,36 +361,44 @@ class FichaComposerService
                     if ($municipiosMacrorregionIds->isNotEmpty()) {
                         $tendenciaMacrorregion = $dataStore->globalData
                             ->whereIn('variable_id', $variableIds)
-                            ->whereIn('municipio_id', $municipiosMacrorregionIds)
-                            ->whereIn('anio', $anios)
-                            ->groupBy('anio')
-                            ->mapWithKeys(function($group, $yr) use ($benchmarkMode) {
-                                $total = $benchmarkMode === 'sum' ? $group->sum('valor') : $group->avg('valor');
-                                return [$yr => (float)$total];
-                            })
+                        ->whereIn('municipio_id', $municipiosMacrorregionIds)
+                        ->whereIn('anio', $anios)
+                        ->groupBy('anio')
+                        ->mapWithKeys(function($group, $yr) use ($aggregation, $aggregationMethod, $benchmarkAggregation) {
+                            $total = $aggregation->aggregateAcrossMunicipalities(
+                                $group,
+                                $group->pluck('municipio_id')->unique()->all(),
+                                $aggregationMethod,
+                                $benchmarkAggregation
+                            );
+                            return [$yr => (float)$total];
+                        })
                             ->toArray();
                     }
                 } else {
-                    $aggSql = $benchmarkMode === 'sum' ? 'SUM(valor) as total' : 'AVG(valor) as total';
-
-                    $tendenciaEstado = DatoHistorico::whereIn('variable_id', $variableIds)
-                        ->select('anio', DB::raw($aggSql))
+                    $stateTrendRows = DatoHistorico::whereIn('variable_id', $variableIds)
                         ->whereIn('anio', $anios)
-                        ->groupBy('anio')
-                        ->get()
-                        ->keyBy('anio')
-                        ->map(fn($t) => (float)$t->total)
+                        ->get(['municipio_id', 'variable_id', 'anio', 'valor']);
+                    $tendenciaEstado = $stateTrendRows->groupBy('anio')
+                        ->map(fn($group) => (float) ($aggregation->aggregateAcrossMunicipalities(
+                            $group,
+                            $group->pluck('municipio_id')->unique()->all(),
+                            $aggregationMethod,
+                            $benchmarkAggregation
+                        ) ?? 0))
                         ->toArray();
 
                     if ($municipiosMacrorregionIds->isNotEmpty()) {
-                        $tendenciaMacrorregion = DatoHistorico::whereIn('variable_id', $variableIds)
+                        $regionTrendRows = $stateTrendRows
                             ->whereIn('municipio_id', $municipiosMacrorregionIds)
-                            ->select('anio', DB::raw($aggSql))
-                            ->whereIn('anio', $anios)
-                            ->groupBy('anio')
-                            ->get()
-                            ->keyBy('anio')
-                            ->map(fn($t) => (float)$t->total)
+                            ->groupBy('anio');
+                        $tendenciaMacrorregion = $regionTrendRows
+                            ->map(fn($group) => (float) ($aggregation->aggregateAcrossMunicipalities(
+                                $group,
+                                $group->pluck('municipio_id')->unique()->all(),
+                                $aggregationMethod,
+                                $benchmarkAggregation
+                            ) ?? 0))
                             ->toArray();
                     }
                 }
@@ -402,19 +431,28 @@ class FichaComposerService
             }
         }
 
+        $availableYears = array_slice($availableYears, 0, $aniosLimite);
+
+        $decimals = is_numeric($valorTotal) && (float) $valorTotal != (int) $valorTotal ? 2 : 0;
         $res = [
             'anio'                    => $anioMax,
             'available_years'         => $availableYears,
             'total'                   => $valorTotal,
-            'valor_actual'            => number_format($valorTotal),
+            'valor_actual'            => number_format($valorTotal, $decimals),
+            'aggregation_method'      => $aggregationMethod,
+            'coverage'                => [
+                'municipios_total' => 1,
+                'municipios_con_dato' => $datos->isNotEmpty() ? 1 : 0,
+                'coverage' => $datos->isNotEmpty() ? 1 : 0,
+            ],
             'ranking'                 => $dataStore
-                ? app(RankingService::class)->getMunicipalityRankingInMemory($dataStore, $variableIds, $municipio->id, $anioMax)
-                : app(RankingService::class)->getMunicipalityRanking($variableIds, $municipio->id, $anioMax),
+                ? app(RankingService::class)->getMunicipalityRankingInMemory($dataStore, $variableIds, $municipio->id, $anioMax, $aggregationMethod)
+                : app(RankingService::class)->getMunicipalityRanking($variableIds, $municipio->id, $anioMax, $aggregationMethod),
             'promedio_estatal'        => $config->mostrar_comparativa
-                ? ($dataStore ? app(RankingService::class)->getStateAverageInMemory($dataStore, $variableIds, $anioMax, $method) : app(RankingService::class)->getStateAverage($variableIds, $anioMax, $method))
+                ? ($dataStore ? app(RankingService::class)->getStateAverageInMemory($dataStore, $variableIds, $anioMax, $benchmarkAggregation, $aggregationMethod) : app(RankingService::class)->getStateAverage($variableIds, $anioMax, $benchmarkAggregation, $aggregationMethod))
                 : null,
             'promedio_macrorregional' => ($config->mostrar_comparativa && $macrorregionId)
-                ? ($dataStore ? app(RankingService::class)->getMacrorregionalAverageInMemory($dataStore, $variableIds, $municipiosMacrorregionIds, $anioMax, $method) : app(RankingService::class)->getMacrorregionalAverage($variableIds, $municipio, $anioMax, $method))
+                ? ($dataStore ? app(RankingService::class)->getMacrorregionalAverageInMemory($dataStore, $variableIds, $municipiosMacrorregionIds, $anioMax, $benchmarkAggregation, $aggregationMethod) : app(RankingService::class)->getMacrorregionalAverage($variableIds, $municipio, $anioMax, $benchmarkAggregation, $aggregationMethod))
                 : null,
             'variables'               => $datos->map(fn($d) => [
                 'nombre'                  => $d->variable->nombre_amigable,
@@ -567,7 +605,8 @@ class FichaComposerService
             $anioMax,
             $tendencia,
             $tendenciaEstado,
-            $tendenciaMacrorregion
+            $tendenciaMacrorregion,
+            $benchmarkMode
         );
 
         return $res;
@@ -613,6 +652,8 @@ class FichaComposerService
         $tituloX = $ajustes['eje_x_titulo'] ?? ($varX->nombre_amigable
             . ($normalizarPorHabitante ? ($esMonetaria ? ' per cápita ($/hab)' : ' per cápita') : " ({$unidadXPresentada})"));
         $tituloY = $ajustes['eje_y_titulo'] ?? $varY->nombre_amigable;
+        $nombreRegion = $region->nombre;
+        $esEstatal = $nombreRegion === 'Estado de Puebla';
         $regionIds = $municipios->pluck('id')->map(fn($id) => (int) $id)->flip();
         $puntosEstado = [];
         $puntosRegion = [];
@@ -643,7 +684,6 @@ class FichaComposerService
         $lecturaCorrelacion = count($puntosRegion) >= 5
             ? $this->describirCorrelacion($correlacion)
             : 'La región tiene menos de cinco municipios con datos; no se estima correlación por el tamaño reducido de la muestra.';
-        $nombreRegion = $region->nombre;
         $fuentes = collect([$varX->indicador?->fuente, $varY->indicador?->fuente])->filter()->unique()->join(' / ');
         $metodoCalculo = $normalizarPorHabitante
             ? "{$varX->nombre_amigable} per cápita = valor reportado / población total de {$anioPoblacion}. Las medianas regionales se incluyen en la información metodológica."
@@ -665,7 +705,15 @@ class FichaComposerService
                 'type' => 'scatter',
                 'eje_x' => ['titulo' => $tituloX],
                 'eje_y' => ['titulo' => $tituloY],
-                'series' => [
+                'series' => $esEstatal ? [
+                    [
+                        'name' => 'Municipios del Estado',
+                        'type' => 'scatter',
+                        'data' => $puntosRegion,
+                        'symbolSize' => 7,
+                        'itemStyle' => ['color' => '#c79b66'],
+                    ],
+                ] : [
                     [
                         'name' => 'Otros municipios de Puebla',
                         'type' => 'scatter',
@@ -677,8 +725,8 @@ class FichaComposerService
                         'name' => $nombreRegion,
                         'type' => 'scatter',
                         'data' => $puntosRegion,
-                        'symbolSize' => 11,
-                        'itemStyle' => ['color' => $ajustes['municipio_color'] ?? '#861e34'],
+                        'symbolSize' => $esEstatal ? 7 : 11,
+                        'itemStyle' => ['color' => $esEstatal ? '#c79b66' : ($ajustes['municipio_color'] ?? '#861e34')],
                     ],
                 ],
             ],
@@ -690,7 +738,7 @@ class FichaComposerService
         ];
     }
 
-    public function formatearDatosParaECharts(array $variablesArray, string $tipo_visualizacion, $variableIds = null, $anio = null, $tendencia = null, $tendenciaEstado = null, $tendenciaMacrorregion = null)
+    public function formatearDatosParaECharts(array $variablesArray, string $tipo_visualizacion, $variableIds = null, $anio = null, $tendencia = null, $tendenciaEstado = null, $tendenciaMacrorregion = null, string $benchmarkMode = 'avg')
     {
         $tipoLower = strtolower($tipo_visualizacion);
         $tipoNorm = $tipoLower;
@@ -833,10 +881,11 @@ class FichaComposerService
                 }
             }
 
+            $benchmarkLabel = $benchmarkMode === 'sum' ? 'Total' : 'Promedio';
             $series = [['name' => 'Municipio', 'type' => $tipoNorm, 'data' => $valores]];
             if (!empty($valoresMacrorregion)) {
                 $series[] = [
-                    'name' => 'Promedio Macrorregional',
+                    'name' => $benchmarkLabel . ' Macrorregional',
                     'type' => $tipoNorm,
                     'data' => $valoresMacrorregion,
                     'itemStyle' => ['opacity' => 0.7],
@@ -845,7 +894,7 @@ class FichaComposerService
             }
             if (!empty($valoresEstado)) {
                 $series[] = [
-                    'name' => 'Promedio Estatal',
+                    'name' => $benchmarkLabel . ' Estatal',
                     'type' => $tipoNorm,
                     'data' => $valoresEstado,
                     'itemStyle' => ['opacity' => 0.4],

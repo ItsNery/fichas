@@ -315,7 +315,36 @@
                         // Elegir un KPI para la gráfica principal o usar datos agregados
                         // prettier-ignore
                         var kpi = {!! json_encode($kpis[0] ?? null) !!};
-                        if (!kpi || !kpi.historial) return;
+                        if (!kpi) return;
+
+                        if (kpi.tipo_visual === 'scatter' && kpi.echarts) {
+                            var scatterOption = {
+                                title: {
+                                    text: kpi.nombre,
+                                    left: 'center',
+                                    textStyle: { fontSize: 14 }
+                                },
+                                tooltip: { trigger: 'item' },
+                                grid: { top: 60, left: 60, right: 20, bottom: 50 },
+                                xAxis: {
+                                    type: 'value',
+                                    name: kpi.echarts.eje_x ? kpi.echarts.eje_x.titulo : 'Eje X',
+                                    nameLocation: 'middle',
+                                    nameGap: 30
+                                },
+                                yAxis: {
+                                    type: 'value',
+                                    name: kpi.echarts.eje_y ? kpi.echarts.eje_y.titulo : 'Eje Y',
+                                    nameLocation: 'middle',
+                                    nameGap: 45
+                                },
+                                series: kpi.echarts.series || []
+                            };
+                            myChart.setOption(scatterOption);
+                            return;
+                        }
+
+                        if (!kpi.historial) return;
 
                         var historyData = JSON.parse(kpi.historial);
                         var xData = historyData.map(d => d.anio);

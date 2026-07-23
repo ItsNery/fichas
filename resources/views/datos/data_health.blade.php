@@ -34,6 +34,11 @@
                             Datos Atípicos
                         </button>
                     </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#polaridad-dss">
+                            Polaridad DSS
+                        </button>
+                    </li>
                 </ul>
 
                 {{-- Contenido --}}
@@ -219,6 +224,39 @@
                             <h5 class="text-muted">No se detectaron anomalías estadísticas graves.</h5>
                         </div>
                         @endif
+                    </div>
+
+                    <div class="tab-pane fade" id="polaridad-dss">
+                        <div class="alert alert-light border-0 d-flex align-items-center mb-4" style="background-color: #f2f7f5; color: var(--color1);">
+                            <i class="fa-solid fa-compass me-3 fa-lg text-verde"></i>
+                            <div>
+                                <strong>Lectura DSS</strong>
+                                <span class="d-block small opacity-75">La polaridad indica cómo interpretar los cambios: si subir es favorable, si bajar es favorable o si el indicador es únicamente descriptivo.</span>
+                            </div>
+                        </div>
+                        <div class="row g-3 mb-4">
+                            @foreach([
+                                ['key' => 'asendente', 'label' => 'Ascendente', 'text' => 'Mayor valor favorable', 'class' => 'text-success', 'icon' => 'fa-arrow-up'],
+                                ['key' => 'descendente', 'label' => 'Descendente', 'text' => 'Menor valor favorable', 'class' => 'text-danger', 'icon' => 'fa-arrow-down'],
+                                ['key' => 'neutro', 'label' => 'Neutro', 'text' => 'Cambio descriptivo', 'class' => 'text-secondary', 'icon' => 'fa-minus'],
+                            ] as $polaridad)
+                            <div class="col-md-4">
+                                <div class="border rounded p-3 h-100 bg-white">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold {{ $polaridad['class'] }}"><i class="fa-solid {{ $polaridad['icon'] }} me-1"></i>{{ $polaridad['label'] }}</span>
+                                        <strong>{{ $polaridadResumen[$polaridad['key']] ?? 0 }}</strong>
+                                    </div>
+                                    <small class="text-muted">{{ $polaridad['text'] }}</small>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                        @if($indicadoresSinPolaridad > 0)
+                            <div class="alert alert-warning mb-0"><i class="fa-solid fa-triangle-exclamation me-2"></i>{{ $indicadoresSinPolaridad }} indicadores no tienen polaridad definida.</div>
+                        @else
+                            <div class="alert alert-success mb-0"><i class="fa-solid fa-check-circle me-2"></i>Todos los indicadores tienen una polaridad registrada.</div>
+                        @endif
+                        <p class="small text-muted mt-3 mb-0"><i class="fa-solid fa-circle-info me-1"></i>Esta lectura no se aplica a visualizaciones de dispersión (scatter), que se interpretan como asociaciones entre variables.</p>
                     </div>
 
                 </div>

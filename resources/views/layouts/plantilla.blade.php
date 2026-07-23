@@ -81,6 +81,18 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (element) {
+                bootstrap.Tooltip.getOrCreateInstance(element);
+            });
+
+            document.querySelectorAll('[data-bs-toggle="popover"]').forEach(function (element) {
+                bootstrap.Popover.getOrCreateInstance(element);
+            });
+        });
+    </script>
+
+    <script>
         window.APP_URL = "{{ url('/') }}";
     </script>
 

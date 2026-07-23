@@ -10,18 +10,19 @@ use Illuminate\Support\Facades\DB;
 
 class RankingService
 {
-    public function getMunicipalityRanking($variableIds, int $municipioId, $anio): array
+    public function getMunicipalityRanking($variableIds, int $municipioId, $anio, string $operation = 'sum'): array
     {
         $variableIds = $this->normalizeVariableIds($variableIds);
         $anio = (int) $anio;
+        $operation = $this->normalizeOperation($operation);
         $valores = DatoHistorico::whereIn('variable_id', $variableIds)
             ->where('anio', $anio)
-            ->select('municipio_id', DB::raw('SUM(valor) as total'))
+            ->select('municipio_id', DB::raw("$operation(valor) as total"))
             ->groupBy('municipio_id')
             ->orderByDesc('total')
             ->get();
 
-        $posicion = $valores->search(fn($v) => $v->municipio_id === $municipioId);
+        $posicion = $valores->search(fn($v) => (int) $v->municipio_id === $municipioId);
 
         return [
             'posicion' => $posicion !== false ? $posicion + 1 : 'N/D',
@@ -33,7 +34,8 @@ class RankingService
         FichaDataStore $dataStore,
         $variableIds,
         int $municipioId,
-        $anio
+        $anio,
+        string $operation = 'sum'
     ): array {
         $variableIds = $this->normalizeVariableIds($variableIds);
         $anio = (int) $anio;
@@ -41,7 +43,7 @@ class RankingService
             ->whereIn('variable_id', $variableIds)
             ->where('anio', $anio)
             ->groupBy('municipio_id')
-            ->map(fn($rows) => (float) $rows->sum('valor'))
+            ->map(fn($rows) => (float) $this->aggregate($rows->pluck('valor'), $operation))
             ->sortDesc();
 
         $municipioIds = $valores->keys()->map(fn($id) => (int) $id)->values();
@@ -53,37 +55,40 @@ class RankingService
         ];
     }
 
-    public function getStateAverage($variableIds, $anio, string $operation = 'avg'): float|int
+    public function getStateAverage($variableIds, $anio, string $operation = 'avg', string $withinOperation = 'sum'): float|int
     {
         $variableIds = $this->normalizeVariableIds($variableIds);
         $anio = (int) $anio;
         $operation = $this->normalizeOperation($operation);
-        $result = DatoHistorico::whereIn('variable_id', $variableIds)
+        $withinOperation = $this->normalizeOperation($withinOperation);
+        $rows = DatoHistorico::whereIn('variable_id', $variableIds)
             ->where('anio', $anio)
-            ->select(DB::raw("$operation(valor) as valor"))
-            ->first();
+            ->get(['municipio_id', 'valor']);
+        $values = $rows->groupBy('municipio_id')->map(fn($group) => $withinOperation === 'sum' ? $group->sum('valor') : $group->avg('valor'));
 
-        return $result?->valor ?? 0;
+        return $values->isEmpty() ? 0 : ($operation === 'sum' ? $values->sum() : $values->avg());
     }
 
     public function getStateAverageInMemory(
         FichaDataStore $dataStore,
         $variableIds,
         $anio,
-        string $operation = 'avg'
+        string $operation = 'avg',
+        string $withinOperation = 'sum'
     ): float|int {
         $variableIds = $this->normalizeVariableIds($variableIds);
         $anio = (int) $anio;
         $valores = $dataStore->globalData
             ->whereIn('variable_id', $variableIds)
             ->where('anio', $anio)
-            ->pluck('valor')
+            ->groupBy('municipio_id')
+            ->map(fn($group) => $this->normalizeOperation($withinOperation) === 'sum' ? $group->sum('valor') : $group->avg('valor'))
             ->filter(fn($valor) => $valor !== null);
 
-        return $this->aggregate($valores, $operation);
+        return $operation === 'sum' ? $valores->sum() : ($valores->isEmpty() ? 0 : $valores->avg());
     }
 
-    public function getMacrorregionalAverage($variableIds, Municipio $municipio, $anio, string $operation = 'avg'): float|int
+    public function getMacrorregionalAverage($variableIds, Municipio $municipio, $anio, string $operation = 'avg', string $withinOperation = 'sum'): float|int
     {
         $variableIds = $this->normalizeVariableIds($variableIds);
         $anio = (int) $anio;
@@ -93,15 +98,16 @@ class RankingService
         }
 
         $operation = $this->normalizeOperation($operation);
-        $result = DatoHistorico::whereIn('dato_historicos.variable_id', $variableIds)
+        $withinOperation = $this->normalizeOperation($withinOperation);
+        $rows = DatoHistorico::whereIn('dato_historicos.variable_id', $variableIds)
             ->where('dato_historicos.anio', $anio)
             ->join('municipios', 'dato_historicos.municipio_id', '=', 'municipios.id')
             ->join('microrregions', 'municipios.microrregion_id', '=', 'microrregions.id')
             ->where('microrregions.macrorregion_id', $macrorregionId)
-            ->select(DB::raw("$operation(dato_historicos.valor) as valor"))
-            ->first();
+            ->get(['dato_historicos.municipio_id', 'dato_historicos.valor']);
+        $values = $rows->groupBy('municipio_id')->map(fn($group) => $withinOperation === 'sum' ? $group->sum('valor') : $group->avg('valor'));
 
-        return $result?->valor ?? 0;
+        return $values->isEmpty() ? 0 : ($operation === 'sum' ? $values->sum() : $values->avg());
     }
 
     public function getMacrorregionalAverageInMemory(
@@ -109,7 +115,8 @@ class RankingService
         $variableIds,
         $municipioIds,
         $anio,
-        string $operation = 'avg'
+        string $operation = 'avg',
+        string $withinOperation = 'sum'
     ): float|int {
         $variableIds = $this->normalizeVariableIds($variableIds);
         $anio = (int) $anio;
@@ -122,10 +129,11 @@ class RankingService
             ->whereIn('variable_id', $variableIds)
             ->whereIn('municipio_id', $municipioIds)
             ->where('anio', $anio)
-            ->pluck('valor')
+            ->groupBy('municipio_id')
+            ->map(fn($group) => $this->normalizeOperation($withinOperation) === 'sum' ? $group->sum('valor') : $group->avg('valor'))
             ->filter(fn($valor) => $valor !== null);
 
-        return $this->aggregate($valores, $operation);
+        return $operation === 'sum' ? $valores->sum() : ($valores->isEmpty() ? 0 : $valores->avg());
     }
 
     public function getSimilitud(Municipio $municipio, $configKeyOrId): array

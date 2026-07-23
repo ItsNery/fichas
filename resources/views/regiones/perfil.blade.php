@@ -1,6 +1,6 @@
 @extends('layouts.plantilla')
 
-@section('title', 'Perfil de ' . $tipoRegion . ' de ' . $region->nombre)
+@section('title', $esEstatal ? 'Perfil Estatal de ' . $region->nombre : 'Perfil de ' . $tipoRegion . ' de ' . $region->nombre)
 
 @section('content')
 {{-- 1. HERO SECTION --}}
@@ -19,10 +19,18 @@
                 </nav>
 
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <span class="badge bg-gold px-3 py-2 text-uppercase hero-ficha__badge m-0">PERFIL REGIONAL</span>
+                    <span class="badge bg-gold px-3 py-2 text-uppercase hero-ficha__badge m-0">PERFIL {{ strtoupper($tipoRegion) }}</span>
                     @php
-                        $pdfRoute = $tipoRegion === 'Macrorregión' ? route('regiones.macro.pdf', $region->slug) : route('regiones.micro.pdf', $region->slug);
-                        $excelRoute = $tipoRegion === 'Macrorregión' ? route('regiones.macro.excel', $region->slug) : route('regiones.micro.excel', $region->slug);
+                        $pdfRoute = match ($tipoRegion) {
+                            'Estatal' => route('regiones.estatal.pdf'),
+                            'Macrorregión' => route('regiones.macro.pdf', $region->slug),
+                            default => route('regiones.micro.pdf', $region->slug),
+                        };
+                        $excelRoute = match ($tipoRegion) {
+                            'Estatal' => route('regiones.estatal.excel'),
+                            'Macrorregión' => route('regiones.macro.excel', $region->slug),
+                            default => route('regiones.micro.excel', $region->slug),
+                        };
                     @endphp
                     <a href="{{ $pdfRoute }}" class="btn btn-outline-light btn-sm fw-bold px-3 py-1 rounded-pill" target="_blank">
                         <i class="fas fa-file-pdf me-1"></i> PDF
@@ -38,12 +46,13 @@
 
                 <div class="d-flex gap-5 mt-5 flex-column flex-md-row">
                     <div class="hero-info-item">
-                        <small class="d-block text-white-50 text-uppercase small letter-spacing-1">Municipios que la conforman</small>
+                        <small class="d-block text-white-50 text-uppercase small letter-spacing-1">{{ $esEstatal ? 'Municipios del estado' : 'Municipios que la conforman' }}</small>
                         <span class="h5 fw-bold">{{ $municipios->count() }} municipios</span>
                     </div>
                     <div class="hero-info-item">
-                        <small class="d-block text-white-50 text-uppercase small letter-spacing-1">Población Total</small>
+                        <small class="d-block text-white-50 text-uppercase small letter-spacing-1">Población total</small>
                         <span class="h5 fw-bold d-block">{{ number_format($poblacionTotal) }} hab.</span>
+                        <small class="d-block text-white-50">Año {{ $poblacionAnio ?? 'N/D' }} · {{ $poblacionCobertura['con_dato'] ?? 0 }}/{{ $poblacionCobertura['total'] ?? 0 }} municipios</small>
                     </div>
                     <div class="hero-info-item">
                         <small class="d-block text-white-50 text-uppercase small letter-spacing-1">Superficie</small>
@@ -53,23 +62,86 @@
             </div>
 
             <div class="col-lg-5 d-none d-lg-block">
-                {{-- Opcional: Mostrar un mapa o ilustración representativa aquí --}}
                 <div class="card border-0 bg-transparent text-white mt-4">
                     <div class="card-body">
-                        <h5 class="fw-bold text-gold mb-3">Municipios:</h5>
-                        <div class="d-flex flex-wrap gap-2" style="max-height: 200px; overflow-y: auto; scrollbar-width: thin;">
-                            @foreach($municipios as $muni)
-                                <a href="{{ route('ficha-municipal.perfil', $muni->slug) }}" class="badge bg-white bg-opacity-10 text-white text-decoration-none border border-white border-opacity-25" style="transition: all 0.2s;" title="Ver ficha de {{ $muni->nombre }}">
-                                    {{ $muni->nombre }}
-                                </a>
-                            @endforeach
-                        </div>
+                        @if($esEstatal)
+                            <h5 class="fw-bold text-gold mb-3">Estructura territorial</h5>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="border border-white border-opacity-25 rounded-3 p-3 bg-white bg-opacity-10">
+                                        <span class="d-block h3 mb-1">{{ count($resumenTerritorial) }}</span>
+                                        <small class="text-white-50 text-uppercase">Macrorregiones</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="border border-white border-opacity-25 rounded-3 p-3 bg-white bg-opacity-10">
+                                        <span class="d-block h3 mb-1">{{ $municipios->pluck('microrregion_id')->filter()->unique()->count() }}</span>
+                                        <small class="text-white-50 text-uppercase">Microrregiones</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="#territorio-estatal" class="btn btn-outline-light btn-sm rounded-pill mt-3">
+                                <i class="fas fa-map me-1"></i> Explorar estructura territorial
+                            </a>
+                        @else
+                            <h5 class="fw-bold text-gold mb-3">Municipios:</h5>
+                            <div class="d-flex flex-wrap gap-2" style="max-height: 200px; overflow-y: auto; scrollbar-width: thin;">
+                                @foreach($municipios as $muni)
+                                    <a href="{{ route('ficha-municipal.perfil', $muni->slug) }}" class="badge bg-white bg-opacity-10 text-white text-decoration-none border border-white border-opacity-25" style="transition: all 0.2s;" title="Ver ficha de {{ $muni->nombre }}">
+                                        {{ $muni->nombre }}
+                                    </a>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
+@if($esEstatal)
+<section id="territorio-estatal" class="container mt-5">
+    <div class="dimension-header shadow-sm">
+        <div>
+            <h2 class="display-5 fw-bold mb-1">Estructura territorial</h2>
+            <p class="text-muted mb-0">Distribución del estado por macrorregión y microrregión.</p>
+        </div>
+    </div>
+    <div class="row g-4">
+        @foreach($resumenTerritorial as $macro)
+        <div class="col-md-6 col-xl-4">
+            <div class="perfil-tarjeta h-100">
+                <div class="perfil-tarjeta__body">
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                        <h3 class="perfil-tarjeta__titulo mb-0">{{ $macro['nombre'] }}</h3>
+                        @if($macro['slug'])
+                        <a href="{{ route('regiones.macro.perfil', $macro['slug']) }}" class="btn btn-sm btn-outline-secondary rounded-pill" title="Abrir perfil de {{ $macro['nombre'] }}">
+                            <i class="fas fa-arrow-up-right-from-square"></i>
+                        </a>
+                        @endif
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-4">
+                            <strong class="d-block text-vino">{{ $macro['municipios'] }}</strong>
+                            <small class="text-muted">Municipios</small>
+                        </div>
+                        <div class="col-4">
+                            <strong class="d-block text-vino">{{ $macro['microrregiones'] }}</strong>
+                            <small class="text-muted">Micros</small>
+                        </div>
+                        <div class="col-4">
+                            <strong class="d-block text-vino">{{ number_format($macro['poblacion']) }}</strong>
+                            <small class="text-muted">Habitantes</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endforeach
+    </div>
+</section>
+@endif
 
 {{-- 2. NAV HORIZONTAL PARA DIMENSIONES --}}
 <div class="sticky-nav">
@@ -88,6 +160,14 @@
 
 {{-- 3. CONTENIDO EDITORIAL --}}
 <div class="container mt-5">
+    @php
+        $aggregationLabels = [
+            'sum' => 'Total acumulado',
+            'average' => 'Promedio municipal',
+            'ratio' => 'Razón hombres/mujeres',
+            'mode' => 'Valor más frecuente',
+        ];
+    @endphp
     @foreach($perfil as $seccion => $items)
     @if($seccion != 'general')
     <section id="section-{{ Str::slug($seccion) }}" class="section-perfil mb-5 pb-5">
@@ -115,7 +195,7 @@
                             </h3>
                             <div class="d-flex align-items-center gap-2">
                                 @if(isset($item['config']->indicador))
-                                <a href="{{ route('banco-indicadores.index', ['indicador_id' => $item['config']->indicador->id, 'nivel' => $tipoRegion === 'Macrorregión' ? 'macrorregion' : 'microrregion', 'region_id' => $region->id]) }}"
+                                    <a href="{{ route('banco-indicadores.index', $tipoRegion === 'Estatal' ? ['indicador_id' => $item['config']->indicador->id, 'nivel' => 'municipio', 'municipio_ids' => 'estatal'] : ['indicador_id' => $item['config']->indicador->id, 'nivel' => $tipoRegion === 'Macrorregión' ? 'macrorregion' : 'microrregion', 'region_id' => $region->id]) }}"
                                    class="perfil-tarjeta__info-icon text-muted"
                                    title="Ver gráfico en Banco de Indicadores"
                                    data-bs-toggle="tooltip"
@@ -128,12 +208,13 @@
                                 </a>
                                 @endif
                                 @if(isset($item['datos']['metodo_calculo']) || isset($item['datos']['fuente']) || isset($item['datos']['correlacion']))
-                                <i class="fa-solid fa-circle-info info-tooltip-trigger perfil-tarjeta__info-icon mb-0"
-                                    data-bs-toggle="popover"
+                                 <button type="button" class="btn btn-link p-0 border-0 fa-solid fa-circle-info info-tooltip-trigger perfil-tarjeta__info-icon mb-0"
+                                     aria-label="Ver metodología y fuente"
+                                     data-bs-toggle="popover"
                                     data-bs-trigger="hover focus"
                                     title="Metodología y fuente"
                                     data-bs-content="<strong>Método:</strong> {{ $item['datos']['metodo_calculo'] ?? 'No especificado' }}@if($item['config']->tipo_visualizacion === 'scatter' && !empty($item['datos']['variables']))<br><strong>Medianas regionales:</strong>@foreach($item['datos']['variables'] as $variableResumen)<br>{{ $variableResumen['nombre'] }}: <strong>{{ number_format($variableResumen['valor'], 2) }} {{ $variableResumen['unidad'] }}</strong>@endforeach @endif @if(isset($item['datos']['correlacion_lectura']))<br><strong>Asociación regional:</strong> {{ $item['datos']['correlacion_lectura'] }} <small>No implica causalidad.</small>@endif<br><strong>Fuente:</strong> {{ $item['datos']['fuente'] ?? 'No especificada' }}"
-                                    data-bs-html="true"></i>
+                                     data-bs-html="true"></button>
                                 @endif
                             </div>
                         </div>
@@ -145,13 +226,19 @@
                         <div class="row mb-4 align-items-center">
                             <div class="col-md-4 text-center border-end">
                                 <h5 class="text-uppercase small fw-bold text-muted mb-2">
-                                    {{ $item['config']->tipo_visualizacion === 'scatter' ? 'Municipios analizados' : 'Valor Regional' }}
+                                    {{ $item['config']->tipo_visualizacion === 'scatter' ? 'Municipios analizados' : ($esEstatal ? 'Valor estatal' : 'Valor regional') }}
                                 </h5>
                                 <h4 class="perfil-tarjeta__kpi-value text-vino" style="font-size: 2.5rem;">
                                     {{ $item['datos']['valor_actual'] ?? $item['datos']['total'] ?? 0 }}
                                 </h4>
                                 @if(isset($item['datos']['variables'][0]['unidad']))
                                 <p class="perfil-tarjeta__kpi-unit">{{ $item['datos']['variables'][0]['unidad'] }}</p>
+                                @endif
+                                @if(isset($item['datos']['coverage']))
+                                <p class="text-muted small mb-0">
+                                    {{ $aggregationLabels[$item['datos']['aggregation_method'] ?? ''] ?? 'Valor' }} |
+                                    {{ $item['datos']['coverage']['municipios_con_dato'] ?? 0 }}/{{ $item['datos']['coverage']['municipios_total'] ?? 0 }} municipios con dato
+                                </p>
                                 @endif
                             </div>
                             <div class="col-md-8">
@@ -164,14 +251,48 @@
                         </div>
 
                         @if(($item['config']->tipo_visualizacion === 'piramide' && !empty($item['datos']['series'])) || !empty($item['datos']['echarts']['series']))
+                        @if($esEstatal && ($item['datos']['ranking_limited'] ?? false))
+                        <p class="text-muted small mb-2"><i class="fas fa-filter me-1"></i>Vista resumida: 5 municipios con mayor valor y 5 con menor valor. El ranking completo está disponible debajo.</p>
+                        @endif
                         <div class="perfil-tarjeta__chart-wrapper perfil-tarjeta__chart-wrapper--full">
                             <div class="perfil-tarjeta__skeleton" id="skeleton-{{ $item['config']->id }}">
                                 <div class="spinner-border perfil-tarjeta__spinner" role="status">
                                     <span class="visually-hidden">Cargando gráfico...</span>
                                 </div>
                             </div>
-                            <div class="perfil-tarjeta__chart-box lazy-chart perfil-tarjeta__chart-box--full" id="chart-{{ $item['config']->id }}" data-chart-id="{{ $item['config']->id }}" style="height: {{ $item['config']->tipo_visualizacion === 'piramide' ? '560px' : ($item['config']->tipo_visualizacion === 'scatter' ? '500px' : '400px') }};"></div>
+                            <div class="perfil-tarjeta__chart-box perfil-tarjeta__chart-box--full lazy-chart {{ $item['config']->tipo_visualizacion === 'piramide' ? 'perfil-chart--piramide' : (in_array($item['config']->tipo_visualizacion, ['scatter', 'mapa']) ? 'perfil-chart--wide' : 'perfil-chart--standard') }}" id="chart-{{ $item['config']->id }}" data-chart-id="{{ $item['config']->id }}"></div>
                         </div>
+                        @endif
+
+                        @if($esEstatal && !empty($item['datos']['ranking']) && ($item['datos']['ranking_limited'] ?? false))
+                        <details class="mt-3 state-ranking-details">
+                            <summary class="btn btn-sm btn-outline-secondary rounded-pill">Ver ranking completo ({{ $item['datos']['ranking_total'] }})</summary>
+                            <div class="table-responsive mt-3">
+                                <label class="visually-hidden" for="state-ranking-search-{{ $item['config']->id }}">Buscar municipio en el ranking</label>
+                                <div class="input-group input-group-sm mb-2">
+                                    <span class="input-group-text bg-white"><i class="fas fa-search" aria-hidden="true"></i></span>
+                                    <input id="state-ranking-search-{{ $item['config']->id }}" class="form-control state-ranking-search" type="search" placeholder="Buscar municipio..." autocomplete="off" data-ranking-target="state-ranking-table-{{ $item['config']->id }}">
+                                </div>
+                                <p class="text-muted small mb-2" aria-live="polite" data-ranking-count="state-ranking-table-{{ $item['config']->id }}">{{ $item['datos']['ranking_total'] }} de {{ $item['datos']['ranking_total'] }} municipios</p>
+                                <div class="state-ranking-scroll">
+                                <table id="state-ranking-table-{{ $item['config']->id }}" class="table table-sm align-middle mb-0">
+                                    <caption class="visually-hidden">Ranking completo de {{ $item['config']->indicador->nombre_amigable }} en el Estado de Puebla</caption>
+                                    <thead>
+                                        <tr><th scope="col">#</th><th scope="col">Municipio</th><th scope="col" class="text-end">Valor</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($item['datos']['ranking'] as $posicion => $ranking)
+                                        <tr data-ranking-name="{{ Str::ascii(mb_strtolower($ranking['name'], 'UTF-8')) }}">
+                                            <td>{{ $posicion + 1 }}</td>
+                                            <td><a href="{{ route('ficha-municipal.perfil', $municipios->firstWhere('id', $ranking['id'])?->slug ?? '#') }}">{{ $ranking['name'] }}</a></td>
+                                            <td class="text-end">{{ number_format($ranking['orderValue'], 2) }}</td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                                </div>
+                            </div>
+                        </details>
                         @endif
 
                     </div>
@@ -195,244 +316,24 @@
 
 @section('jss')
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="{{ asset('js/perfil.js') }}"></script>
+@php
+    $perfilCharts = $perfil;
+    if ($esEstatal) {
+        foreach ($perfilCharts as $section => $items) {
+            foreach ($items as $index => $item) {
+                if (isset($item['datos']['ranking_display'])) {
+                    $perfilCharts[$section][$index]['datos']['ranking'] = $item['datos']['ranking_display'];
+                }
+            }
+        }
+    }
+@endphp
 <script>
     window.FichaConfig = {
         municipioNombre: "Regional",
-        perfilData: @json($perfil)
+        geojsonUrl: "{{ asset('geojson/municipios_puebla_slim.geojson') }}",
+        perfilData: @json($perfilCharts)
     };
-    
-    // Sobrescribir fetch de geojson ya que no necesitamos el mapa aquí
-    // pero mantenemos la lógica de perfil.js para cargar los lazy-charts
-    document.addEventListener("DOMContentLoaded", function () {
-        setupLazyCharts();
-        setupScrollSpy();
-        
-        // Inicializar popovers directamente
-        var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
-        popoverTriggerList.map(function (popoverTriggerEl) {
-            return new bootstrap.Popover(popoverTriggerEl);
-        });
-    });
-
-    // Pequeño script modificado de perfil.js solo para renderizar la cola localmente
-    const renderQueue = [];
-    let processingQueue = false;
-
-    function processNextInQueue() {
-        if (renderQueue.length === 0) {
-            processingQueue = false;
-            return;
-        }
-        processingQueue = true;
-        const task = renderQueue.shift();
-        
-        renderMainChart(task.itemData);
-        task.chartElement.style.opacity = "1";
-
-        const skeleton = document.getElementById("skeleton-" + task.chartId);
-        if (skeleton) {
-            skeleton.style.transition = "opacity 0.3s ease";
-            skeleton.style.opacity = "0";
-            setTimeout(() => skeleton.remove(), 300);
-        }
-
-        setTimeout(() => requestAnimationFrame(processNextInQueue), 40);
-    }
-
-    function setupLazyCharts() {
-        const lazyCharts = document.querySelectorAll(".lazy-chart");
-        const chartObserver = new IntersectionObserver(
-            (entries, observer) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        const chartElement = entry.target;
-                        const chartId = chartElement.getAttribute("data-chart-id");
-                        const itemData = findChartDataById(chartId);
-
-                        if (itemData) {
-                            renderQueue.push({ itemData, chartElement, chartId });
-                            if (!processingQueue) processNextInQueue();
-                        }
-                        observer.unobserve(chartElement);
-                    }
-                });
-            },
-            { root: null, rootMargin: "150px 0px 150px 0px", threshold: 0.05 }
-        );
-        lazyCharts.forEach((chart) => chartObserver.observe(chart));
-    }
-
-    function findChartDataById(id) {
-        if (!window.FichaConfig || !window.FichaConfig.perfilData) return null;
-        let found = null;
-        Object.values(window.FichaConfig.perfilData).forEach((items) => {
-            const match = items.find((item) => String(item.config.id) === String(id));
-            if (match) found = match;
-        });
-        return found;
-    }
-
-    function renderMainChart(itemData) {
-        var chartDom = document.getElementById("chart-" + itemData.config.id);
-        if (!chartDom) return;
-        var myChart = echarts.getInstanceByDom(chartDom) || echarts.init(chartDom);
-        var echartsData = itemData.datos.echarts;
-
-        if (itemData.config.tipo_visualizacion === "piramide") {
-            const data = itemData.datos;
-            const hombres = data.series && data.series[0] ? data.series[0].data : [];
-            const mujeres = data.series && data.series[1] ? data.series[1].data : [];
-            const categorias = data.eje_x ? data.eje_x.categorias : [];
-            const option = {
-                tooltip: {
-                    trigger: "axis",
-                    axisPointer: { type: "shadow" },
-                    confine: true,
-                    formatter: params => params[0].name + "<br/>" + params.map(item =>
-                        item.marker + item.seriesName + ": " + Math.abs(item.value).toLocaleString("es-MX")
-                    ).join("<br/>")
-                },
-                legend: { data: ["Hombres", "Mujeres"], bottom: 0 },
-                grid: { left: "3%", right: "4%", bottom: "10%", containLabel: true },
-                xAxis: [{
-                    type: "value",
-                    axisLabel: { formatter: value => Math.abs(value).toLocaleString("es-MX") }
-                }],
-                yAxis: [{ type: "category", data: categorias, axisTick: { show: false }, inverse: true }],
-                series: [
-                    {
-                        name: "Hombres", type: "bar", stack: "total",
-                        data: hombres.map(value => -Math.abs(value)),
-                        itemStyle: { color: "#0a192f" }
-                    },
-                    {
-                        name: "Mujeres", type: "bar", stack: "total",
-                        data: mujeres.map(value => Math.abs(value)),
-                        itemStyle: { color: "#c79b66" }
-                    }
-                ]
-            };
-            myChart.setOption(option);
-            window.addEventListener('resize', () => myChart.resize());
-        } else if (echartsData && echartsData.type === "scatter") {
-            const option = {
-                tooltip: {
-                    trigger: "item",
-                    confine: true,
-                    formatter: params => {
-                        if (!params.data || params.data.length < 3) return params.value;
-                        const xTitle = echartsData.eje_x?.titulo || "Eje X";
-                        const yTitle = echartsData.eje_y?.titulo || "Eje Y";
-                        return `<strong>${params.data[2]}</strong><br>`
-                            + `${xTitle}: <strong>${Number(params.data[0]).toLocaleString("es-MX", { maximumFractionDigits: 2 })}</strong><br>`
-                            + `${yTitle}: <strong>${Number(params.data[1]).toLocaleString("es-MX", { maximumFractionDigits: 2 })}</strong>`
-                            + (params.data[3] ? '<br><small>Haz clic para abrir la ficha municipal</small>' : '');
-                    }
-                },
-                legend: { bottom: 0 },
-                grid: { top: 45, bottom: 75, left: 75, right: 45 },
-                xAxis: {
-                    type: "value",
-                    name: echartsData.eje_x?.titulo || "Eje X",
-                    nameLocation: "middle",
-                    nameGap: 35,
-                    splitLine: { show: true, lineStyle: { type: "dashed" } }
-                },
-                yAxis: {
-                    type: "value",
-                    name: echartsData.eje_y?.titulo || "Eje Y",
-                    nameLocation: "middle",
-                    nameGap: 50,
-                    splitLine: { show: true, lineStyle: { type: "dashed" } }
-                },
-                series: echartsData.series || []
-            };
-            myChart.setOption(option);
-            myChart.off('click');
-            myChart.on('click', params => {
-                const slug = params.data && params.data[3];
-                if (slug) window.location.href = `/ficha/municipio/${encodeURIComponent(slug)}/perfil`;
-            });
-            window.addEventListener('resize', () => myChart.resize());
-        } else if (echartsData && echartsData.type === "bar-horizontal") {
-            let option = {
-                tooltip: {
-                    trigger: "axis",
-                    axisPointer: { type: "shadow" },
-                    confine: true,
-                    formatter: function (params) {
-                        if (!params || params.length === 0) return "";
-                        let str = `<strong>${params[0].name}</strong><br/>`;
-                        let total = 0;
-                        let hasMultiple = params.length > 1;
-                        let unidad = echartsData.unidad || "";
-                        
-                        params.forEach(p => {
-                            let val = p.value;
-                            if (val > 0) {
-                                let formattedVal = Number(val).toLocaleString("es-MX");
-                                str += `${p.marker}${p.seriesName}: <strong>${formattedVal} ${unidad}</strong><br/>`;
-                                total += Number(val);
-                            }
-                        });
-                        
-                        if (hasMultiple && total > 0) {
-                            str += `<div style="border-top:1px solid #ccc; margin-top:5px; padding-top:5px;">Total: <strong>${Number(total).toLocaleString("es-MX")} ${unidad}</strong></div>`;
-                        }
-                        
-                        return str;
-                    },
-                },
-                legend: { bottom: 0 },
-                grid: { top: 30, bottom: 60, left: 150, right: 30 },
-                xAxis: {
-                    type: "value",
-                    splitLine: { show: true, lineStyle: { type: "dashed" } },
-                    axisLabel: { formatter: (value) => Number(value).toLocaleString("es-MX") },
-                },
-                yAxis: {
-                    type: "category",
-                    data: echartsData.eje_y ? echartsData.eje_y.categorias : [],
-                    inverse: true,
-                    axisTick: { show: false },
-                    axisLabel: {
-                        formatter: function (value) {
-                            if (!value) return "";
-                            if (value.length > 17) return value.substring(0, 17) + "...";
-                            return value;
-                        },
-                    },
-                },
-                series: (echartsData.series || []).map((s) => {
-                    s.type = "bar";
-                    return s;
-                }),
-            };
-            myChart.setOption(option);
-            window.addEventListener('resize', () => myChart.resize());
-        }
-    }
-    
-    function setupScrollSpy() {
-        const sections = document.querySelectorAll(".section-perfil");
-        const navLinks = document.querySelectorAll(".sticky-nav__link");
-
-        window.onscroll = () => {
-            let current = "";
-            sections.forEach((s) => {
-                const top = s.offsetTop;
-                if (pageYOffset >= top - 150) {
-                    current = s.getAttribute("id");
-                }
-            });
-
-            navLinks.forEach((link) => {
-                link.classList.remove("active");
-                if (current && link.getAttribute("href").includes(current)) {
-                    link.classList.add("active");
-                }
-            });
-        };
-    }
 </script>
 @endsection

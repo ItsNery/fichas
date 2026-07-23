@@ -32,12 +32,12 @@
                         </button>
                         <a href="{{ route('ficha-municipal.perfil.pdf', $municipio->slug) }}"
                            class="btn btn-outline-light btn-sm fw-bold px-3 py-1 rounded-pill"
-                           target="_blank">
+                           target="_blank" data-pdf-link>
                             <i class="fa-solid fa-file-pdf me-1"></i> PDF
                         </a>
                     </div>
-                    <h1 class="display-1 fw-bold mb-2">{{ $municipio->nombre }}</h1>
-                    <p class="h3 fw-light mb-5 opacity-75">
+                    <h1 class="hero-ficha__titulo mb-2">{{ $municipio->nombre }}</h1>
+                    <p class="hero-ficha__subtitulo mb-5 opacity-75">
                         {{ $municipio->microrregion->macrorregion->nombre ?? 'Estado de Puebla' }} |
                         {{ $municipio->microrregion->nombre ?? 'Región' }}
                     </p>
@@ -209,7 +209,7 @@
             @if($seccion != 'general')
                 <section id="section-{{ Str::slug($seccion) }}" class="section-perfil mb-4 pb-4">
                     <div class="dimension-header shadow-sm">
-                        <h2 class="display-4 fw-bold mb-0">{{ ucwords(str_replace('_', ' ', $seccion)) }}</h2>
+                        <h2 class="dimension-header__title mb-0">{{ ucwords(str_replace('_', ' ', $seccion)) }}</h2>
                     </div>
 
                     <div class="row g-4 align-items-stretch">
@@ -220,7 +220,7 @@
                             @endphp
 
                             <div class="{{ $gridClass }}">
-                                <div class="perfil-tarjeta">
+                                <article class="perfil-tarjeta">
                                     <div class="perfil-tarjeta__body">
                                         {{-- Watermark Icon --}}
                                         @php $cardIcon = $item['datos']['icono_actual'] ?? $item['config']->icono; @endphp
@@ -230,7 +230,37 @@
                                             </div>
                                         @endif
 
-                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                        @php
+                                            $tendenciaDss = $item['datos']['tendencia'] ?? [];
+                                            if (count($tendenciaDss) > 1) {
+                                                usort($tendenciaDss, fn($a, $b) => $a['anio'] <=> $b['anio']);
+                                            }
+                                            $mostrarTendenciaDss = count($tendenciaDss) > 1
+                                                && (float) $tendenciaDss[count($tendenciaDss) - 2]['valor'] != 0.0;
+                                            $polaridad = $item['datos']['polaridad'] ?? null;
+                                            $mostrarTendenciaDss = $mostrarTendenciaDss
+                                                && ($item['config']->tipo_visualizacion ?? null) !== 'scatter'
+                                                && in_array($polaridad, ['asendente', 'ascendente', 'descendente'], true);
+                                            $cambioReciente = null;
+                                            $tendenciaIcono = null;
+                                            $tendenciaClase = 'text-muted';
+                                            $polaridadTexto = null;
+
+                                            if ($mostrarTendenciaDss) {
+                                                $polaridadEsAscendente = in_array($polaridad, ['asendente', 'ascendente'], true);
+                                                $polaridadTexto = $polaridadEsAscendente
+                                                    ? 'Subir se interpreta como mejora.'
+                                                    : 'Bajar se interpreta como mejora.';
+                                                $anterior = (float) $tendenciaDss[count($tendenciaDss) - 2]['valor'];
+                                                $actual = (float) $tendenciaDss[count($tendenciaDss) - 1]['valor'];
+                                                $cambioReciente = (($actual - $anterior) / abs($anterior)) * 100;
+                                                $esMejora = $polaridadEsAscendente ? $cambioReciente > 0 : $cambioReciente < 0;
+                                                $tendenciaIcono = $cambioReciente > 0 ? 'fa-arrow-up' : ($cambioReciente < 0 ? 'fa-arrow-down' : 'fa-minus');
+                                                $tendenciaClase = abs($cambioReciente) < 0.05 ? 'text-muted' : ($esMejora ? 'text-success' : 'text-danger');
+                                            }
+                                        @endphp
+
+                                        <header class="perfil-tarjeta__header">
                                             <h3 class="perfil-tarjeta__titulo mb-0">
                                                 {{ $item['config']->titulo_reporte ?? $item['config']->indicador->nombre_amigable }}
                                                 @if(isset($item['datos']['anio']) && $item['datos']['anio'])
@@ -239,19 +269,25 @@
                                                     </span>
                                                 @endif
 
-                                                @if(isset($item['datos']['echarts']['type']) && $item['datos']['echarts']['type'] === 'bar-horizontal')
-                                                    <span
-                                                        class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1 ms-2"
-                                                        style="font-size: 0.7rem; font-weight: 500; cursor: pointer; vertical-align: middle;"
-                                                        data-bs-toggle="popover" data-bs-trigger="hover focus" data-bs-placement="top"
-                                                        title="Comparativa Regional"
-                                                        data-bs-content="Ranking comparativo con los municipios vecinos en la macrorregión: <strong>{{ $municipio->microrregion->macrorregion->nombre ?? 'correspondiente' }}</strong>"
-                                                        data-bs-html="true">
-                                                        <i class="fa-solid fa-map-location-dot me-1"></i> Comparativa Regional
-                                                    </span>
-                                                @endif
                                             </h3>
                                             <div class="d-flex align-items-center gap-2">
+                                                @if(isset($item['datos']['echarts']['type']) && $item['datos']['echarts']['type'] === 'bar-horizontal')
+                                                    <span class="perfil-tarjeta__context-icon" tabindex="0" role="img"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top"
+                                                        title="Comparativa regional: {{ $municipio->microrregion->macrorregion->nombre ?? 'región correspondiente' }}"
+                                                        aria-label="Comparativa regional: {{ $municipio->microrregion->macrorregion->nombre ?? 'región correspondiente' }}">
+                                                        <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i>
+                                                    </span>
+                                                @endif
+                                                @if($mostrarTendenciaDss)
+                                                    <span class="perfil-tarjeta__trend-icon {{ $tendenciaClase }}" tabindex="0" role="img"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top"
+                                                        title="{{ $polaridadTexto }} Cambio reciente: {{ number_format(abs($cambioReciente), 1) }}%"
+                                                        aria-label="{{ $polaridadTexto }} Cambio reciente: {{ number_format(abs($cambioReciente), 1) }}%">
+                                                        <i class="fa-solid {{ $tendenciaIcono }}" aria-hidden="true"></i>
+                                                        <span>{{ number_format(abs($cambioReciente), 1) }}%</span>
+                                                    </span>
+                                                @endif
                                                 @if(isset($item['config']->indicador))
                                                     <a href="{{ route('banco-indicadores.index', ['indicador_id' => $item['config']->indicador->id, 'municipio_ids' => $municipio->id]) }}"
                                                         class="perfil-tarjeta__info-icon text-muted"
@@ -269,10 +305,17 @@
                                                         data-bs-html="true"></i>
                                                 @endif
                                             </div>
-                                        </div>
+                                        </header>
 
-                                        @if($item['config']->subtitulo_reporte)
-                                            <p class="text-muted small mb-2">{{ $item['config']->subtitulo_reporte }}</p>
+                                        @php
+                                            $subtituloReporte = $item['config']->subtitulo_reporte;
+                                            $historialConfigurado = (int) ($item['config']->anios_historial ?? 5);
+                                            if ($historialConfigurado < 2 && $subtituloReporte && str_contains(mb_strtolower($subtituloReporte), 'compar')) {
+                                                $subtituloReporte = 'Último corte disponible';
+                                            }
+                                        @endphp
+                                        @if($subtituloReporte)
+                                            <p class="text-muted small mb-2">{{ $subtituloReporte }}</p>
                                         @endif
                                         {{-- Insight Badge --}}
                                         @if(isset($item['datos']['ranking']) && isset($item['datos']['polaridad']) && !is_array($item['datos']['ranking']))
@@ -459,10 +502,9 @@
                                             </div>
 
                                             @if(isset($item['datos']['available_years']) && count($item['datos']['available_years']) > 1 && (isset($item['datos']['echarts']['type']) && $item['datos']['echarts']['type'] !== 'line'))
-                                                <div
-                                                    class="perfil-tarjeta__years-container d-flex align-items-center justify-content-center gap-2 mt-3 mb-2">
-                                                    <span class="text-muted small me-2"><i class="fa-solid fa-clock-rotate-left"></i> Explorar
-                                                        Años:</span>
+                                                <div class="perfil-tarjeta__years-container" aria-label="Seleccionar corte temporal">
+                                                    <span class="perfil-tarjeta__years-label">Corte temporal</span>
+                                                    <div class="perfil-tarjeta__years-list">
                                                     @foreach($item['datos']['available_years'] as $yr)
                                                         <button type="button"
                                                             class="btn btn-sm btn-outline-secondary rounded-pill py-0 px-2 btn-year-selector {{ (isset($item['datos']['anio']) && $item['datos']['anio'] == $yr) ? 'active btn-vino text-white border-vino' : '' }}"
@@ -471,6 +513,7 @@
                                                             {{ $yr }}
                                                         </button>
                                                     @endforeach
+                                                    </div>
                                                 </div>
                                             @endif
                                         @endif
@@ -483,7 +526,7 @@
                                             </p>
                                         </div>
                                     @endif
-                                </div>
+                                </article>
                             </div>
                         @endforeach
                     </div>
@@ -629,6 +672,31 @@
     <script src="{{ asset('js/perfil.js') }}?v={{ time() }}"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+            const pdfLink = document.querySelector('[data-pdf-link]');
+
+            if (pdfLink) {
+                pdfLink.addEventListener('click', function (event) {
+                    if (this.dataset.loading === 'true') {
+                        event.preventDefault();
+                        return;
+                    }
+
+                    this.dataset.loading = 'true';
+                    this.setAttribute('aria-disabled', 'true');
+                    this.setAttribute('aria-busy', 'true');
+                    this.classList.add('disabled');
+                    this.innerHTML = '<span class="spinner-border spinner-border-sm me-1" aria-hidden="true"></span>Generando PDF...';
+
+                    window.setTimeout(() => {
+                        this.dataset.loading = 'false';
+                        this.removeAttribute('aria-disabled');
+                        this.removeAttribute('aria-busy');
+                        this.classList.remove('disabled');
+                        this.innerHTML = '<i class="fa-solid fa-file-pdf me-1"></i> PDF';
+                    }, 30000);
+                });
+            }
+
             const form = document.getElementById("compare-modal-form");
             if (form) {
                 form.addEventListener("submit", function (e) {

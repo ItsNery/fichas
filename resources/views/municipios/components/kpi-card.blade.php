@@ -33,6 +33,33 @@
             </div>
         </div>
     </a>
+@elseif ($kpi['tipo_visual'] === 'scatter')
+    <a href="{{ !$kpi['solo_resumen'] ? route('banco-indicadores.index', ['indicador_id' => $kpi['indicador_id'], 'municipio_ids' => $municipio->id]) : '#' }}" class="text-decoration-none">
+        <div class="card h-100 bento-card text-dark shadow-sm bg-white" style="border-bottom: 4px solid {{ $dimensionData['color'] ?? '#c5a059' }};">
+            <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <h6 class="text-muted fw-semibold mb-2 small">{{ $tituloCard }}</h6>
+                    <span class="badge bg-light text-dark border">Dispersión</span>
+                </div>
+                <p class="mb-2 text-dark fw-bold">
+                    @if($kpi['correlacion'] !== null)
+                        r = {{ number_format((float) $kpi['correlacion'], 3) }}
+                    @else
+                        Sin correlación disponible
+                    @endif
+                </p>
+                @if(!empty($kpi['correlacion_lectura']))
+                    <p class="small text-muted mb-3">{{ $kpi['correlacion_lectura'] }}</p>
+                @endif
+                @foreach(array_slice($kpi['variables'] ?? [], 0, 2) as $variable)
+                    <div class="d-flex justify-content-between small border-top py-2">
+                        <span class="text-muted">{{ $variable['nombre'] ?? 'Variable' }}</span>
+                        <strong>{{ is_numeric($variable['valor'] ?? null) ? number_format((float) $variable['valor'], 2) : 'N/D' }}</strong>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </a>
 @else
     <a href="{{ !$kpi['solo_resumen'] ? route('banco-indicadores.index', ['indicador_id' => $kpi['indicador_id'], 'municipio_ids' => $municipio->id]) : '#' }}" class="text-decoration-none">
         <div class="card h-100 bento-card text-dark shadow-sm bg-white" style="border-bottom: 4px solid {{ $dimensionData['color'] ?? '#c5a059' }};">

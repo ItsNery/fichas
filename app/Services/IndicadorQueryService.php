@@ -11,6 +11,7 @@ use App\Models\Microrregion;
 use App\Models\Municipio;
 use App\Models\Variable;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class IndicadorQueryService
 {
@@ -25,6 +26,10 @@ class IndicadorQueryService
         $this->usarVariablesPublicas($indicador);
         $nivel     = $validated['nivel_de_agregacion'];
         $selection = $this->prepareGeographicSelection($nivel, $validated);
+        $esPiramidePoblacional = str_contains(
+            mb_strtolower($indicador->nombre_amigable ?? '', 'UTF-8'),
+            'población por grupos de edad'
+        );
 
         if ($indicador->es_complejo) {
             $chartData     = null;
@@ -159,7 +164,7 @@ class IndicadorQueryService
             $chartData['fuente']         = $indicador->fuente;
             $chartData['metodo_calculo'] = $indicador->metodo_calculo;
         } elseif (
-            $indicador->id == 2 &&
+            $esPiramidePoblacional &&
             (($nivel === 'municipio' && count($validated['municipio_ids'] ?? []) === 1) || in_array($nivel, ['microrregion', 'macrorregion']))
         ) {
             $chartData = $this->handlePiramideChart($indicador, $selection);
@@ -324,6 +329,52 @@ class IndicadorQueryService
             if ($varMuj) $varIds->push($varMuj->id);
         }
 
+        if ($varIds->isEmpty()) {
+            $genericVariables = $indicador->variables
+                ->whereIn('id', $idsToQuery)
+                ->sortBy(['orden', 'nombre_amigable'])
+                ->values();
+            $genericYearsQuery = DatoHistorico::whereIn('variable_id', $genericVariables->pluck('id'));
+            if (!in_array('estatal', $municipioIds)) {
+                $genericYearsQuery->whereIn('municipio_id', $municipioIds);
+            }
+            $genericYears = $genericYearsQuery->distinct()->orderBy('anio', 'desc')->pluck('anio');
+            $genericYear = $genericYears->first();
+            $genericDataQuery = DatoHistorico::whereIn('variable_id', $genericVariables->pluck('id'))
+                ->where('anio', $genericYear);
+            if (!in_array('estatal', $municipioIds)) {
+                $genericDataQuery->whereIn('municipio_id', $municipioIds);
+            }
+            $genericValues = $genericDataQuery->select('variable_id', DB::raw('SUM(valor) as valor'))
+                ->groupBy('variable_id')
+                ->pluck('valor', 'variable_id');
+            $split = (int) ceil($genericVariables->count() / 2);
+
+            return [
+                'titulo' => $indicador->nombre_amigable . " - " . $tituloSeleccion . " (" . ($genericYear ?: 'N/D') . ")",
+                'descripcion' => $indicador->descripcion,
+                'fuente' => $indicador->fuente,
+                'metodo_calculo' => $indicador->metodo_calculo,
+                'tipo_grafico' => 'piramide',
+                'series' => [
+                    [
+                        'name' => 'Grupo A',
+                        'data' => $genericVariables->map(fn($variable, $index) => $index < $split ? -(float) ($genericValues[$variable->id] ?? 0) : 0)->all(),
+                    ],
+                    [
+                        'name' => 'Grupo B',
+                        'data' => $genericVariables->map(fn($variable, $index) => $index >= $split ? (float) ($genericValues[$variable->id] ?? 0) : 0)->all(),
+                    ],
+                ],
+                'eje_x' => ['categorias' => $genericVariables->pluck('nombre_amigable')->all()],
+                'eje_y' => ['titulo' => $genericVariables->first()->unidad_medida ?? 'Valor'],
+                'available_years' => $genericYears,
+                'selected_years' => $genericYear ? [$genericYear] : [],
+                'anio' => $genericYear,
+                'polaridad' => $indicador->polaridad,
+            ];
+        }
+
         $queryDatos = DatoHistorico::whereIn('variable_id', $varIds)->where('anio', $anioConsulta);
         if (!in_array('estatal', $municipioIds)) {
             $queryDatos->whereIn('municipio_id', $municipioIds);
@@ -455,9 +506,14 @@ class IndicadorQueryService
     public function handleAggregatedView(string $nivel, array $validated, Indicador $indicador, array $selection): array
     {
         $this->usarVariablesPublicas($indicador);
+        $aggregation = app(GeographicAggregationService::class);
         $selectedYears = $validated['anios'] ?? [];
 
-        if ($indicador->id == 1 && ($nivel !== 'municipio' || in_array('estatal', $selection['ids'])) && count($selectedYears) <= 1) {
+        $esPiramidePoblacional = str_contains(
+            mb_strtolower($indicador->nombre_amigable ?? '', 'UTF-8'),
+            'población por grupos de edad'
+        );
+        if ($esPiramidePoblacional && ($nivel !== 'municipio' || in_array('estatal', $selection['ids'])) && count($selectedYears) <= 1) {
 
             $anio = null;
             if (empty($selectedYears)) {
@@ -549,14 +605,34 @@ class IndicadorQueryService
                     }
                 }
             } else {
-                if (! in_array('estatal', $selection['ids'])) {
-                    $query->whereIn('municipio_id', $selection['ids']);
+                $esRelacionSexo = str_contains(mb_strtolower((string) $variable->unidad_medida, 'UTF-8'), 'hombres por cada cien mujeres');
+                if ($esRelacionSexo) {
+                    $sexoIds = Variable::whereHas('indicador', fn ($q) => $q->where('nombre_amigable', 'Población total según sexo'))
+                        ->whereIn('nombre_amigable', ['Población hombres', 'Población mujeres'])
+                        ->pluck('id', 'nombre_amigable');
+                    $ratioQuery = DatoHistorico::whereIn('variable_id', $sexoIds->values());
+                    if (! in_array('estatal', $selection['ids'])) {
+                        $ratioQuery->whereIn('municipio_id', $selection['ids']);
+                    }
+                    $hombresId = (int) ($sexoIds['Población hombres'] ?? 0);
+                    $mujeresId = (int) ($sexoIds['Población mujeres'] ?? 0);
+                    $dataPoints = $ratioQuery->get(['municipio_id', 'anio', 'variable_id', 'valor'])
+                        ->groupBy('anio')
+                        ->map(fn($rows, $anio) => [(int) $anio, (float) ($aggregation->ratio($rows, $hombresId, $mujeresId) ?? 0)])
+                        ->sortBy(fn($point) => $point[0])
+                        ->values();
+                } else {
+                    if (! in_array('estatal', $selection['ids'])) {
+                        $query->whereIn('municipio_id', $selection['ids']);
+                    }
+                    $datosHistoricos = $query->get(['municipio_id', 'anio', 'valor']);
+                    $aggregationMethod = $aggregation->method(null, collect([$variable]));
+                    $dataPoints = $datosHistoricos
+                        ->groupBy('anio')
+                        ->map(fn($rows, $anio) => [(int) $anio, (float) ($aggregation->aggregate($rows, $aggregationMethod) ?? 0)])
+                        ->sortBy(fn($point) => $point[0])
+                        ->values();
                 }
-                $datosHistoricos = $query->selectRaw('anio, SUM(valor) as valor')
-                    ->groupBy('anio')
-                    ->orderBy('anio', 'asc')
-                    ->get();
-                $dataPoints        = $datosHistoricos->map(fn($dato) => [(int) $dato->anio, (float) $dato->valor]);
             }
 
             $seriesCompletas[] = ['name' => $variable->nombre_amigable, 'data' => $dataPoints];

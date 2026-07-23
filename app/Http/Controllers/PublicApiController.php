@@ -136,12 +136,11 @@ class PublicApiController extends Controller
                 $query->where('visible_en_ficha', true)->orderBy('orden')->orderBy('nombre');
             }])->orderBy('orden')->orderBy('nombre')->get();
 
-        $indicadores = Indicador::where('visible_en_ficha', true)
-            ->whereHas('tematica', fn($query) => $query->where('visible_en_ficha', true)
-                ->whereHas('dimension', fn($dimension) => $dimension->where('visible_en_ficha', true)))
+        $indicadores = Indicador::visiblePublicamente()
             ->with(['variables' => fn($variables) => $variables->where('visible_en_ficha', true)])
             ->orderBy('nombre_amigable')->get();
         $variables   = Variable::where('visible_en_ficha', true)
+            ->whereHas('indicador', fn($indicador) => $indicador->visiblePublicamente())
             ->select('id', 'indicador_id', 'nombre_amigable', 'unidad_medida', 'orden')
             ->orderBy('nombre_amigable')->get();
 
@@ -157,9 +156,7 @@ class PublicApiController extends Controller
 
     public function indicadores(Request $request)
     {
-        $query = Indicador::where('visible_en_ficha', true)
-            ->whereHas('tematica', fn($tematica) => $tematica->where('visible_en_ficha', true)
-                ->whereHas('dimension', fn($dimension) => $dimension->where('visible_en_ficha', true)))
+        $query = Indicador::visiblePublicamente()
             ->with(['variables' => fn($variables) => $variables->where('visible_en_ficha', true)])
             ->orderBy('nombre_amigable');
 
@@ -181,9 +178,7 @@ class PublicApiController extends Controller
 
     public function indicador($id)
     {
-        $indicador = Indicador::where('visible_en_ficha', true)
-            ->whereHas('tematica', fn($tematica) => $tematica->where('visible_en_ficha', true)
-                ->whereHas('dimension', fn($dimension) => $dimension->where('visible_en_ficha', true)))
+        $indicador = Indicador::visiblePublicamente()
             ->with(['variables' => fn($variables) => $variables->where('visible_en_ficha', true)])
             ->find($id);
 
@@ -205,36 +200,4 @@ class PublicApiController extends Controller
         return $this->consultarDatos($request);
     }
 
-    public function debugController()
-    {
-        // Log::info('API DEBUG: Entrando a debugController');
-        try {
-            $count = Indicador::query()->count();
-
-            // Probar instanciación de FichaController
-            $fichaController = new FichaController();
-            $testValid = class_exists(FichaController::class);
-
-            // Log::info('API DEBUG: Prueba de logs exitosa desde debugController');
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Controller, DB and Logs should be working',
-                'indicadores_count' => $count,
-                'ficha_controller_exists' => $testValid,
-                'php_version' => PHP_VERSION,
-                'server_time' => now()->toDateTimeString(),
-                'log_path' => storage_path('logs/laravel.log'),
-                'log_writable' => is_writable(storage_path('logs/laravel.log')),
-            ]);
-        } catch (Throwable $e) {
-            // Log::error('API DEBUG: Error en debugController: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Controller reached but logic failed',
-                'error' => $e->getMessage(),
-                'trace' => config('app.debug') ? $e->getTraceAsString() : null,
-            ], 500);
-        }
-    }
 }

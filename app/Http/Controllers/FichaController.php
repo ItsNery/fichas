@@ -119,8 +119,6 @@ class FichaController extends Controller
         return $chartData;
     }
 
-
-
     /**
      * Exports processed chart data (obtained via getChartData) into a downloadable Excel/CSV file.
      *
@@ -198,6 +196,7 @@ class FichaController extends Controller
         $configuraciones = ConfiguracionFicha::with(['indicador.variables', 'indicador.tematica.dimension', 'variables'])
             ->where('activo', true)
             ->orderBy('orden')
+            ->orderBy('id')
             ->get();
 
         $allVariableIds = FichaDataStore::extractVariableIds($configuraciones);
@@ -376,7 +375,9 @@ class FichaController extends Controller
 
             $unidad = strtolower($variable->unidad_medida ?? '');
             $tipoVisual = 'absoluto';
-            if (str_contains($unidad, '%') || str_contains($unidad, 'porcentaje')) {
+            if ($config->tipo_visualizacion === 'scatter') {
+                $tipoVisual = 'scatter';
+            } elseif (str_contains($unidad, '%') || str_contains($unidad, 'porcentaje')) {
                 $tipoVisual = 'porcentaje';
             } elseif (str_contains($unidad, '$') || str_contains($unidad, 'pesos')) {
                 $tipoVisual = 'moneda';
@@ -507,6 +508,7 @@ class FichaController extends Controller
         $configuraciones = ConfiguracionFicha::with(['indicador.variables', 'indicador.tematica.dimension', 'variables'])
             ->where('activo', true)
             ->orderBy('orden')
+            ->orderBy('id')
             ->get();
 
         $allVariableIds = FichaDataStore::extractVariableIds($configuraciones);
@@ -573,6 +575,7 @@ class FichaController extends Controller
         $configuraciones = ConfiguracionFicha::with(['indicador.variables', 'indicador.tematica.dimension', 'variables'])
             ->where('activo', true)
             ->orderBy('orden')
+            ->orderBy('id')
             ->get();
 
         $datosAgrupados = [];
@@ -623,13 +626,19 @@ class FichaController extends Controller
                 'indicador_id' => $indicador->id,
                 'indicador_nombre' => $indicador->nombre_amigable,
                 'nombre' => $indicador->nombre_amigable,
-                'valor' => is_array($datos) ? ($datos['total'] ?? 0) : (is_numeric($datos) ? $datos : 0),
-                'valor_display' => is_array($datos) ? ($datos['valor_actual'] ?? (isset($datos['total']) ? number_format($datos['total']) : 'N/D')) : ($datos ?? 'N/D'),
+                'valor' => $tipoVisual === 'scatter' ? null : (is_array($datos) ? ($datos['total'] ?? 0) : (is_numeric($datos) ? $datos : 0)),
+                'valor_display' => $tipoVisual === 'scatter'
+                    ? 'Relación entre variables'
+                    : (is_array($datos) ? ($datos['valor_actual'] ?? (isset($datos['total']) ? number_format($datos['total']) : 'N/D')) : ($datos ?? 'N/D')),
                 'anio' => is_array($datos) ? ($datos['anio'] ?? 'N/D') : 'N/D',
                 'unidad' => $variablePrincipal->unidad_medida ?? '',
                 'solo_resumen' => $indicador->solo_resumen,
                 'tipo_visual' => ($config->tipo_visualizacion === 'lista') ? 'lista' : $tipoVisual,
                 'historial' => json_encode($historial),
+                'echarts' => is_array($datos) ? ($datos['echarts'] ?? null) : null,
+                'correlacion' => is_array($datos) ? ($datos['correlacion'] ?? null) : null,
+                'correlacion_lectura' => is_array($datos) ? ($datos['correlacion_lectura'] ?? null) : null,
+                'variables' => is_array($datos) ? ($datos['variables'] ?? []) : [],
             ];
         }
 

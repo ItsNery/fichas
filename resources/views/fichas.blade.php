@@ -279,6 +279,9 @@ $currentUrl = url()->current();
                                     </button>
                                     <h5 id="chart-title-regions" class="mb-0 fw-bold text-dark">Selecciona una región</h5>
                                     <div class="d-flex gap-2">
+                                        <a href="{{ route('regiones.estatal.perfil') }}" class="btn btn-sm btn-outline-success rounded-pill">
+                                            <i class="fas fa-globe-americas me-1"></i> Perfil estatal
+                                        </a>
                                         <button id="toggle-map-btn-regions" class="btn btn-sm btn-outline-primary rounded-pill">
                                             <i class="fas fa-map me-1"></i> Mapa
                                         </button>

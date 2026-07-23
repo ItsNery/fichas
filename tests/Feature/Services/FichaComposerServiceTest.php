@@ -208,6 +208,8 @@ class FichaComposerServiceTest extends TestCase
         $this->assertCount(2, $result['echarts']['series']);
         $this->assertSame(1.5, $result['variables'][0]['valor']);
         $this->assertSame(15.0, $result['variables'][1]['valor']);
+        $this->assertSame('rgba(122, 122, 122, 0.28)', $result['echarts']['series'][0]['itemStyle']['color']);
+        $this->assertSame('#861e34', $result['echarts']['series'][1]['itemStyle']['color']);
         $this->assertNull($result['correlacion']);
         $this->assertStringContainsString('menos de cinco municipios', $result['correlacion_lectura']);
     }

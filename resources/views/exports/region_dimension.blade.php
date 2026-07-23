@@ -5,7 +5,7 @@
         </tr>
         <tr>
             <th style="font-weight: bold; background-color: #f3f3f3; width: 300px;">Indicador</th>
-            <th style="font-weight: bold; background-color: #f3f3f3; width: 150px;">Valor Regional</th>
+            <th style="font-weight: bold; background-color: #f3f3f3; width: 150px;">{{ $tipoRegion === 'Estatal' ? 'Valor Estatal' : 'Valor Regional' }}</th>
             <th style="font-weight: bold; background-color: #f3f3f3; width: 400px;">Ranking Municipal (Top 5)</th>
         </tr>
     </thead>
@@ -18,30 +18,13 @@
                 $unidad = $item['datos']['unidad'] ?? '';
                 
                 $rankingStr = "";
-                if(isset($item['datos']['echarts']['series']) && count($item['datos']['echarts']['series']) > 0) {
-                    $serie = $item['datos']['echarts']['series'][0];
-                    $categorias = $item['datos']['echarts']['eje_y']['categorias'] ?? [];
-                    $datosOrdenados = [];
-                    
-                    foreach($categorias as $idx => $muniNombre) {
-                        $datosOrdenados[] = [
-                            'nombre' => $muniNombre,
-                            'valor' => $serie['data'][$idx] ?? 0
-                        ];
-                    }
-                    
-                    // Ordenar de mayor a menor
-                    usort($datosOrdenados, function($a, $b) {
-                        return $b['valor'] <=> $a['valor'];
-                    });
-                    
-                    // Tomar el top 5
-                    $top5 = array_slice($datosOrdenados, 0, 5);
+                if (!empty($item['datos']['ranking'])) {
+                    $top5 = array_slice($item['datos']['ranking'], 0, 5);
                     $esPorcentaje = str_contains(strtolower($unidad), '%') || str_contains(strtolower($unidad), 'porcentaje');
                     
                     $rankingLines = [];
                     foreach($top5 as $idx => $rankItem) {
-                        $valFormateado = $rankItem['valor'];
+                        $valFormateado = $rankItem['orderValue'];
                         if($esPorcentaje) {
                             $valFormateado = number_format($valFormateado, 2) . '%';
                         } elseif(str_contains(strtolower($unidad), '$') || str_contains(strtolower($unidad), 'pesos')) {
@@ -50,7 +33,7 @@
                             $valFormateado = is_numeric($valFormateado) && floor($valFormateado) != $valFormateado ? number_format($valFormateado, 2) : number_format($valFormateado);
                             $valFormateado .= ' ' . $unidad;
                         }
-                        $rankingLines[] = ($idx + 1) . ". " . $rankItem['nombre'] . " (" . $valFormateado . ")";
+                        $rankingLines[] = ($idx + 1) . ". " . $rankItem['name'] . " (" . $valFormateado . ")";
                     }
                     $rankingStr = implode(" | ", $rankingLines);
                 }

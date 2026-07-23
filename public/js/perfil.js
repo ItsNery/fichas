@@ -3,12 +3,33 @@
  * Maneja la renderización de ECharts, mapas y scrollspy para la ficha municipal con carga diferida.
  */
 
+const chartFontFamily = '"Gilroy-Regular", sans-serif';
+
 document.addEventListener("DOMContentLoaded", function () {
     if (!window.FichaConfig) return;
 
+    const chartFontsReady = document.fonts
+        ? Promise.all([
+              document.fonts.load('12px "Gilroy-Regular"'),
+              document.fonts.ready,
+          ])
+        : Promise.resolve();
+
+    const startProfile = () => {
+        chartFontsReady.then(() => {
+            initHeroMap();
+            setupLazyCharts();
+            setupScrollSpy();
+            initPopovers();
+        });
+    };
+
     // Cargar mapa y renderizar todo
     fetch(window.FichaConfig.geojsonUrl)
-        .then((response) => response.json())
+        .then((response) => {
+            if (!response.ok) throw new Error("GeoJSON no disponible");
+            return response.json();
+        })
         .then((pueblaJson) => {
             // Estandarizar nombres para ECharts
             pueblaJson.features.forEach((f) => {
@@ -16,15 +37,20 @@ document.addEventListener("DOMContentLoaded", function () {
             });
             echarts.registerMap("puebla", pueblaJson);
 
-            initHeroMap();
-            setupLazyCharts();
-            setupScrollSpy();
-            initPopovers();
-        });
+            startProfile();
+        })
+        .catch(() => startProfile());
 });
 
 const renderQueue = [];
 let processingQueue = false;
+
+function formatChartValue(value, maximumFractionDigits = 2) {
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue)
+        ? numericValue.toLocaleString("en-US", { maximumFractionDigits })
+        : value;
+}
 
 function processNextInQueue() {
     if (renderQueue.length === 0) {
@@ -136,6 +162,51 @@ function setupLazyCharts() {
         );
         lazySparklines.forEach((spark) => sparkObserver.observe(spark));
     }
+
+    setupStateRankings();
+}
+
+function normalizeSearchText(value) {
+    return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+}
+
+function setupStateRankings() {
+    document.querySelectorAll(".state-ranking-search").forEach((input) => {
+        input.addEventListener("input", () => {
+            const table = document.getElementById(input.dataset.rankingTarget);
+            if (!table) return;
+
+            const query = normalizeSearchText(input.value);
+            const rows = [...table.querySelectorAll("tbody tr")];
+            let visible = 0;
+            rows.forEach((row) => {
+                const matches = !query || normalizeSearchText(row.dataset.rankingName).includes(query);
+                row.hidden = !matches;
+                if (matches) visible++;
+            });
+
+            const count = document.querySelector(`[data-ranking-count="${input.dataset.rankingTarget}"]`);
+            if (count) {
+                count.textContent = `${visible} de ${rows.length} municipios`;
+            }
+
+            let empty = table.parentElement.querySelector(".state-ranking-empty");
+            if (!visible) {
+                if (!empty) {
+                    empty = document.createElement("p");
+                    empty.className = "state-ranking-empty text-muted small py-3 mb-0";
+                    empty.textContent = "No hay municipios que coincidan con la búsqueda.";
+                    table.parentElement.appendChild(empty);
+                }
+            } else if (empty) {
+                empty.remove();
+            }
+        });
+    });
 }
 
 function findChartDataById(id) {
@@ -160,7 +231,7 @@ function renderMainChart(itemData) {
     var myChart = echarts.getInstanceByDom(chartDom);
     var isNew = false;
     if (!myChart) {
-        myChart = echarts.init(chartDom);
+        myChart = echarts.init(chartDom, null, { renderer: "svg" });
         isNew = true;
     }
     var option = {};
@@ -187,7 +258,7 @@ function renderMainChart(itemData) {
                                 x.marker +
                                 x.seriesName +
                                 ": " +
-                                Math.abs(x.value).toLocaleString(),
+                                formatChartValue(Math.abs(x.value), 0),
                         )
                         .join("<br/>"),
             },
@@ -202,7 +273,7 @@ function renderMainChart(itemData) {
                 {
                     type: "value",
                     axisLabel: {
-                        formatter: (v) => Math.abs(v).toLocaleString(),
+                        formatter: (v) => formatChartValue(Math.abs(v), 0),
                     },
                 },
             ],
@@ -257,7 +328,7 @@ function renderMainChart(itemData) {
 
         if (chartType === "map") {
             var currentMunName = window.FichaConfig.municipioNombre.trim();
-            var cleanData = (echartsData.data || []).map((d) => {
+            var cleanData = (echartsData.data || (echartsData.series && echartsData.series[0] && echartsData.series[0].data) || []).map((d) => {
                 var nameUpper = d.name.toUpperCase().trim();
                 var isCurrent = nameUpper === currentMunName;
                 var item = { name: nameUpper, value: d.value };
@@ -277,7 +348,7 @@ function renderMainChart(itemData) {
             option = {
                 tooltip: {
                     trigger: "item",
-                    formatter: "{b}: {c}",
+                    formatter: (params) => `${params.name}: ${params.value == null ? 'Sin dato' : formatChartValue(params.value)}`,
                     confine: true,
                 },
                 visualMap: {
@@ -316,6 +387,8 @@ function renderMainChart(itemData) {
             }
             var normalColor = (extraScatter && extraScatter.otros_color) || '#c79b66';
             var highlightColor = (extraScatter && extraScatter.municipio_color) || '#861e34';
+            var regionalContext = !window.FichaConfig.municipioNombre
+                || window.FichaConfig.municipioNombre.toLowerCase() === 'regional';
 
             option = {
                 tooltip: {
@@ -337,8 +410,8 @@ function renderMainChart(itemData) {
 
                             return (
                                 `<div style="font-weight: bold; margin-bottom: 5px; border-bottom: 1px solid #ccc; padding-bottom: 3px;">${munName}</div>` +
-                                `<span style="color:${highlightColor}; font-size: 14px;">●</span> ${xTitle}: <strong>${xVal.toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong><br/>` +
-                                `<span style="color:${normalColor}; font-size: 14px;">●</span> ${yTitle}: <strong>${yVal.toLocaleString(undefined, { maximumFractionDigits: 2 })}</strong>`
+                        `<span style="color:${highlightColor}; font-size: 14px;">●</span> ${xTitle}: <strong>${formatChartValue(xVal)}</strong><br/>` +
+                        `<span style="color:${normalColor}; font-size: 14px;">●</span> ${yTitle}: <strong>${formatChartValue(yVal)}</strong>`
                             );
                         }
                         return params.value;
@@ -368,21 +441,25 @@ function renderMainChart(itemData) {
                     splitLine: { show: true, lineStyle: { type: "dashed" } },
                 },
                 series: (echartsData.series || []).map((s) => {
-                    s.type = "scatter";
-                    s.symbolSize = s.symbolSize || 10;
-                    s.itemStyle = {
-                        color: function(params) {
-                            var currentMunName = window.FichaConfig && window.FichaConfig.municipioNombre ? window.FichaConfig.municipioNombre.toUpperCase().trim() : '';
-                            if (params.data && params.data[2] && params.data[2].toUpperCase().trim() === currentMunName) {
-                                return highlightColor; // Vino para municipio actual
+                    const series = { ...s, type: "scatter", symbolSize: s.symbolSize || 10 };
+                    if (!regionalContext) {
+                        series.itemStyle = {
+                            ...(s.itemStyle || {}),
+                            color: function(params) {
+                                var currentMunName = window.FichaConfig && window.FichaConfig.municipioNombre ? window.FichaConfig.municipioNombre.toUpperCase().trim() : '';
+                                if (params.data && params.data[2] && params.data[2].toUpperCase().trim() === currentMunName) {
+                                    return highlightColor;
+                                }
+                                return normalColor;
                             }
-                            return normalColor; // Dorado/Gris para otros
-                        }
-                    };
-                    return s;
+                        };
+                    }
+                    return series;
                 }),
             };
         } else if (chartType === "bar-horizontal") {
+            const compactChart = chartDom.clientWidth < 600;
+            const yAxisLabelWidth = compactChart ? 120 : 165;
             option = {
                 tooltip: {
                     trigger: "axis",
@@ -395,18 +472,27 @@ function renderMainChart(itemData) {
                         if (typeof val === "object" && val !== null) {
                             val = val.value;
                         }
-                        let formattedVal = Number(val).toLocaleString("es-MX");
+                        let formattedVal = formatChartValue(val);
                         let unidad = echartsData.unidad || "";
                         return `${p.name}<br/>${p.marker}${p.seriesName}: <strong>${formattedVal} ${unidad}</strong>`;
                     },
                 },
-                grid: { top: 30, bottom: 30, left: 150, right: 30 },
+                grid: {
+                    top: 30,
+                    bottom: 35,
+                    left: compactChart ? 128 : 180,
+                    right: compactChart ? 12 : 30,
+                    containLabel: false,
+                },
+                animation: false,
                 xAxis: {
                     type: "value",
                     splitLine: { show: true, lineStyle: { type: "dashed" } },
                     axisLabel: {
+                        width: compactChart ? 82 : 135,
+                        overflow: "truncate",
                         formatter: function (value) {
-                            return Number(value).toLocaleString("es-MX");
+                            return formatChartValue(value);
                         },
                     },
                 },
@@ -416,6 +502,11 @@ function renderMainChart(itemData) {
                     inverse: true,
                     axisTick: { show: false },
                     axisLabel: {
+                        width: yAxisLabelWidth,
+                        overflow: "truncate",
+                        ellipsis: "...",
+                        align: "right",
+                        margin: 8,
                         formatter: function (value) {
                             if (!value) return "";
                             // Match pattern: "Name of Municipality (Rank°)"
@@ -423,17 +514,19 @@ function renderMainChart(itemData) {
                             if (match) {
                                 const name = match[1];
                                 const rank = match[2];
-                                if (name.length > 17) {
+                                const maxNameLength = compactChart ? 13 : 17;
+                                if (name.length > maxNameLength) {
                                     return (
-                                        name.substring(0, 17) +
+                                        name.substring(0, maxNameLength) +
                                         "... (" +
                                         rank +
                                         ")"
                                     );
                                 }
                             } else {
-                                if (value.length > 17) {
-                                    return value.substring(0, 17) + "...";
+                                const maxLabelLength = compactChart ? 16 : 20;
+                                if (value.length > maxLabelLength) {
+                                    return value.substring(0, maxLabelLength) + "...";
                                 }
                             }
                             return value;
@@ -454,6 +547,19 @@ function renderMainChart(itemData) {
                             ? "axis"
                             : "item",
                     confine: true,
+                    formatter: ["line", "bar"].includes(chartType)
+                        ? function (params) {
+                              const points = Array.isArray(params) ? params : [params];
+                              const title = points[0]?.axisValue ?? points[0]?.name ?? "";
+                              return title + "<br/>" + points
+                                  .map((point) => `${point.marker}${point.seriesName}: ${formatChartValue(point.value)}`)
+                                  .join("<br/>");
+                          }
+                        : chartType === "pie"
+                            ? (params) => `${params.marker}${params.name}: <strong>${formatChartValue(params.value)}</strong> (${params.percent}%)`
+                            : chartType === "treemap"
+                                ? (params) => `${params.name}<br><strong>${formatChartValue(params.value)}</strong>${params.data?.percent == null ? '' : ` (${formatChartValue(params.data.percent)}%)`}`
+                                : undefined,
                 },
                 legend: { bottom: 0 },
                 grid: { top: 40, bottom: 60, left: 60, right: 30 },
@@ -472,12 +578,16 @@ function renderMainChart(itemData) {
             };
 
             if (["bar", "line", "area"].includes(chartType)) {
+                const isNumericAxis = (echartsData.eje_x && echartsData.eje_x.type === "numeric")
+                    || (echartsData.eje_y && echartsData.eje_y.type === "numeric");
                 option.xAxis = {
-                    type: "category",
+                    type: isNumericAxis ? "value" : "category",
                     data:
-                        echartsData.eje_x && echartsData.eje_x.categorias
+                        !isNumericAxis && echartsData.eje_x && echartsData.eje_x.categorias
                             ? echartsData.eje_x.categorias
                             : [],
+                    minInterval: isNumericAxis ? 1 : undefined,
+                    boundaryGap: chartType === "line" ? false : undefined,
                     axisLabel: {
                         rotate:
                             echartsData.eje_x &&
@@ -487,7 +597,10 @@ function renderMainChart(itemData) {
                                 : 0,
                     },
                 };
-                option.yAxis = { type: "value" };
+                option.yAxis = {
+                    type: "value",
+                    axisLabel: { formatter: (value) => formatChartValue(value) },
+                };
             }
         }
     } else {
@@ -531,6 +644,11 @@ function renderMainChart(itemData) {
         } catch (e) {}
     }
 
+    option.textStyle = {
+        ...(option.textStyle || {}),
+        fontFamily: chartFontFamily,
+    };
+
     myChart.setOption(option, true);
     if (isNew) {
         window.addEventListener("resize", () => myChart.resize());
@@ -541,7 +659,7 @@ function renderSparkline(itemData) {
     var sparkDom = document.getElementById("sparkline-" + itemData.config.id);
     if (!sparkDom) return;
 
-    var sparkChart = echarts.init(sparkDom);
+    var sparkChart = echarts.init(sparkDom, null, { renderer: "svg" });
     var trendData = itemData.datos.tendencia;
 
     var option = {
@@ -660,7 +778,7 @@ function initHeroMap() {
     var dom = document.getElementById("hero-map");
     if (!dom) return;
 
-    var myChart = echarts.init(dom);
+    var myChart = echarts.init(dom, null, { renderer: "svg" });
     var cvegeo = window.FichaConfig.cvegeo;
     var geo = echarts.getMap("puebla").geoJSON;
     var feature = geo.features.find(

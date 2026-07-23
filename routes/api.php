@@ -30,10 +30,6 @@ Route::prefix('v1')->group(function () {
     Route::get('/metadata', [PublicApiController::class, 'metadata'])->name('api.public.metadata');
     Route::match(['get', 'post'], '/data', [PublicApiController::class, 'data'])->name('api.public.data');
     Route::post('/consulta', [PublicApiController::class, 'consultarDatos'])->name('api.public.consulta');
-    Route::get('/debug', function () {
-        return response()->json(['success' => true, 'message' => 'API is working']);
-    });
-    Route::get('/debug-controller', [PublicApiController::class, 'debugController'])->name('api.public.debug');
 });
 
 Route::get('/openapi.json', [\App\Http\Controllers\ApiDocumentationController::class, 'openapi'])->name('api.openapi');

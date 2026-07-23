@@ -378,9 +378,9 @@
                                                 <div class="col-md-4">
                                                     <label for="anios_historial" class="form-label">
                                                         Años de historial
-                                                        <i class="fa-solid fa-circle-info text-muted ms-1 cursor-pointer"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="Define cuántos años de histórico se muestran en el minigráfico (Sparkline) de tendencia de la tarjeta. Evita saturar de puntos la visualización."></i>
+                                                            <i class="fa-solid fa-circle-info text-muted ms-1 cursor-pointer"
+                                                             data-bs-toggle="tooltip" data-bs-placement="top"
+                                                             title="Define cuántos cortes históricos se muestran en la tarjeta y cuántos años estarán disponibles para explorar. Con 1 año no se muestra una tendencia comparativa."></i>
                                                     </label>
                                                     <select class="form-select" id="anios_historial" name="anios_historial">
                                                         @php
@@ -408,7 +408,7 @@
                                                 </label>
                                                 <textarea class="form-control font-monospace" id="ajustes_visuales" name="ajustes_visuales" rows="4"
                                                     style="font-size: 0.8rem;" placeholder='{"colors": ["#861e34", "#c79b66"]}'>{{ old('ajustes_visuales', isset($configuracion->ajustes_visuales) ? json_encode($configuracion->ajustes_visuales, JSON_PRETTY_PRINT) : '') }}</textarea>
-                                                <div class="field-help"><i class="fa-solid fa-triangle-exclamation"></i><span>Úsalo solo si necesitas personalización técnica. El formulario funciona correctamente sin escribir JSON.</span></div>
+                                                        <div class="field-help"><i class="fa-solid fa-triangle-exclamation"></i><span>Úsalo solo si necesitas personalización técnica. El formulario funciona correctamente sin escribir JSON.</span></div>
                                                 </div>
                                             </details>
                                         </div>
@@ -679,32 +679,44 @@
 
         let currentAniosHistorialValue = @json(old('anios_historial', $configuracion->anios_historial ?? 5));
 
-        function populateAniosHistorial(maxYears, selectedVal) {
+        function populateAniosHistorial(availableYears, selectedVal) {
             const select = document.getElementById('anios_historial');
             if (!select) return;
-            
-            const previousVal = select.value || selectedVal;
+
+            const years = (Array.isArray(availableYears) ? availableYears : [])
+                .map(Number)
+                .filter(Number.isFinite)
+                .sort((a, b) => b - a);
+            const previousVal = parseInt(select.value || selectedVal, 10);
             select.innerHTML = '';
-            
-            let limit = maxYears > 0 ? maxYears : 10;
-            if (previousVal && parseInt(previousVal) > limit) {
-                limit = parseInt(previousVal);
+
+            if (years.length === 0) {
+                const option = document.createElement('option');
+                option.value = '1';
+                option.textContent = 'Sin años disponibles';
+                option.disabled = true;
+                select.appendChild(option);
+                return;
             }
 
-            for (let i = 1; i <= limit; i++) {
+            const selected = previousVal >= 1 && previousVal <= years.length
+                ? previousVal
+                : Math.min(years.length, 5);
+
+            for (let count = 1; count <= years.length; count++) {
                 const option = document.createElement('option');
-                option.value = i;
-                option.textContent = i === 1 ? '1 año' : `${i} años`;
-                if (i == previousVal) {
-                    option.selected = true;
-                }
+                option.value = count;
+                option.textContent = count === 1
+                    ? `1 corte: ${years[0]}`
+                    : `${count} cortes: ${years.slice(0, count).join(', ')}`;
+                option.selected = count === selected;
                 select.appendChild(option);
             }
         }
 
         function fetchAniosDisponibles(indicadorId, variablesIds = []) {
             if (!indicadorId) {
-                populateAniosHistorial(5, currentAniosHistorialValue);
+                populateAniosHistorial([], currentAniosHistorialValue);
                 return;
             }
 
@@ -724,15 +736,14 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        const maxYears = data.anios_disponibles;
                         const selectEl = document.getElementById('anios_historial');
                         const activeVal = selectEl ? selectEl.value : currentAniosHistorialValue;
-                        populateAniosHistorial(maxYears, activeVal);
+                        populateAniosHistorial(data.anios || [], activeVal);
                     }
                 })
                 .catch(error => {
                     console.error('Error fetching available years:', error);
-                    populateAniosHistorial(5, currentAniosHistorialValue);
+                    populateAniosHistorial([], currentAniosHistorialValue);
                 });
         }
 

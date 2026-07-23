@@ -25,7 +25,7 @@ class FichaNarratorService
             return str_replace('{municipio}', $municipio->nombre, $plantilla);
         }
 
-        $polaridad = $datos['polaridad'] ?? 'alta_mejor';
+        $polaridad = self::normalizarPolaridad($datos['polaridad'] ?? 'neutro');
         $valorActualNum = $datos['total'] ?? 0;
 
         // Generar textos dinámicos inteligentes
@@ -67,6 +67,15 @@ class FichaNarratorService
         return str_replace(array_keys($reemplazos), array_values($reemplazos), $plantilla);
     }
 
+    private static function normalizarPolaridad(string $polaridad): string
+    {
+        return match ($polaridad) {
+            'asendente', 'alta_mejor' => 'alta_mejor',
+            'descendente', 'baja_mejor' => 'baja_mejor',
+            default => 'neutro',
+        };
+    }
+
     /**
      * Analiza el historial de tendencia para redactar el progreso histórico en lenguaje natural.
      */
@@ -103,19 +112,21 @@ class FichaNarratorService
             if ($polaridad === 'baja_mejor') {
                 // Sube indicador negativo (ej. pobreza): Favorable = falso
                 return "registrando un incremento desfavorable del {$absPct} {$periodo}";
-            } else {
+            } elseif ($polaridad === 'alta_mejor') {
                 // Sube indicador positivo (ej. alfabetismo): Favorable = verdadero
                 return "mostrando un crecimiento acumulado del {$absPct} {$periodo}";
             }
+            return "registrando un incremento del {$absPct} {$periodo}";
         } else {
             // El valor bajó
             if ($polaridad === 'baja_mejor') {
                 // Baja indicador negativo: Favorable = verdadero
                 return "logrando una reducción favorable del {$absPct} {$periodo}";
-            } else {
+            } elseif ($polaridad === 'alta_mejor') {
                 // Baja indicador positivo: Favorable = falso
                 return "registrando un retroceso del {$absPct} {$periodo}";
             }
+            return "registrando una reducción del {$absPct} {$periodo}";
         }
     }
 
@@ -142,6 +153,8 @@ class FichaNarratorService
             if ($veces > 1.0) {
                 if ($polaridad === 'alta_mejor') {
                     return "siendo " . number_format($veces, 1) . " veces superior al promedio {$tipo}";
+                } elseif ($polaridad === 'baja_mejor') {
+                    return "siendo " . number_format($veces, 1) . " veces superior al promedio {$tipo} (desfavorable)";
                 } else {
                     return "lo que representa " . number_format($veces, 1) . " veces la media {$tipo}";
                 }
@@ -155,15 +168,17 @@ class FichaNarratorService
         if ($diff > 0) {
             if ($polaridad === 'alta_mejor') {
                 return "lo que posiciona al municipio un {$absPct} por encima del promedio {$tipo}";
-            } else {
+            } elseif ($polaridad === 'baja_mejor') {
                 return "lo que representa un {$absPct} más que la media {$tipo}";
             }
+            return "ubicándose un {$absPct} por encima del promedio {$tipo}";
         } else {
             if ($polaridad === 'alta_mejor') {
                 return "lo que representa un rezago del {$absPct} respecto al promedio {$tipo}";
-            } else {
+            } elseif ($polaridad === 'baja_mejor') {
                 return "lo que sitúa al municipio un {$absPct} por debajo de la media {$tipo}";
             }
+            return "ubicándose un {$absPct} por debajo del promedio {$tipo}";
         }
     }
 
@@ -184,6 +199,10 @@ class FichaNarratorService
         }
 
         $percentil = ($pos / $total) * 100;
+
+        if ($polaridad === 'neutro') {
+            return "en la posición {$pos} de {$total} municipios a nivel estatal";
+        }
 
         if ($polaridad === 'alta_mejor') {
             // Posiciones iniciales (1, 2, 3...) tienen valores altos, que es lo mejor

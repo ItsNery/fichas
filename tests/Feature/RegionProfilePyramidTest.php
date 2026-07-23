@@ -123,4 +123,127 @@ class RegionProfilePyramidTest extends TestCase
         $response->assertSee('Municipio externo', false);
         $response->assertDontSee('"type":"bar-horizontal"', false);
     }
+
+    public function test_regional_profile_averages_indicators_with_promedio_unit(): void
+    {
+        $macro = new Macrorregion();
+        $macro->nombre = 'Región promedio';
+        $macro->slug = 'region-promedio';
+        $macro->save();
+        $micro = new Microrregion();
+        $micro->nombre = 'Micro promedio';
+        $micro->slug = 'micro-promedio';
+        $micro->macrorregion_id = $macro->id;
+        $micro->save();
+        $municipioA = new Municipio();
+        $municipioA->nombre = 'Municipio A';
+        $municipioA->slug = 'promedio-a';
+        $municipioA->microrregion_id = $micro->id;
+        $municipioA->save();
+        $municipioB = new Municipio();
+        $municipioB->nombre = 'Municipio B';
+        $municipioB->slug = 'promedio-b';
+        $municipioB->microrregion_id = $micro->id;
+        $municipioB->save();
+
+        $dimension = Dimension::create(['nombre' => 'Social promedio', 'nombre_tecnico' => 'social_promedio']);
+        $tematica = Tematica::create(['nombre' => 'Vivienda', 'nombre_tecnico' => 'vivienda', 'dimension_id' => $dimension->id]);
+        $indicador = Indicador::create(['nombre_amigable' => 'Índice de hacinamiento', 'tematica_id' => $tematica->id]);
+        $variable = Variable::create([
+            'indicador_id' => $indicador->id,
+            'nombre_amigable' => 'Índice de hacinamiento',
+            'nombre_tecnico' => 'indice_hacinamiento',
+            'unidad_medida' => 'Promedio',
+        ]);
+        ConfiguracionFicha::create([
+            'indicador_id' => $indicador->id,
+            'seccion' => 'social_promedio',
+            'orden' => 1,
+            'tipo_visualizacion' => 'barras',
+            'clase_grid' => 'col-12',
+            'activo' => true,
+        ]);
+
+        DatoHistorico::create(['municipio_id' => $municipioA->id, 'variable_id' => $variable->id, 'anio' => 2020, 'valor' => 0.08]);
+        DatoHistorico::create(['municipio_id' => $municipioB->id, 'variable_id' => $variable->id, 'anio' => 2020, 'valor' => 1.5]);
+
+        $response = $this->get(route('regiones.macro.perfil', $macro->slug));
+
+        $response->assertOk();
+        $response->assertSee('"valor_actual":"0.79"', false);
+        $response->assertDontSee('"valor_actual":"2"', false);
+
+        $stateResponse = $this->get(route('regiones.estatal.perfil'));
+        $stateResponse->assertOk();
+        $stateResponse->assertSee('"valor_actual":"0.79"', false);
+    }
+
+    public function test_state_profile_route_is_available(): void
+    {
+        $response = $this->get(route('regiones.estatal.perfil'));
+
+        $response->assertOk();
+        $response->assertSee('Estado de Puebla');
+        $response->assertSee(route('regiones.estatal.pdf'), false);
+        $response->assertSee(route('regiones.estatal.excel'), false);
+    }
+
+    public function test_state_profile_calculates_sex_ratio_from_population_totals(): void
+    {
+        $macro = new Macrorregion();
+        $macro->nombre = 'Región demográfica';
+        $macro->slug = 'region-demografica';
+        $macro->save();
+        $micro = new Microrregion();
+        $micro->nombre = 'Micro demográfica';
+        $micro->slug = 'micro-demografica';
+        $micro->macrorregion_id = $macro->id;
+        $micro->save();
+        $municipioA = Municipio::create(['nombre' => 'Municipio A', 'slug' => 'ratio-a', 'microrregion_id' => $micro->id]);
+        $municipioB = Municipio::create(['nombre' => 'Municipio B', 'slug' => 'ratio-b', 'microrregion_id' => $micro->id]);
+
+        $dimension = Dimension::create(['nombre' => 'Demográfica ratio', 'nombre_tecnico' => 'demografica_ratio']);
+        $tematica = Tematica::create(['nombre' => 'Sexo', 'nombre_tecnico' => 'sexo', 'dimension_id' => $dimension->id]);
+        $poblacion = Indicador::create(['nombre_amigable' => 'Población total según sexo', 'tematica_id' => $tematica->id]);
+        $mujeres = Variable::create(['indicador_id' => $poblacion->id, 'nombre_amigable' => 'Población mujeres', 'nombre_tecnico' => 'poblacion_mujeres', 'unidad_medida' => 'Habitantes']);
+        $hombres = Variable::create(['indicador_id' => $poblacion->id, 'nombre_amigable' => 'Población hombres', 'nombre_tecnico' => 'poblacion_hombres', 'unidad_medida' => 'Habitantes']);
+        ConfiguracionFicha::create([
+            'indicador_id' => $poblacion->id,
+            'seccion' => 'demografica_ratio',
+            'orden' => 1,
+            'tipo_visualizacion' => 'treemap',
+            'clase_grid' => 'col-12',
+            'activo' => true,
+        ]);
+        $relacion = Indicador::create(['nombre_amigable' => 'Relación hombres-mujeres', 'tematica_id' => $tematica->id]);
+        $variableRelacion = Variable::create([
+            'indicador_id' => $relacion->id,
+            'nombre_amigable' => 'Relación hombres-mujeres',
+            'nombre_tecnico' => 'relacion_hombres_mujeres',
+            'unidad_medida' => 'Hombres por cada cien mujeres',
+        ]);
+        ConfiguracionFicha::create([
+            'indicador_id' => $relacion->id,
+            'seccion' => 'demografica_ratio',
+            'orden' => 1,
+            'tipo_visualizacion' => 'lineas',
+            'clase_grid' => 'col-12',
+            'activo' => true,
+        ]);
+
+        foreach ([[$municipioA, 60, 40, 66.6667], [$municipioB, 340, 260, 76.4706]] as [$municipio, $mujeresValor, $hombresValor, $ratio]) {
+            DatoHistorico::create(['municipio_id' => $municipio->id, 'variable_id' => $mujeres->id, 'anio' => 2020, 'valor' => $mujeresValor]);
+            DatoHistorico::create(['municipio_id' => $municipio->id, 'variable_id' => $hombres->id, 'anio' => 2020, 'valor' => $hombresValor]);
+            DatoHistorico::create(['municipio_id' => $municipio->id, 'variable_id' => $variableRelacion->id, 'anio' => 2020, 'valor' => $ratio]);
+        }
+
+        $response = $this->get(route('regiones.estatal.perfil'));
+
+        $response->assertOk();
+        $response->assertSee('"valor_actual":"75.00"', false);
+        $response->assertSee('"eje_x":{"categorias":[2020', false);
+        $response->assertSee('"type":"treemap"', false);
+        $response->assertSee('"name":"Hombres"', false);
+        $response->assertSee('"name":"Mujeres"', false);
+    }
 }
