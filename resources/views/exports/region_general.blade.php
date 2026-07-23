@@ -25,6 +25,27 @@
             <td style="font-weight: bold;">Total de Municipios</td>
             <td>{{ $datos['municipios']->count() }}</td>
         </tr>
+        @if($datos['tipoRegion'] === 'Estatal')
+        <tr>
+            <td style="font-weight: bold;">Macrorregiones oficiales</td>
+            <td>{{ $datos['alcanceTerritorial']['macrorregiones_oficiales'] }}</td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Microrregiones oficiales</td>
+            <td>{{ $datos['alcanceTerritorial']['microrregiones_oficiales'] }}</td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Microrregiones representadas en los datos</td>
+            <td>{{ $datos['alcanceTerritorial']['microrregiones_representadas'] }}</td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Fuente de regionalización</td>
+            <td>{{ $datos['alcanceTerritorial']['fuente_url'] }}</td>
+        </tr>
+        <tr>
+            <td colspan="2">La información se integra a nivel municipal y no divide datos para porciones territoriales de municipios.</td>
+        </tr>
+        @endif
         <tr>
             <td colspan="2"></td>
         </tr>

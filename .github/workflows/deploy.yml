@@ -19,6 +19,7 @@ jobs:
 
           git fetch origin
           git reset --hard origin/beta
+          test -f public/img/fondos/Fondo-hero.webp
           mkdir -p storage/framework/views
           mkdir -p storage/framework/cache
           mkdir -p storage/framework/sessions
@@ -55,6 +56,7 @@ jobs:
 
           git fetch origin
           git reset --hard origin/main
+          test -f public/img/fondos/Fondo-hero.webp
           sudo chown -R user_planeacion:www-data storage bootstrap/cache
           sudo chmod -R 775 storage bootstrap/cache
           sudo chmod -R g+s storage bootstrap/cache

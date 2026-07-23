@@ -9,7 +9,7 @@
 
     {{-- 1. HERO SECTION (v2) --}}
     <section class="hero-ficha"
-        style="background-image: url('{{ $municipio->banner_image_url ?? 'https://picsum.photos/seed/' . $municipio->id . '/1400/650?grayscale&blur=1' }}')">
+        style="background-image: url('{{ $municipio->banner_image_url ?? asset(config('regionalizacion.fallback_hero')) }}')">
         <div class="hero-ficha__capa-gradiente"></div>
 
         <div class="container hero-ficha__contenedor">

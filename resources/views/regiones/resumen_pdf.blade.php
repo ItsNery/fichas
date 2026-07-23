@@ -87,6 +87,15 @@
             margin-bottom: 25px;
         }
 
+        .scope-note {
+            border: 1px solid #ead8bd;
+            border-left: 4px solid #c79b66;
+            background: #fffaf4;
+            padding: 8px 10px;
+            margin-bottom: 18px;
+            font-size: 0.9em;
+        }
+
         .kpi-grid {
             width: 100%;
             border-collapse: collapse;
@@ -203,6 +212,16 @@
             <strong>Superficie:</strong> {{ number_format($superficieTotal, 2) }} km²<br>
             <strong>Municipios que la conforman:</strong> {{ $municipios->count() }}
         </p>
+
+        @if($tipoRegion === 'Estatal')
+            <div class="scope-note">
+                <strong>Alcance territorial:</strong>
+                {{ $alcanceTerritorial['macrorregiones_oficiales'] }} macrorregiones oficiales y
+                {{ $alcanceTerritorial['microrregiones_oficiales'] }} microrregiones oficiales.
+                La información estadística se integra a nivel municipal; los municipios que intersectan varias microrregiones no se dividen ni se duplican.
+                Fuente: {{ $alcanceTerritorial['fuente_url'] }}
+            </div>
+        @endif
 
         @foreach ($perfil as $seccion => $items)
             @if($seccion != 'general')

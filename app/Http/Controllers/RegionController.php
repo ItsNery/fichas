@@ -46,7 +46,7 @@ class RegionController extends Controller
         if ($municipiosCount === 1) {
             $municipio = $microrregion->municipios->first();
             return redirect()->route('ficha-municipal.perfil', $municipio->slug)
-                ->with('info', 'La información para esta microrregión no se puede desagregar porque pertenece a un municipio particionado. Te hemos redirigido a la ficha de su municipio correspondiente.');
+                ->with('info', "Esta microrregión no tiene información municipal desagregable en el sistema. Te hemos redirigido a la ficha de {$municipio->nombre}, donde se encuentra la información disponible.");
         } elseif ($municipiosCount === 0) {
             if ($microrregion->macrorregion) {
                     return redirect()->route('regiones.macro.perfil', $microrregion->macrorregion->slug)
@@ -76,6 +76,8 @@ class RegionController extends Controller
      */
     private function obtenerDatosPerfil($tipoRegion, $region, $municipios, $municipiosIds)
     {
+        $municipios = $municipios->unique('id')->values();
+        $municipiosIds = collect($municipiosIds)->unique()->values()->all();
         $aggregation = app(\App\Services\GeographicAggregationService::class);
         $esEstatal = $tipoRegion === 'Estatal';
         // 1. Obtener configuraciones activas (igual que en perfil municipal)
@@ -482,7 +484,7 @@ class RegionController extends Controller
                         'nombre' => $macro?->nombre ?? 'Sin macrorregión',
                         'slug' => $macro?->slug,
                         'municipios' => $grupo->count(),
-                        'microrregiones' => $grupo->pluck('microrregion_id')->filter()->unique()->count(),
+                        'microrregiones_representadas' => $grupo->pluck('microrregion_id')->filter()->unique()->count(),
                         'poblacion' => (float) $grupo->sum(fn ($municipio) => (float) ($poblacionPorMunicipio->get($municipio->id)?->valor ?? 0)),
                     ];
                 })
@@ -490,6 +492,19 @@ class RegionController extends Controller
                 ->values()
                 ->all();
         }
+
+        $microrregionesRepresentadas = $municipios->pluck('microrregion_id')->filter()->unique()->count();
+        $macrorregionesRepresentadas = $esEstatal
+            ? collect($resumenTerritorial)->whereNotNull('id')->count()
+            : ($municipios->isNotEmpty() ? 1 : 0);
+        $alcanceTerritorial = [
+            'municipios_con_informacion' => $municipios->count(),
+            'macrorregiones_oficiales' => config('regionalizacion.macrorregiones'),
+            'microrregiones_oficiales' => config('regionalizacion.microrregiones'),
+            'macrorregiones_representadas' => $macrorregionesRepresentadas,
+            'microrregiones_representadas' => $microrregionesRepresentadas,
+            'fuente_url' => config('regionalizacion.url'),
+        ];
 
         return [
             'tipoRegion' => $tipoRegion,
@@ -501,6 +516,7 @@ class RegionController extends Controller
             'poblacionCobertura' => $poblacionCobertura,
             'superficieTotal' => $superficieKm2,
             'resumenTerritorial' => $resumenTerritorial,
+            'alcanceTerritorial' => $alcanceTerritorial,
             'perfil' => $perfil
         ];
     }
@@ -551,7 +567,7 @@ class RegionController extends Controller
         if ($municipiosCount === 1) {
             $municipio = $microrregion->municipios->first();
             return redirect()->route('ficha-municipal.pdf', $municipio->slug)
-                ->with('info', 'La información para esta microrregión no se puede desagregar. Te hemos redirigido a la ficha de su municipio.');
+                ->with('info', "Esta microrregión no tiene información municipal desagregable en el sistema. Te hemos redirigido a la ficha de {$municipio->nombre}.");
         } elseif ($municipiosCount === 0) {
             return redirect()->back()->with('error', 'Microrregión sin datos.');
         }
@@ -598,7 +614,7 @@ class RegionController extends Controller
         if ($municipiosCount === 1) {
             $municipio = $microrregion->municipios->first();
             return redirect()->route('ficha-municipal.perfil', $municipio->slug)
-                ->with('info', 'La información para esta microrregión no se puede desagregar. Te hemos redirigido a la ficha de su municipio.');
+                ->with('info', "Esta microrregión no tiene información municipal desagregable en el sistema. Te hemos redirigido a la ficha de {$municipio->nombre}.");
         } elseif ($municipiosCount === 0) {
             return redirect()->back()->with('error', 'Microrregión sin datos.');
         }

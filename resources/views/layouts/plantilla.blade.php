@@ -159,6 +159,10 @@
     <main id="main-content">
         @include('layouts.header')
 
+        <div class="container pt-3">
+            @include('partials.alerts')
+        </div>
+
         @yield('content')
 
         @include('layouts.footer')

@@ -184,8 +184,50 @@ class RegionProfilePyramidTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Estado de Puebla');
+        $response->assertSee('7');
+        $response->assertSee('31');
+        $response->assertSee('Microrregiones oficiales');
+        $response->assertSee('Alcance territorial de esta ficha');
+        $response->assertSee('https://planeader.puebla.gob.mx/regionalizacion', false);
+        $response->assertSee('Fondo-hero.webp', false);
         $response->assertSee(route('regiones.estatal.pdf'), false);
         $response->assertSee(route('regiones.estatal.excel'), false);
+    }
+
+    public function test_non_desagregable_microrregion_redirect_explains_available_municipal_profile(): void
+    {
+        $macro = new Macrorregion();
+        $macro->nombre = 'Macro redirección';
+        $macro->slug = 'macro-redireccion';
+        $macro->save();
+        $micro = new Microrregion();
+        $micro->nombre = 'Micro Puebla';
+        $micro->slug = 'micro-puebla';
+        $micro->macrorregion_id = $macro->id;
+        $micro->save();
+        $municipio = Municipio::create([
+            'nombre' => 'Puebla',
+            'slug' => 'puebla',
+            'microrregion_id' => $micro->id,
+        ]);
+
+        $response = $this->get(route('regiones.micro.perfil', $micro->slug));
+
+        $response->assertRedirect(route('ficha-municipal.perfil', $municipio->slug));
+        $response->assertSessionHas('info', "Esta microrregión no tiene información municipal desagregable en el sistema. Te hemos redirigido a la ficha de Puebla, donde se encuentra la información disponible.");
+    }
+
+    public function test_omnisearch_includes_state_profile_for_puebla(): void
+    {
+        $response = $this->getJson(route('api.omnisearch', ['q' => 'Puebla']));
+
+        $response->assertOk()
+            ->assertJsonFragment([
+                'id' => 'estado_puebla',
+                'text' => 'Puebla',
+                'type' => 'Estado',
+                'url' => route('regiones.estatal.perfil'),
+            ]);
     }
 
     public function test_state_profile_calculates_sex_ratio_from_population_totals(): void

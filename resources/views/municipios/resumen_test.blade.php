@@ -9,7 +9,7 @@
 @section('content')
 
 {{-- 1. HERO SECTION --}}
-<section class="hero-ficha" style="background-image: url('{{ $municipio->banner_image_url ?? 'https://picsum.photos/id/1015/1920/1080?blur=2' }}')">
+<section class="hero-ficha" style="background-image: url('{{ $municipio->banner_image_url ?? asset(config('regionalizacion.fallback_hero')) }}')">
     <div class="hero-ficha__capa-gradiente"></div>
 
     <div class="container hero-ficha__contenedor">

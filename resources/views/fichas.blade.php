@@ -136,12 +136,12 @@ $currentUrl = url()->current();
                     <div class="tab-pane fade show active" id="pane-municipios" role="tabpanel">
                         <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
                             <div class="card-header bg-white py-3 border-bottom-0">
-                                <div class="d-flex justify-content-between align-items-center">
+                                <div class="chart-panel__header">
                                     <button class="btn btn-sm btn-outline-secondary toggle-catalogo-btn rounded-circle" data-bs-toggle="tooltip" title="Ocultar catálogo">
                                         <i class="fas fa-chevron-left"></i>
                                     </button>
-                                    <h5 id="chart-title" class="mb-0 fw-bold text-dark">Selecciona un municipio</h5>
-                                    <div class="d-flex gap-2">
+                                    <h5 id="chart-title" class="chart-panel__title mb-0 fw-bold text-dark">Selecciona un municipio</h5>
+                                    <div class="chart-panel__actions d-flex gap-2">
                                         <div id="resumen-container" style="display: none;">
                                             <a href="{{ route('ficha-municipal.show', ['municipio' => 'ID_PLACEHOLDER']) }}"
                                                 id="resumen-btn" class="btn btn-sm btn-outline-info rounded-pill disabled" title="Resumen Municipal">
@@ -273,12 +273,12 @@ $currentUrl = url()->current();
                     <div class="tab-pane fade" id="pane-regiones" role="tabpanel">
                         <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
                             <div class="card-header bg-white py-3 border-bottom-0">
-                                <div class="d-flex justify-content-between align-items-center">
+                                <div class="chart-panel__header">
                                     <button class="btn btn-sm btn-outline-secondary toggle-catalogo-btn rounded-circle" data-bs-toggle="tooltip" title="Ocultar catálogo">
                                         <i class="fas fa-chevron-left"></i>
                                     </button>
-                                    <h5 id="chart-title-regions" class="mb-0 fw-bold text-dark">Selecciona una región</h5>
-                                    <div class="d-flex gap-2">
+                                    <h5 id="chart-title-regions" class="chart-panel__title mb-0 fw-bold text-dark">Selecciona una región</h5>
+                                    <div class="chart-panel__actions d-flex gap-2">
                                         <a href="{{ route('regiones.estatal.perfil') }}" class="btn btn-sm btn-outline-success rounded-pill">
                                             <i class="fas fa-globe-americas me-1"></i> Perfil estatal
                                         </a>
@@ -341,7 +341,7 @@ $currentUrl = url()->current();
                                         Consulta actual: Aún no has seleccionado un indicador regional.
                                     </div>
                                     <div id="view-guidance-regions" class="alert alert-info border-0 rounded-4 py-2 px-3 small mb-3">
-                                        Algunas microrregiones no se muestran por limitaciones de desagregación. El mapa se activa cuando la consulta regional aplica.
+                                         La consulta regional utiliza municipios completos; algunas intersecciones oficiales no se muestran porque la información no puede desagregarse por porciones territoriales. <a href="{{ config('regionalizacion.url') }}" target="_blank" rel="noopener noreferrer">Consulta la regionalización oficial vigente</a>.
                                     </div>
                                     <div id="chart-container-regions" style="min-height: 500px; width: 100%;">
                                         <div class="d-flex flex-column align-items-center justify-content-center h-100 py-5">

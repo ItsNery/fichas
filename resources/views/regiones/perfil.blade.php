@@ -4,7 +4,7 @@
 
 @section('content')
 {{-- 1. HERO SECTION --}}
-<section class="hero-ficha" style="background-image: url('https://picsum.photos/id/1016/1920/1080?blur=2')">
+<section class="hero-ficha hero-ficha--{{ Str::slug($tipoRegion) }}" style="background-image: url('{{ $region->banner_image_url ?? asset(config('regionalizacion.fallback_hero')) }}')">
     <div class="hero-ficha__capa-gradiente"></div>
 
     <div class="container hero-ficha__contenedor">
@@ -18,7 +18,7 @@
                     </ol>
                 </nav>
 
-                <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="d-flex align-items-center gap-3 mb-3 flex-wrap hero-ficha__acciones">
                     <span class="badge bg-gold px-3 py-2 text-uppercase hero-ficha__badge m-0">PERFIL {{ strtoupper($tipoRegion) }}</span>
                     @php
                         $pdfRoute = match ($tipoRegion) {
@@ -46,7 +46,7 @@
 
                 <div class="d-flex gap-5 mt-5 flex-column flex-md-row">
                     <div class="hero-info-item">
-                        <small class="d-block text-white-50 text-uppercase small letter-spacing-1">{{ $esEstatal ? 'Municipios del estado' : 'Municipios que la conforman' }}</small>
+                        <small class="d-block text-white-50 text-uppercase small letter-spacing-1">{{ $esEstatal ? 'Municipios con información' : 'Municipios que la conforman' }}</small>
                         <span class="h5 fw-bold">{{ $municipios->count() }} municipios</span>
                     </div>
                     <div class="hero-info-item">
@@ -55,13 +55,13 @@
                         <small class="d-block text-white-50">Año {{ $poblacionAnio ?? 'N/D' }} · {{ $poblacionCobertura['con_dato'] ?? 0 }}/{{ $poblacionCobertura['total'] ?? 0 }} municipios</small>
                     </div>
                     <div class="hero-info-item">
-                        <small class="d-block text-white-50 text-uppercase small letter-spacing-1">Superficie</small>
+                        <small class="d-block text-white-50 text-uppercase small letter-spacing-1">{{ $esEstatal ? 'Superficie municipal total' : 'Superficie representada' }}</small>
                         <span class="h5 fw-bold d-block">{{ number_format($superficieTotal, 2) }} km²</span>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-5 d-none d-lg-block">
+            <div class="col-lg-5">
                 <div class="card border-0 bg-transparent text-white mt-4">
                     <div class="card-body">
                         @if($esEstatal)
@@ -69,23 +69,24 @@
                             <div class="row g-3">
                                 <div class="col-6">
                                     <div class="border border-white border-opacity-25 rounded-3 p-3 bg-white bg-opacity-10">
-                                        <span class="d-block h3 mb-1">{{ count($resumenTerritorial) }}</span>
-                                        <small class="text-white-50 text-uppercase">Macrorregiones</small>
+                                        <span class="d-block h3 mb-1">{{ $alcanceTerritorial['macrorregiones_oficiales'] }}</span>
+                                        <small class="text-white-50 text-uppercase">Macrorregiones oficiales</small>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="border border-white border-opacity-25 rounded-3 p-3 bg-white bg-opacity-10">
-                                        <span class="d-block h3 mb-1">{{ $municipios->pluck('microrregion_id')->filter()->unique()->count() }}</span>
-                                        <small class="text-white-50 text-uppercase">Microrregiones</small>
+                                        <span class="d-block h3 mb-1">{{ $alcanceTerritorial['microrregiones_oficiales'] }}</span>
+                                        <small class="text-white-50 text-uppercase">Microrregiones oficiales</small>
                                     </div>
                                 </div>
                             </div>
+                            <small class="d-block text-white-50 mt-3">La información estadística se representa con municipios completos.</small>
                             <a href="#territorio-estatal" class="btn btn-outline-light btn-sm rounded-pill mt-3">
                                 <i class="fas fa-map me-1"></i> Explorar estructura territorial
                             </a>
                         @else
                             <h5 class="fw-bold text-gold mb-3">Municipios:</h5>
-                            <div class="d-flex flex-wrap gap-2" style="max-height: 200px; overflow-y: auto; scrollbar-width: thin;">
+                            <div class="d-flex flex-wrap gap-2 hero-ficha__region-list" style="max-height: 200px; overflow-y: auto; scrollbar-width: thin;">
                                 @foreach($municipios as $muni)
                                     <a href="{{ route('ficha-municipal.perfil', $muni->slug) }}" class="badge bg-white bg-opacity-10 text-white text-decoration-none border border-white border-opacity-25" style="transition: all 0.2s;" title="Ver ficha de {{ $muni->nombre }}">
                                         {{ $muni->nombre }}
@@ -100,12 +101,32 @@
     </div>
 </section>
 
+<section class="container mt-4" aria-labelledby="alcance-territorial-titulo">
+    <aside class="territorial-scope-note">
+        <div class="d-flex align-items-start gap-3">
+            <i class="fas fa-circle-info territorial-scope-note__icon" aria-hidden="true"></i>
+            <div>
+                <h2 id="alcance-territorial-titulo" class="territorial-scope-note__title">Alcance territorial de esta ficha</h2>
+                @if($esEstatal)
+                <p class="mb-2">La información estadística se integra a nivel municipal. Algunos municipios intersectan más de una microrregión oficial, pero sus datos no pueden dividirse por porciones territoriales. Para evitar duplicidades, cada municipio se incorpora una sola vez conforme a la asignación municipal disponible.</p>
+                <p class="mb-2">Por ello, los conteos de información representada no deben interpretarse como el total territorial oficial de microrregiones.</p>
+                @else
+                <p class="mb-2">Esta ficha representa municipios completos. No desagrega información para porciones territoriales de municipios que intersectan más de una microrregión oficial.</p>
+                @endif
+                <a href="{{ $alcanceTerritorial['fuente_url'] }}" target="_blank" rel="noopener noreferrer" class="territorial-scope-note__link">
+                    Consultar regionalización oficial vigente <i class="fas fa-arrow-up-right-from-square ms-1" aria-hidden="true"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+</section>
+
 @if($esEstatal)
 <section id="territorio-estatal" class="container mt-5">
     <div class="dimension-header shadow-sm">
         <div>
             <h2 class="display-5 fw-bold mb-1">Estructura territorial</h2>
-            <p class="text-muted mb-0">Distribución del estado por macrorregión y microrregión.</p>
+            <p class="text-muted mb-0">{{ $alcanceTerritorial['macrorregiones_oficiales'] }} macrorregiones oficiales; las métricas de las tarjetas usan municipios completos con información disponible.</p>
         </div>
     </div>
     <div class="row g-4">
@@ -127,8 +148,8 @@
                             <small class="text-muted">Municipios</small>
                         </div>
                         <div class="col-4">
-                            <strong class="d-block text-vino">{{ $macro['microrregiones'] }}</strong>
-                            <small class="text-muted">Micros</small>
+                            <strong class="d-block text-vino">{{ $macro['microrregiones_representadas'] }}</strong>
+                            <small class="text-muted">Microrregiones con información</small>
                         </div>
                         <div class="col-4">
                             <strong class="d-block text-vino">{{ number_format($macro['poblacion']) }}</strong>

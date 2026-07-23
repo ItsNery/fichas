@@ -158,6 +158,7 @@
                             'Indicador':     '#0c312d',
                             'Microrregión':  '#c5a059',
                             'Macrorregión':  '#2c5f2d',
+                            'Estado':        '#5f1b2d',
                         };
                         const color = typeColors[data.type] || '#666';
                         return `<div class="d-flex align-items-center gap-2 py-1 px-1">
@@ -171,7 +172,7 @@
                         </div>`;
                     },
                     item: function(data, escape) {
-                        return `<div><i class="fas ${escape(data.icon)} me-1"></i>${escape(data.text)}</div>`;
+                        return `<div><i class="fas ${escape(data.icon)} me-1"></i>${escape(data.text)} <small class="text-muted">(${escape(data.type)})</small></div>`;
                     },
                     no_results: function() {
                         return '<div class="no-results p-3 text-center text-muted"><i class="fas fa-search me-1"></i>Sin resultados. Intenta con otro término.</div>';

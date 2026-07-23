@@ -1992,6 +1992,27 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    function desplazarASeccionGrafica(container) {
+        if (
+            !container ||
+            !window.matchMedia("(max-width: 767.98px)").matches
+        ) {
+            return;
+        }
+
+        const target = container.closest(".viz-wrapper") || container;
+        requestAnimationFrame(() => {
+            const mainNav = document.getElementById("main-nav");
+            const offset = (mainNav?.getBoundingClientRect().height || 0) + 12;
+            const top = target.getBoundingClientRect().top + window.scrollY - offset;
+            const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+                ? "auto"
+                : "smooth";
+
+            window.scrollTo({ top: Math.max(0, top), behavior });
+        });
+    }
+
     function renderizarGrafico(
         datosParaGrafico,
         container,
@@ -2271,6 +2292,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                     displayChoroplethMap(data.mapData);
                 }
+                desplazarASeccionGrafica(activeChartContainer);
                 const nuevaUrl = generarURLdeEstado();
                 const nuevoTitulo = data.titulo || "Banco de Indicadores";
                 history.pushState(appState, nuevoTitulo, nuevaUrl);

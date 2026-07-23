@@ -7,6 +7,7 @@ use App\Models\Macrorregion;
 use App\Models\Microrregion;
 use App\Models\Municipio;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 /**
  * OmnisearchController
@@ -33,6 +34,16 @@ class OmnisearchController extends Controller
         }
 
         $results = collect();
+
+        if (Str::contains(Str::lower(Str::ascii($q)), 'puebla')) {
+            $results->push([
+                'id'   => 'estado_puebla',
+                'text' => 'Puebla',
+                'type' => 'Estado',
+                'icon' => 'fa-landmark',
+                'url'  => route('regiones.estatal.perfil'),
+            ]);
+        }
 
         // 1. Municipios (prioridad alta, límite 5)
         $municipios = Municipio::where('nombre', 'LIKE', "%{$q}%")

@@ -84,7 +84,7 @@
                 data-micro="{{ $micro?->id }}">
                 <article class="tarjeta-municipio">
                     <img class="tarjeta-municipio__imagen"
-                        src="{{ $mun->banner_image_url ?: "https://picsum.photos/seed/{$mun->id}/400/250" }}"
+                        src="{{ $mun->banner_image_url ?: asset(config('regionalizacion.fallback_hero')) }}"
                         alt="Foto de {{ $mun->nombre }}"
                         loading="lazy"
                         decoding="async">

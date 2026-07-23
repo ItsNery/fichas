@@ -16,7 +16,10 @@ yarn-error.log
 /public/documentos
 /public/fontAwesome
 /public/geojson
-/public/img
+/public/img/*
+!/public/img/fondos/
+/public/img/fondos/*
+!/public/img/fondos/Fondo-hero.webp
 fichas_municipales.sql
 fichas_municipales.rar
 opencode.json

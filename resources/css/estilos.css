@@ -1595,12 +1595,39 @@ inicio {
     box-shadow: none !important;
 }
 
+.chart-panel__header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.chart-panel__title,
 #chart-title {
+    min-width: 0;
     font-size: 1.4rem;
     font-weight: 800;
     color: var(--color1);
     letter-spacing: -0.03em;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    overflow-wrap: anywhere;
+}
+
+.chart-panel__actions {
+    min-width: 0;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 991.98px) {
+    .chart-panel__header {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .chart-panel__actions {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+    }
 }
 
 /* Fix Z-index for Dropdowns */
@@ -1652,6 +1679,18 @@ inicio {
     overflow-y: auto;
     position: sticky;
     top: 20px;
+}
+
+@media (max-width: 767.98px) {
+    .catalogo-col {
+        max-height: none;
+        overflow: visible;
+        position: static;
+    }
+
+    .content-col {
+        min-width: 0;
+    }
 }
 
 /* Accordion Hierarchy */
@@ -2237,7 +2276,7 @@ inicio {
     min-height: 500px;
     background-size: cover;
     background-position: center;
-    background-attachment: fixed;
+    background-attachment: scroll;
     display: flex;
     align-items: center;
     color: white;
@@ -2995,6 +3034,47 @@ inicio {
     padding: 1.25rem;
     border-radius: 15px;
     margin-bottom: 0.5rem;
+}
+
+.territorial-scope-note {
+    border: 1px solid rgba(95, 27, 45, 0.14);
+    border-left: 4px solid var(--color4);
+    border-radius: 0.75rem;
+    padding: 1rem 1.15rem;
+    background: #fffaf4;
+    color: #4b4b4b;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.04);
+}
+
+.territorial-scope-note__icon {
+    flex: 0 0 auto;
+    color: var(--color1);
+    margin-top: 0.2rem;
+}
+
+.territorial-scope-note__title {
+    color: var(--color1);
+    font-family: var(--fontFamilyBold);
+    font-size: 1rem;
+    margin-bottom: 0.35rem;
+}
+
+.territorial-scope-note p {
+    font-size: 0.9rem;
+    line-height: 1.55;
+}
+
+.territorial-scope-note__link {
+    color: var(--color1);
+    font-family: var(--fontFamilyBold);
+    font-size: 0.85rem;
+    text-decoration: none;
+}
+
+.territorial-scope-note__link:hover,
+.territorial-scope-note__link:focus {
+    color: var(--color2);
+    text-decoration: underline;
 }
 
 .dimension-header__title {
