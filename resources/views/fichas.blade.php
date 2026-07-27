@@ -40,14 +40,14 @@ $currentUrl = url()->current();
 
                 {{-- Selector de Nivel (Segmented Control) - Persistente --}}
                 <div class="level-switcher mb-3">
-                    <div class="nav nav-pills nav-fill bg-light p-1 rounded-pill shadow-sm" id="pills-tab-nivel" role="tablist">
-                        <button class="nav-link active rounded-pill py-1 px-2 small" id="pill-municipios-tab"
+                    <div class="nav nav-pills nav-fill bg-light rounded-sm p-1 shadow-sm" id="pills-tab-nivel" role="tablist">
+                        <button class="nav-link active py-1 px-2 small" id="pill-municipios-tab"
                             data-bs-target="#pane-municipios" type="button" role="tab" data-nivel="municipio">Municipio</button>
-                        <button class="nav-link rounded-pill py-1 px-2 small" id="pill-microrregiones-tab"
+                        <button class="nav-link py-1 px-2 small" id="pill-microrregiones-tab"
                             data-bs-target="#pane-regiones" type="button" role="tab" data-nivel="microrregion">Microrregión</button>
-                        <button class="nav-link rounded-pill py-1 px-2 small" id="pill-macrorregiones-tab"
+                        <button class="nav-link py-1 px-2 small" id="pill-macrorregiones-tab"
                             data-bs-target="#pane-regiones" type="button" role="tab" data-nivel="macrorregion">Macrorregión</button>
-                        <button class="nav-link rounded-pill py-1 px-2 small" id="pill-estatal-tab"
+                        <button class="nav-link py-1 px-2 small" id="pill-estatal-tab"
                             data-bs-target="#pane-regiones" type="button" role="tab" data-nivel="estatal">Estatal</button>
                     </div>
                 </div>
@@ -146,18 +146,18 @@ $currentUrl = url()->current();
                                     <div class="chart-panel__actions d-flex gap-2">
                                         <div id="resumen-container" style="display: none;">
                                             <a href="{{ route('ficha-municipal.show', ['municipio' => 'ID_PLACEHOLDER']) }}"
-                                                id="resumen-btn" class="btn btn-sm btn-outline-info rounded-pill disabled" title="Resumen Municipal">
+                                                id="resumen-btn" class="btn btn-sm btn-outline-info rounded-sm disabled" title="Resumen Municipal">
                                                 <i class="fa-solid fa-file-invoice me-1"></i> Resumen
                                             </a>
                                         </div>
-                                        <button id="toggle-map-btn" class="btn btn-sm btn-outline-primary rounded-pill">
+                                        <button id="toggle-map-btn" class="btn btn-sm btn-outline-primary rounded-sm">
                                             <i class="fas fa-map me-1"></i> Mapa
                                         </button>
-                                        <button id="fullscreen-btn" class="btn btn-sm btn-outline-secondary rounded-pill"
+                                        <button id="fullscreen-btn" class="btn btn-sm btn-outline-secondary rounded-sm"
                                             data-bs-toggle="modal" data-bs-target="#chart-fullscreen-modal" style="display: none;">
                                             <i class="fas fa-expand me-1"></i> Expandir
                                         </button>
-                                        <button class="btn btn-sm btn-outline-dark rounded-pill" onclick="window.print()">
+                                        <button class="btn btn-sm btn-outline-dark rounded-sm" onclick="window.print()">
                                             <i class="fas fa-print me-1"></i> Imprimir
                                         </button>
                                     </div>
@@ -278,17 +278,17 @@ $currentUrl = url()->current();
                                     </button>
                                     <h5 id="chart-title-regions" class="chart-panel__title mb-0 fw-bold text-dark">Selecciona una región</h5>
                                     <div class="chart-panel__actions d-flex gap-2">
-                                        <a href="{{ route('regiones.estatal.perfil') }}" class="btn btn-sm btn-outline-success rounded-pill">
+                                        <a href="{{ route('regiones.estatal.perfil') }}" class="btn btn-sm btn-outline-success rounded-sm">
                                             <i class="fas fa-globe-americas me-1"></i> Perfil estatal
                                         </a>
-                                        <button id="toggle-map-btn-regions" class="btn btn-sm btn-outline-primary rounded-pill">
+                                        <button id="toggle-map-btn-regions" class="btn btn-sm btn-outline-primary rounded-sm">
                                             <i class="fas fa-map me-1"></i> Mapa
                                         </button>
-                                        <button id="fullscreen-btn-regions" class="btn btn-sm btn-outline-secondary rounded-pill"
+                                        <button id="fullscreen-btn-regions" class="btn btn-sm btn-outline-secondary rounded-sm"
                                             data-bs-toggle="modal" data-bs-target="#chart-fullscreen-modal" style="display: none;">
                                             <i class="fas fa-expand me-1"></i> Expandir
                                         </button>
-                                        <button class="btn btn-sm btn-outline-dark rounded-pill" onclick="window.print()">
+                                        <button class="btn btn-sm btn-outline-dark rounded-sm" onclick="window.print()">
                                             <i class="fas fa-print me-1"></i> Imprimir
                                         </button>
                                     </div>
@@ -341,10 +341,10 @@ $currentUrl = url()->current();
                                     <div id="consult-feedback-regions" class="small text-muted mb-2">
                                         Elige un indicador y una región para habilitar la consulta.
                                     </div>
-                                    <div id="view-summary-regions" class="alert alert-light border rounded-4 py-2 px-3 small mb-3">
+                                    <div id="view-summary-regions" class="alert alert-light border rounded-sm py-2 px-3 small mb-3">
                                         Consulta actual: Aún no has seleccionado un indicador regional.
                                     </div>
-                                    <div id="view-guidance-regions" class="alert alert-info border-0 rounded-4 py-2 px-3 small mb-3">
+                                    <div id="view-guidance-regions" class="alert alert-info border-0 rounded-sm py-2 px-3 small mb-3">
                                          La consulta regional utiliza municipios completos; algunas intersecciones oficiales no se muestran porque la información no puede desagregarse por porciones territoriales. <a href="{{ config('regionalizacion.url') }}" target="_blank" rel="noopener noreferrer">Consulta la regionalización oficial vigente</a>.
                                     </div>
                                     <div id="chart-container-regions" style="min-height: 500px; width: 100%;">

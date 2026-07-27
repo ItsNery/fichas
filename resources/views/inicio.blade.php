@@ -22,7 +22,7 @@
 
             <div class="row justify-content-center">
                 <div class="col-lg-8">
-                    <div class="card border-0 rounded-4 shadow-lg p-4" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+                    <div class="card border-0 rounded-sm shadow-lg p-4" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
                         <h5 class="fw-bold mb-2 text-white">
                             <i class="fas fa-search me-2"></i>Explora Puebla en Datos
                         </h5>

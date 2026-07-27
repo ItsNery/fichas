@@ -1626,6 +1626,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     function generarOpcionesEcharts(datosParaGrafico) {
         let options = {};
+        const ejeX = datosParaGrafico.eje_x || {};
         const formatNum = (val) => new Intl.NumberFormat("es-MX").format(val);
         const esAbsoluto = appState.indicatorTipoDato && appState.indicatorTipoDato.toLowerCase() === "absoluto";
         const pctFeature = esAbsoluto ? {
@@ -1692,7 +1693,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 yAxis: {
                     type: "category",
                     name: "Grupos de Edad",
-                    data: datosParaGrafico.eje_x.categorias,
+                    data: ejeX.categorias || [],
                     inverse: true,
                 },
                 series: datosParaGrafico.series.map((s) => ({
@@ -1708,8 +1709,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             if (
                 datosParaGrafico.tipo_grafico === "line" &&
-                (!datosParaGrafico.eje_x.categorias ||
-                    datosParaGrafico.eje_x.categorias.length === 0)
+                (!ejeX.categorias || ejeX.categorias.length === 0)
             ) {
                 const allYears = datosParaGrafico.series
                     .flatMap((s) => s.data.map((p) => p[0]))
@@ -1728,7 +1728,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     };
                 });
             } else {
-                xAxisData = datosParaGrafico.eje_x.categorias || [];
+                xAxisData = ejeX.categorias || [];
                 const tipoSeries =
                     datosParaGrafico.tipo_grafico === "bar" ? "bar" : "line";
                 seriesData = datosParaGrafico.series.map((serie) => ({
@@ -1776,8 +1776,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (params.value == null || isNaN(params.value))
                             return "";
 
-                        const prefijoX = datosParaGrafico.eje_x.titulo
-                            ? `${datosParaGrafico.eje_x.titulo}: `
+                        const prefijoX = ejeX.titulo
+                            ? `${ejeX.titulo}: `
                             : "";
 
                         let html = `<div style="font-weight:bold; margin-bottom: 8px; border-bottom: 1px solid #ddd; padding-bottom: 4px;">${prefijoX}${params.name}</div>`;
@@ -1869,7 +1869,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 xAxis: {
                     type: "category",
                     data: xAxisData,
-                    name: datosParaGrafico.eje_x.titulo || "",
+                    name: ejeX.titulo || "",
                     nameLocation: "middle",
                     nameGap:
                         xAxisData.length > 10

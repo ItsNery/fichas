@@ -26,9 +26,9 @@ use Illuminate\Support\Facades\Route;
 | Rutas Públicas
 |--------------------------------------------------------------------------
 */
-Route::get('/prueba-header', function () {
-     return view('prueba-header');
-});
+// Route::get('/prueba-header', function () {
+//      return view('prueba-header');
+// });
 Route::get('/', [HomeController::class, 'index'])->name('inicio');
 Route::get('/api/municipios/search', [MunicipioController::class, 'search'])->name('api.municipios.search');
 Route::get('/api/omnisearch', [OmnisearchController::class, 'search'])->name('api.omnisearch');

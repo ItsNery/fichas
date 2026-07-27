@@ -797,7 +797,10 @@ function initHeroMap() {
                 aspectScale: 1.0,
                 layoutCenter: ["50%", "50%"],
                 layoutSize: "100%",
-                label: { show: false },
+                 label: { show: false },
+                 emphasis: { label: { show: false } },
+                 select: { label: { show: false } },
+                 blur: { label: { show: false } },
                 itemStyle: {
                     areaColor: "rgba(255, 255, 255, 0.3)",
                     borderColor: "rgba(255, 255, 255, 0.6)",
