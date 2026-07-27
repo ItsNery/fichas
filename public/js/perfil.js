@@ -463,18 +463,25 @@ function renderMainChart(itemData) {
             option = {
                 tooltip: {
                     trigger: "axis",
+                    triggerOn: "mousemove",
                     axisPointer: { type: "shadow" },
                     confine: true,
                     formatter: function (params) {
                         if (!params || params.length === 0) return "";
-                        let p = params[0];
-                        let val = p.value;
-                        if (typeof val === "object" && val !== null) {
-                            val = val.value;
-                        }
-                        let formattedVal = formatChartValue(val);
+                        const points = Array.isArray(params) ? params : [params];
                         let unidad = echartsData.unidad || "";
-                        return `${p.name}<br/>${p.marker}${p.seriesName}: <strong>${formattedVal} ${unidad}</strong>`;
+                        const title = points[0].axisValue ?? points[0].name ?? "";
+
+                        return title + "<br/>" + points
+                            .filter((point) => point.value != null)
+                            .map((point) => {
+                                let value = point.value;
+                                if (typeof value === "object" && value !== null) {
+                                    value = value.value;
+                                }
+                                return `${point.marker}${point.seriesName}: <strong>${formatChartValue(value)} ${unidad}</strong>`;
+                            })
+                            .join("<br/>");
                     },
                 },
                 grid: {

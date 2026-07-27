@@ -178,6 +178,53 @@ class RegionProfilePyramidTest extends TestCase
         $stateResponse->assertDontSee('Índice de hacinamiento');
     }
 
+    public function test_per_capita_values_are_averaged_in_regional_profiles(): void
+    {
+        $macro = new Macrorregion();
+        $macro->nombre = 'Región per cápita';
+        $macro->slug = 'region-per-capita';
+        $macro->save();
+        $micro = new Microrregion();
+        $micro->nombre = 'Micro per cápita';
+        $micro->slug = 'micro-per-capita';
+        $micro->macrorregion_id = $macro->id;
+        $micro->save();
+        $municipioA = Municipio::create(['nombre' => 'Municipio A', 'slug' => 'per-capita-a', 'microrregion_id' => $micro->id]);
+        $municipioB = Municipio::create(['nombre' => 'Municipio B', 'slug' => 'per-capita-b', 'microrregion_id' => $micro->id]);
+
+        $dimension = Dimension::create(['nombre' => 'Gobierno per cápita', 'nombre_tecnico' => 'gobierno_per_capita']);
+        $tematica = Tematica::create(['nombre' => 'Recursos', 'nombre_tecnico' => 'recursos', 'dimension_id' => $dimension->id]);
+        $indicador = Indicador::create([
+            'nombre_amigable' => 'Recursos per cápita',
+            'tematica_id' => $tematica->id,
+            'tipo_dato' => 'Absoluto',
+        ]);
+        $variable = Variable::create([
+            'indicador_id' => $indicador->id,
+            'nombre_amigable' => 'Recursos por habitante',
+            'nombre_tecnico' => 'recursos_por_habitante',
+            'unidad_medida' => 'Pesos por habitante',
+            'visible_en_ficha' => true,
+        ]);
+        $configuracion = ConfiguracionFicha::create([
+            'indicador_id' => $indicador->id,
+            'seccion' => 'gobierno',
+            'orden' => 1,
+            'tipo_visualizacion' => 'kpi',
+            'activo' => true,
+        ]);
+        $configuracion->variables()->attach($variable->id);
+
+        DatoHistorico::create(['municipio_id' => $municipioA->id, 'variable_id' => $variable->id, 'anio' => 2025, 'valor' => 100]);
+        DatoHistorico::create(['municipio_id' => $municipioB->id, 'variable_id' => $variable->id, 'anio' => 2025, 'valor' => 300]);
+
+        $response = $this->get(route('regiones.macro.perfil', $macro->slug));
+
+        $response->assertOk();
+        $response->assertSee('"valor_actual":"$200.00"', false);
+        $response->assertDontSee('"valor_actual":"$400.00"', false);
+    }
+
     public function test_state_profile_route_is_available(): void
     {
         $response = $this->get(route('regiones.estatal.perfil'));

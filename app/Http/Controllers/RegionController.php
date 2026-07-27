@@ -9,6 +9,7 @@ use App\Models\ConfiguracionFicha;
 use App\Models\DatoHistorico;
 use App\Services\IndicadorQueryService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class RegionController extends Controller
@@ -73,7 +74,28 @@ class RegionController extends Controller
     /**
      * Obtiene los datos del perfil regional agregando los datos
      */
-    private function obtenerDatosPerfil($tipoRegion, $region, $municipios, $municipiosIds)
+    private function obtenerDatosPerfil($tipoRegion, $region, $municipios, $municipiosIds): array
+    {
+        if (app()->environment('testing')) {
+            return $this->construirDatosPerfil($tipoRegion, $region, $municipios, $municipiosIds);
+        }
+
+        $municipiosIds = collect($municipiosIds)->map(fn ($id) => (int) $id)->unique()->sort()->values()->all();
+        $version = implode('|', [
+            DatoHistorico::max('updated_at') ?? 'none',
+            ConfiguracionFicha::max('updated_at') ?? 'none',
+            \App\Models\Variable::max('updated_at') ?? 'none',
+            Municipio::max('updated_at') ?? 'none',
+        ]);
+        $regionId = $region->id ?? 'estatal';
+        $cacheKey = 'region-profile:' . md5($tipoRegion . '|' . $regionId . '|' . implode(',', $municipiosIds) . '|' . $version);
+
+        return Cache::remember($cacheKey, now()->addMinutes(30), fn () =>
+            $this->construirDatosPerfil($tipoRegion, $region, $municipios, $municipiosIds)
+        );
+    }
+
+    private function construirDatosPerfil($tipoRegion, $region, $municipios, $municipiosIds)
     {
         $municipios = $municipios->unique('id')->values();
         $municipiosIds = collect($municipiosIds)->unique()->values()->all();
@@ -137,18 +159,30 @@ class RegionController extends Controller
         if ($varPobId) $variablesNecesarias[] = $varPobId;
         $variablesNecesarias = array_unique($variablesNecesarias);
 
-        $datosBrutos = DatoHistorico::with('variable')
+        $datosBrutos = DatoHistorico::select(['municipio_id', 'variable_id', 'anio', 'valor'])
+            ->with('variable:id,mapeo_valores,nombre_amigable,unidad_medida,tipo_valor')
             ->whereIn('municipio_id', $municipiosIds)
             ->whereIn('variable_id', $variablesNecesarias)
             ->get();
 
+        $datosPorAnioVariable = $datosBrutos->groupBy(
+            fn ($dato) => $dato->anio . '-' . $dato->variable_id
+        );
+        $aniosPorVariableMunicipio = $datosBrutos
+            ->filter(fn ($dato) => $dato->valor !== null)
+            ->groupBy('variable_id')
+            ->map(fn ($variableRows) => $variableRows
+                ->groupBy('municipio_id')
+                ->map(fn ($municipioRows) => $municipioRows->pluck('anio')->unique()->values()->all())
+                ->all())
+            ->all();
+        $aniosComunes = [];
+
         // Agrupar por variable y municipio para sacar el año más reciente de cada uno
-        $datosRecientes = collect();
-        $agrupados = $datosBrutos->groupBy(fn($d) => $d->variable_id . '-' . $d->municipio_id);
-        
-        foreach ($agrupados as $grupo) {
-            $datosRecientes->push($grupo->sortByDesc('anio')->first());
-        }
+        $datosRecientes = $datosBrutos
+            ->sortByDesc('anio')
+            ->unique(fn ($dato) => $dato->variable_id . '-' . $dato->municipio_id)
+            ->values();
 
         // 3. Estructurar el Perfil
         $perfil = ['general' => []];
@@ -201,10 +235,34 @@ class RegionController extends Controller
                 continue;
             }
 
-            $anioConfig = $aggregation->commonLatestYear($datosBrutos, $municipiosIds, $variableIds)
+            $yearKey = implode(',', $variableIds);
+            if (!array_key_exists($yearKey, $aniosComunes)) {
+                $commonYears = null;
+                foreach ($variableIds as $variableId) {
+                    $variableYears = null;
+                    foreach ($municipiosIds as $municipioId) {
+                        $municipioYears = $aniosPorVariableMunicipio[$variableId][$municipioId] ?? [];
+                        $variableYears = $variableYears === null
+                            ? $municipioYears
+                            : array_values(array_intersect($variableYears, $municipioYears));
+                        if (!$variableYears) break;
+                    }
+
+                    $commonYears = $commonYears === null
+                        ? $variableYears
+                        : array_values(array_intersect($commonYears, $variableYears ?? []));
+                    if (!$commonYears) break;
+                }
+
+                $aniosComunes[$yearKey] = $commonYears ? max($commonYears) : null;
+            }
+
+            $anioConfig = $aniosComunes[$yearKey]
                 ?? $aggregation->latestYear($datosBrutos, $variableIds);
             $datosIndicador = $anioConfig
-                ? $datosBrutos->where('anio', $anioConfig)->whereIn('variable_id', $variableIds)
+                ? collect($variableIds)
+                    ->flatMap(fn ($variableId) => $datosPorAnioVariable->get($anioConfig . '-' . $variableId, collect()))
+                    ->values()
                 : $datosRecientes->whereIn('variable_id', $variables->pluck('id'));
 
             if ($datosIndicador->isEmpty()) continue;
@@ -308,7 +366,10 @@ class RegionController extends Controller
             // Los absolutos se suman; los demás tipos se excluyeron arriba.
             $primeraVar = $variables->first();
             $unidad = strtolower($primeraVar->unidad_medida ?? '');
-            $aggregationMethod = 'sum';
+            $esPerCapita = str_contains($unidad, 'por habitante')
+                || str_contains($unidad, 'per cápita')
+                || str_contains($unidad, 'per capita');
+            $aggregationMethod = $esPerCapita ? 'average' : 'sum';
             $esRelacionSexo = str_contains($unidad, 'hombres por cada cien mujeres');
             $esPorcentaje = false;
             $esPromedio = false;
@@ -370,8 +431,12 @@ class RegionController extends Controller
 
             // Preparar datos de ranking por municipios (apilados)
             $municipiosRanking = [];
+            $datosPorMunicipio = $datosIndicador->groupBy('municipio_id');
+            $datosPorMunicipioVariable = $datosIndicador->keyBy(
+                fn ($dato) => $dato->municipio_id . '-' . $dato->variable_id
+            );
             foreach ($municipios as $muni) {
-                $datosMuni = $datosIndicador->where('municipio_id', $muni->id);
+                $datosMuni = $datosPorMunicipio->get($muni->id, collect());
                 if ($datosMuni->isNotEmpty() && !$esCategorica) {
                     // Los absolutos se ordenan por la suma o por la variable Total prioritaria.
                     $totalParaOrdenar = $aggregation->aggregate(
@@ -408,7 +473,7 @@ class RegionController extends Controller
             foreach ($variables as $v) {
                 $datosSerie = [];
                 foreach ($rankingVista as $mRank) {
-                    $val = $datosIndicador->where('municipio_id', $mRank['id'])->where('variable_id', $v->id)->first();
+                    $val = $datosPorMunicipioVariable->get($mRank['id'] . '-' . $v->id);
                     $datosSerie[] = $val ? (float) $val->valor : null;
                 }
                 

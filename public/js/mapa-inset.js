@@ -44,19 +44,23 @@ function initHeroMapInset(chartDom, feature) {
     const height = bounds.maxY - bounds.minY;
     if (!width || !height) return;
 
+    const stateWidth = stateBounds.maxX - stateBounds.minX;
+    const stateHeight = stateBounds.maxY - stateBounds.minY;
+    const relativeArea = (width * height) / (stateWidth * stateHeight);
+
+    // El inset se reserva para municipios que son realmente pequeños en el mapa estatal.
+    if (relativeArea >= 0.005) return;
+
     const zoom = Math.min(
         12,
         Math.max(
             2.2,
             Math.min(
-                (stateBounds.maxX - stateBounds.minX) / width,
-                (stateBounds.maxY - stateBounds.minY) / height,
+                stateWidth / width,
+                stateHeight / height,
             ) * 0.65,
         ),
     );
-
-    // Los municipios grandes no necesitan una vista secundaria.
-    if (zoom < 3.5) return;
 
     const inset = document.createElement("aside");
     inset.className = "hero-ficha__mapa-inset";

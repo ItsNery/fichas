@@ -1836,6 +1836,11 @@ footer {
     }
 }
 
+.toggle-catalogo-btn {
+    height: 30px;
+    width: 30px;
+}
+
 /* Botón Consultar */
 #consultar-btn,
 #consultar-btn-regions {
@@ -1863,6 +1868,7 @@ footer {
 }
 
 @media print {
+
     .catalogo-col,
     .filter-bar,
     .level-switcher,
