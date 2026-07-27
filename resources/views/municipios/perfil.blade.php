@@ -662,6 +662,7 @@
 
 @section('jss')
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <script src="{{ asset('js/mapa-inset.js') }}?v={{ time() }}"></script>
     <script>
         window.FichaConfig = {
             cvegeo: "{{ $municipio->cvegeo }}",

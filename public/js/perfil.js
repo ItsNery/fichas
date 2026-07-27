@@ -822,6 +822,8 @@ function initHeroMap() {
             },
         ],
     });
+
+    initHeroMapInset(dom, feature);
 }
 
 function setupScrollSpy() {

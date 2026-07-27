@@ -253,6 +253,7 @@
 
 @section('jss')
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <script src="{{ asset('js/mapa-inset.js') }}?v={{ time() }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // --- 1. DUAL TRACKING via Intersection Observer ---
@@ -472,6 +473,7 @@
                             }]
                         };
                         myChart.setOption(option);
+                        initHeroMapInset(chartDom, feature);
                     });
             })();
 

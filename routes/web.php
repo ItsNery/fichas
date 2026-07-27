@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('inicio');
 Route::get('/api/municipios/search', [MunicipioController::class, 'search'])->name('api.municipios.search');
 Route::get('/api/omnisearch', [OmnisearchController::class, 'search'])->name('api.omnisearch');
+Route::view('/demo/mapa-inset', 'demo.mapa-inset')->name('demo.mapa-inset');
 
 // --- Módulo 1: Banco de Indicadores ---
 Route::prefix('banco-indicadores')->name('banco-indicadores.')->group(function () {
