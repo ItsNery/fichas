@@ -725,8 +725,13 @@ function initPopovers() {
                         popoverBody &&
                         !popoverTriggerEl.getAttribute("data-loaded")
                     ) {
+                        const similarityUrl = window.FichaConfig.similitudUrl.replace(
+                            "__CONFIG__",
+                            encodeURIComponent(configId),
+                        );
+
                         fetch(
-                            `/ficha/municipio/api/similitud-indicador/${muniId}/${configId}`,
+                            similarityUrl,
                         )
                             .then((r) => r.json())
                             .then((data) => {

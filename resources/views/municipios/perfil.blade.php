@@ -663,12 +663,19 @@
 @section('jss')
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <script src="{{ asset('js/mapa-inset.js') }}?v={{ time() }}"></script>
+    @php
+        $similitudUrl = route('ficha-municipal.api.indicador.similitud', [
+            'municipio' => $municipio->id,
+            'config' => '__CONFIG__',
+        ]);
+    @endphp
     <script>
         window.FichaConfig = {
             cvegeo: "{{ $municipio->cvegeo }}",
             municipioNombre: "{{ strtoupper($municipio->nombre) }}",
             municipioSlug: "{{ $municipio->slug }}",
             geojsonUrl: "{{ asset('geojson/municipios_puebla_slim.geojson ') }}",
+            similitudUrl: @json($similitudUrl),
             perfilData: @json($perfil)
         };
     </script>
