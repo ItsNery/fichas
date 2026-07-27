@@ -3029,16 +3029,15 @@ inicio {
 
 /* Encabezado de Dimensión */
 .dimension-header {
-    background: linear-gradient(90deg, var(--color1) 0%, var(--color2) 100%);
+    background: linear-gradient(90deg, var(--color2) 0%, var(--color2) 100%);
     color: white;
-    padding: 1.25rem;
+    padding: 1rem;
     border-radius: 15px;
     margin-bottom: 0.5rem;
 }
 
 .territorial-scope-note {
     border: 1px solid rgba(95, 27, 45, 0.14);
-    border-left: 4px solid var(--color4);
     border-radius: 0.75rem;
     padding: 1rem 1.15rem;
     background: #fffaf4;
@@ -3081,7 +3080,7 @@ inicio {
     font-size: clamp(1.25rem, 2vw, 1.8rem);
     line-height: 1.2;
     letter-spacing: -0.02em;
-    text-transform: none;
+    text-transform: capitalize;
 }
 
 /* Bloque Tarjeta de Perfil (BEM) */
@@ -3217,7 +3216,6 @@ inicio {
     margin-bottom: 1.5rem;
     position: relative;
     z-index: 2;
-    border-left: 5px solid var(--color4);
     padding-left: 2rem;
 }
 
@@ -3331,7 +3329,7 @@ inicio {
 .perfil-tarjeta__footer {
     background: transparent;
     border-top: 1px solid #f0f0f0;
-    padding: 0.75rem 1.5rem;
+    padding: 0rem 1.25rem;
 }
 
 .state-ranking-details summary {

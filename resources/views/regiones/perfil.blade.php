@@ -126,7 +126,7 @@
     <div class="dimension-header shadow-sm">
         <div>
             <h2 class="display-5 fw-bold mb-1">Estructura territorial</h2>
-            <p class="text-muted mb-0">{{ $alcanceTerritorial['macrorregiones_oficiales'] }} macrorregiones oficiales; las métricas de las tarjetas usan municipios completos con información disponible.</p>
+            <p class="text-white mb-0">{{ $alcanceTerritorial['macrorregiones_oficiales'] }} macrorregiones oficiales; las métricas de las tarjetas usan municipios completos con información disponible.</p>
         </div>
     </div>
     <div class="row g-4">
@@ -193,7 +193,7 @@
     @if($seccion != 'general')
     <section id="section-{{ Str::slug($seccion) }}" class="section-perfil mb-5 pb-5">
         <div class="dimension-header shadow-sm">
-            <h2 class="display-4 fw-bold mb-0">{{ ucwords(str_replace('_', ' ', $seccion)) }}</h2>
+            <h2 class="dimension-header__title display-4 fw-bold mb-0">{{ str_replace('_', ' ', $seccion) }}</h2>
         </div>
 
         <div class="row g-4 align-items-stretch">
@@ -320,7 +320,7 @@
                     @if(isset($item['datos']['fuente']))
                     <div class="perfil-tarjeta__footer">
                         <p class="fuente-texto">
-                            <i class="fa-solid fa-database me-1"></i> Fuente: <strong>{{ $item['datos']['fuente'] }}</strong>
+                            Fuente: <strong>{{ $item['datos']['fuente'] }}</strong>
                         </p>
                     </div>
                     @endif

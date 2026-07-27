@@ -8,7 +8,6 @@ use App\Models\Municipio;
 use App\Models\ConfiguracionFicha;
 use App\Models\DatoHistorico;
 use App\Services\IndicadorQueryService;
-use App\Services\FichaComposerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -87,11 +86,37 @@ class RegionController extends Controller
             ->orderBy('id')
             ->get();
 
+        $variablesVisibles = static function ($config) {
+            return $config->variables->where('visible_en_ficha', true)->isNotEmpty()
+                ? $config->variables->where('visible_en_ficha', true)
+                : ($config->indicador?->variables->where('visible_en_ficha', true) ?? collect());
+        };
+
+        $configuraciones = $configuraciones->filter(function ($config) use ($variablesVisibles) {
+            $indicador = $config->indicador;
+            $variables = $variablesVisibles($config);
+            if (!$indicador || $variables->isEmpty() || $config->tipo_visualizacion === 'scatter') {
+                return false;
+            }
+
+            $tipoDato = strtolower(trim((string) $indicador->tipo_dato));
+            $unidad = mb_strtolower((string) $variables->first()->unidad_medida, 'UTF-8');
+            $esCategorica = $variables->count() === 1 && $variables->first(
+                fn ($variable) => $variable->tipo_valor === 'categorica'
+                    || !empty($variable->mapeo_valores)
+            );
+            $unidadNoAditiva = str_contains($unidad, 'por cada cien')
+                || str_contains($unidad, 'promedio')
+                || str_contains($unidad, 'índice')
+                || str_contains($unidad, 'indice')
+                || str_contains($unidad, 'grado');
+
+            return ($tipoDato === 'absoluto' || $esCategorica) && (!$unidadNoAditiva || $esCategorica);
+        })->values();
+
         $variablesNecesarias = [];
         foreach ($configuraciones as $config) {
-            $vars = $config->variables->where('visible_en_ficha', true)->isNotEmpty()
-                ? $config->variables->where('visible_en_ficha', true)
-                : ($config->indicador ? $config->indicador->variables->where('visible_en_ficha', true) : collect());
+            $vars = $variablesVisibles($config);
             foreach ($vars as $var) {
                 $variablesNecesarias[] = $var->id;
             }
@@ -112,7 +137,7 @@ class RegionController extends Controller
         if ($varPobId) $variablesNecesarias[] = $varPobId;
         $variablesNecesarias = array_unique($variablesNecesarias);
 
-        $datosBrutos = DatoHistorico::with('variable.indicador')
+        $datosBrutos = DatoHistorico::with('variable')
             ->whereIn('municipio_id', $municipiosIds)
             ->whereIn('variable_id', $variablesNecesarias)
             ->get();
@@ -150,11 +175,32 @@ class RegionController extends Controller
             }
 
             // Filtrar datos para este indicador
-            $variables = $config->variables->where('visible_en_ficha', true)->isNotEmpty()
-                ? $config->variables->where('visible_en_ficha', true)
-                : $indicador->variables->where('visible_en_ficha', true);
-                
+            $variables = $variablesVisibles($config);
+
             $variableIds = $variables->pluck('id')->all();
+            $tipoDato = strtolower(trim((string) $indicador->tipo_dato));
+            $unidadPrimeraVariable = mb_strtolower((string) $variables->first()?->unidad_medida, 'UTF-8');
+            $esCategorica = $variables->count() === 1 && $variables->first(
+                fn ($variable) => $variable->tipo_valor === 'categorica'
+                    || !empty($variable->mapeo_valores)
+            );
+
+            // Solo sumas de absolutos y moda de categorías hasta contar con numeradores y denominadores.
+            if ($tipoDato !== 'absoluto' && !$esCategorica) {
+                continue;
+            }
+            $unidadNoAditiva = str_contains($unidadPrimeraVariable, 'por cada cien')
+                || str_contains($unidadPrimeraVariable, 'promedio')
+                || str_contains($unidadPrimeraVariable, 'índice')
+                || str_contains($unidadPrimeraVariable, 'indice')
+                || str_contains($unidadPrimeraVariable, 'grado');
+            if ($unidadNoAditiva && !$esCategorica) {
+                continue;
+            }
+            if ($config->tipo_visualizacion === 'scatter') {
+                continue;
+            }
+
             $anioConfig = $aggregation->commonLatestYear($datosBrutos, $municipiosIds, $variableIds)
                 ?? $aggregation->latestYear($datosBrutos, $variableIds);
             $datosIndicador = $anioConfig
@@ -163,15 +209,25 @@ class RegionController extends Controller
 
             if ($datosIndicador->isEmpty()) continue;
 
-            if ($config->tipo_visualizacion === 'scatter') {
-                $datosScatter = app(FichaComposerService::class)
-                    ->obtenerScatterRegional($config, $region, $municipios);
-                if (!$datosScatter) continue;
+            if ($esCategorica) {
+                $valorRegional = $aggregation->mode($datosIndicador);
+                if ($valorRegional === null) continue;
 
                 $perfil[$dimensionKey][] = [
                     'config' => $config,
-                    'datos' => $datosScatter,
-                    'narrativa' => $datosScatter['descripcion'],
+                    'datos' => [
+                        'valor_actual' => $valorRegional,
+                        'total' => $valorRegional,
+                        'anio' => $anioConfig,
+                        'aggregation_method' => 'mode',
+                        'coverage' => $aggregation->coverage($datosIndicador, $municipiosIds),
+                        'unidad' => $variables->first()->unidad_medida ?? '',
+                        'fuente' => $indicador->fuente ?? 'N/D',
+                        'metodo_calculo' => $indicador->metodo_calculo ?? 'N/D',
+                        'variables' => [['unidad' => $variables->first()->unidad_medida ?? '']],
+                        'echarts' => ['type' => 'categorical', 'series' => []],
+                    ],
+                    'narrativa' => "La categoría predominante de <strong>{$indicador->nombre_amigable}</strong> en esta región es: <strong>{$valorRegional}</strong>.",
                 ];
                 continue;
             }
@@ -249,26 +305,25 @@ class RegionController extends Controller
                 continue;
             }
 
-            // Determinar si sumar o promediar basándose en la unidad
+            // Los absolutos se suman; los demás tipos se excluyeron arriba.
             $primeraVar = $variables->first();
             $unidad = strtolower($primeraVar->unidad_medida ?? '');
-            $aggregationMethod = $aggregation->method($config, $variables);
+            $aggregationMethod = 'sum';
             $esRelacionSexo = str_contains($unidad, 'hombres por cada cien mujeres');
-            if ($esRelacionSexo && $hombresId && $mujeresId) {
-                $aggregationMethod = 'ratio';
-            }
-            $esPorcentaje = str_contains($unidad, '%') || str_contains($unidad, 'porcentaje');
-            $esPromedio = in_array($aggregationMethod, ['average', 'ratio'], true) && !$esPorcentaje;
+            $esPorcentaje = false;
+            $esPromedio = false;
             $esMoneda = str_contains($unidad, '$') || str_contains($unidad, 'pesos');
-            $esCategorica = false;
-            
-            // Comprobación de valor categórico (si algún valor no es numérico)
-            foreach ($datosIndicador as $d) {
-                if (!is_numeric(str_replace([',', '$', '%', ' '], '', $d->valor_display ?? $d->valor))) {
-                    $esCategorica = true;
-                    break;
+
+            $variablesParaValor = $variables;
+            if ($indicador->priorizar_total) {
+                $variableTotal = $variables->first(
+                    fn ($variable) => str_contains(strtolower($variable->nombre_amigable), 'total')
+                );
+                if ($variableTotal) {
+                    $variablesParaValor = collect([$variableTotal]);
                 }
             }
+            $datosParaValor = $datosIndicador->whereIn('variable_id', $variablesParaValor->pluck('id'));
 
             $valorRegional = 0;
             $valorDisplay = "";
@@ -301,7 +356,7 @@ class RegionController extends Controller
                             $hombresId,
                             $mujeresId
                         ) ?? 0)
-                        : ($aggregation->aggregate($datosIndicador, $aggregationMethod) ?? 0);
+                        : ($aggregation->aggregate($datosParaValor, $aggregationMethod) ?? 0);
 
                     if ($esMoneda) {
                         $valorDisplay = '$' . number_format($valorRegional, 2);
@@ -318,8 +373,11 @@ class RegionController extends Controller
             foreach ($municipios as $muni) {
                 $datosMuni = $datosIndicador->where('municipio_id', $muni->id);
                 if ($datosMuni->isNotEmpty() && !$esCategorica) {
-                    // Para ordenar: si es porcentaje usamos la primera variable, si es absoluto la suma.
-                    $totalParaOrdenar = $aggregation->aggregate($datosMuni, $aggregationMethod);
+                    // Los absolutos se ordenan por la suma o por la variable Total prioritaria.
+                    $totalParaOrdenar = $aggregation->aggregate(
+                        $datosMuni->whereIn('variable_id', $variablesParaValor->pluck('id')),
+                        $aggregationMethod
+                    );
                     if ($totalParaOrdenar === null) continue;
                         
                     $municipiosRanking[] = [
@@ -415,7 +473,7 @@ class RegionController extends Controller
                 $tipoEcharts = 'line';
                 $tendenciaRows = $esRelacionSexo
                     ? $datosBrutos->whereIn('variable_id', [$hombresId, $mujeresId])
-                    : $datosBrutos->whereIn('variable_id', $variableIds);
+                    : $datosBrutos->whereIn('variable_id', $variablesParaValor->pluck('id'));
                 $tendenciaRegional = $tendenciaRows
                     ->groupBy('anio')
                     ->map(fn ($rows, $anio) => [

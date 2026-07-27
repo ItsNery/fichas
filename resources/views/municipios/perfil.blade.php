@@ -521,7 +521,7 @@
                                     @if(isset($item['datos']['fuente']))
                                         <div class="perfil-tarjeta__footer">
                                             <p class="fuente-texto">
-                                                <i class="fa-solid fa-database me-1"></i> Fuente:
+                                                Fuente:
                                                 <strong>{{ $item['datos']['fuente'] }}</strong>
                                             </p>
                                         </div>

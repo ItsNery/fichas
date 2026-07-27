@@ -69,7 +69,7 @@ class RegionProfilePyramidTest extends TestCase
         $response->assertDontSee('"type":"bar-horizontal"', false);
     }
 
-    public function test_regional_profile_preserves_scatter_and_state_context(): void
+    public function test_regional_profile_omits_scatter_until_aggregation_is_defined(): void
     {
         $macro = new Macrorregion();
         $macro->nombre = 'Región scatter';
@@ -118,13 +118,12 @@ class RegionProfilePyramidTest extends TestCase
         $response = $this->get(route('regiones.macro.perfil', $macro->slug));
 
         $response->assertOk();
-        $response->assertSee('"type":"scatter"', false);
-        $response->assertSee('Medianas regionales', false);
-        $response->assertSee('Municipio externo', false);
+        $response->assertDontSee('"type":"scatter"', false);
+        $response->assertDontSee('Medianas regionales', false);
         $response->assertDontSee('"type":"bar-horizontal"', false);
     }
 
-    public function test_regional_profile_averages_indicators_with_promedio_unit(): void
+    public function test_regional_profile_omits_average_indicators(): void
     {
         $macro = new Macrorregion();
         $macro->nombre = 'Región promedio';
@@ -170,12 +169,13 @@ class RegionProfilePyramidTest extends TestCase
         $response = $this->get(route('regiones.macro.perfil', $macro->slug));
 
         $response->assertOk();
-        $response->assertSee('"valor_actual":"0.79"', false);
-        $response->assertDontSee('"valor_actual":"2"', false);
+        $response->assertDontSee('"valor_actual":"0.79"', false);
+        $response->assertDontSee('Índice de hacinamiento');
 
         $stateResponse = $this->get(route('regiones.estatal.perfil'));
         $stateResponse->assertOk();
-        $stateResponse->assertSee('"valor_actual":"0.79"', false);
+        $stateResponse->assertDontSee('"valor_actual":"0.79"', false);
+        $stateResponse->assertDontSee('Índice de hacinamiento');
     }
 
     public function test_state_profile_route_is_available(): void
@@ -230,7 +230,7 @@ class RegionProfilePyramidTest extends TestCase
             ]);
     }
 
-    public function test_state_profile_calculates_sex_ratio_from_population_totals(): void
+    public function test_state_profile_omits_sex_ratio_but_keeps_population_total(): void
     {
         $macro = new Macrorregion();
         $macro->nombre = 'Región demográfica';
@@ -282,8 +282,8 @@ class RegionProfilePyramidTest extends TestCase
         $response = $this->get(route('regiones.estatal.perfil'));
 
         $response->assertOk();
-        $response->assertSee('"valor_actual":"75.00"', false);
-        $response->assertSee('"eje_x":{"categorias":[2020', false);
+        $response->assertDontSee('"valor_actual":"75.00"', false);
+        $response->assertDontSee('Relación hombres-mujeres');
         $response->assertSee('"type":"treemap"', false);
         $response->assertSee('"name":"Hombres"', false);
         $response->assertSee('"name":"Mujeres"', false);

@@ -87,6 +87,33 @@ class GeographicAggregationService
         };
     }
 
+    public function mode(Collection $rows): string|int|null
+    {
+        $values = $rows
+            ->filter(fn ($row) => $row->valor !== null)
+            ->map(function ($row) {
+                return method_exists($row, 'getValorDisplayAttribute')
+                    && method_exists($row, 'relationLoaded')
+                    && $row->relationLoaded('variable')
+                    ? (string) $row->valor_display
+                    : (string) $row->valor;
+            })
+            ->countBy();
+
+        if ($values->isEmpty()) {
+            return null;
+        }
+
+        $max = $values->max();
+        $candidates = $values
+            ->filter(fn ($count) => $count === $max)
+            ->keys()
+            ->all();
+        sort($candidates, SORT_NATURAL | SORT_FLAG_CASE);
+
+        return $candidates[0];
+    }
+
     public function aggregateByMunicipality(Collection $rows, string $method): Collection
     {
         return $rows->groupBy('municipio_id')->map(fn (Collection $municipioRows) => $this->aggregate($municipioRows, $method));

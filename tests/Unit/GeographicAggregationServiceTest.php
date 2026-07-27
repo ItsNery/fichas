@@ -22,6 +22,19 @@ class GeographicAggregationServiceTest extends TestCase
         $this->assertSame(16.0, $service->aggregateAcrossMunicipalities($rows, [1, 2], 'sum'));
     }
 
+    public function test_it_returns_the_deterministic_mode(): void
+    {
+        $service = app(GeographicAggregationService::class);
+        $rows = new Collection([
+            (object) ['municipio_id' => 1, 'valor' => 'Alto'],
+            (object) ['municipio_id' => 2, 'valor' => 'Bajo'],
+            (object) ['municipio_id' => 3, 'valor' => 'Alto'],
+            (object) ['municipio_id' => 4, 'valor' => 'Bajo'],
+        ]);
+
+        $this->assertSame('Alto', $service->mode($rows));
+    }
+
     public function test_it_selects_the_latest_year_with_complete_municipal_coverage(): void
     {
         $service = app(GeographicAggregationService::class);
