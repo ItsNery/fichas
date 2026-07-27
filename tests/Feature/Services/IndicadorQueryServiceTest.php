@@ -80,6 +80,18 @@ class IndicadorQueryServiceTest extends TestCase
         $this->assertEquals('Total Estatal', $result['titulo']);
     }
 
+    public function test_prepare_geographic_selection_state_level_returns_all_municipalities(): void
+    {
+        $municipioA = $this->makeMunicipio('A');
+        $municipioB = $this->makeMunicipio('B');
+
+        $result = $this->service->prepareGeographicSelection('estatal', []);
+
+        $this->assertEqualsCanonicalizing([$municipioA->id, $municipioB->id], $result['ids']);
+        $this->assertSame('Estado de Puebla', $result['titulo']);
+        $this->assertEqualsCanonicalizing(['A', 'B'], $result['nombres_municipios']);
+    }
+
     public function test_get_chart_data_simple_bar()
     {
         $ind = $this->makeIndicador('Test', ['tipo_grafico_default' => 'barras']);
@@ -168,5 +180,52 @@ class IndicadorQueryServiceTest extends TestCase
         ]);
 
         $this->assertSame(20.0, $result['series'][0]['data'][0][1]);
+    }
+
+    public function test_state_level_aggregates_absolute_values(): void
+    {
+        $ind = $this->makeIndicador('Total estatal', ['tipo_grafico_default' => 'barras']);
+        $var = Variable::create([
+            'indicador_id' => $ind->id,
+            'nombre_amigable' => 'Habitantes',
+            'nombre_tecnico' => 'habitantes',
+            'unidad_medida' => 'Habitantes',
+        ]);
+        $municipioA = $this->makeMunicipio('A');
+        $municipioB = $this->makeMunicipio('B');
+
+        DatoHistorico::create(['municipio_id' => $municipioA->id, 'variable_id' => $var->id, 'anio' => 2020, 'valor' => 10]);
+        DatoHistorico::create(['municipio_id' => $municipioB->id, 'variable_id' => $var->id, 'anio' => 2020, 'valor' => 30]);
+
+        $result = $this->service->getChartData([
+            'indicador_id' => $ind->id,
+            'nivel_de_agregacion' => 'estatal',
+            'anios' => [2020],
+        ]);
+
+        $this->assertSame(40.0, $result['series'][0]['data'][0][1]);
+        $this->assertStringContainsString('Estado de Puebla', $result['titulo']);
+    }
+
+    public function test_state_level_rejects_non_absolute_indicators(): void
+    {
+        $ind = $this->makeIndicador('Porcentaje estatal', ['tipo_dato' => 'porcentaje']);
+
+        $response = $this->postJson(route('api.data'), [
+            'indicador_id' => $ind->id,
+            'nivel_de_agregacion' => 'estatal',
+        ]);
+
+        $response->assertStatus(422);
+    }
+
+    public function test_indicator_bank_exposes_state_as_territorial_level(): void
+    {
+        $response = $this->get(route('banco-indicadores.index'));
+
+        $response->assertOk()
+            ->assertSee('data-nivel="estatal"', false)
+            ->assertSee('Estado de Puebla')
+            ->assertDontSee('id="estatal-btn"', false);
     }
 }

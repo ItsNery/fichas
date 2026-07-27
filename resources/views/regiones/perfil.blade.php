@@ -228,16 +228,7 @@
                                     <i class="fa-solid fa-chart-column"></i>
                                 </a>
                                 @endif
-                                @if(isset($item['datos']['metodo_calculo']) || isset($item['datos']['fuente']) || isset($item['datos']['correlacion']))
-                                 <button type="button" class="btn btn-link p-0 border-0 fa-solid fa-circle-info info-tooltip-trigger perfil-tarjeta__info-icon mb-0"
-                                     aria-label="Ver metodología y fuente"
-                                     data-bs-toggle="popover"
-                                    data-bs-trigger="hover focus"
-                                    title="Metodología y fuente"
-                                    data-bs-content="<strong>Método:</strong> {{ $item['datos']['metodo_calculo'] ?? 'No especificado' }}@if($item['config']->tipo_visualizacion === 'scatter' && !empty($item['datos']['variables']))<br><strong>Medianas regionales:</strong>@foreach($item['datos']['variables'] as $variableResumen)<br>{{ $variableResumen['nombre'] }}: <strong>{{ number_format($variableResumen['valor'], 2) }} {{ $variableResumen['unidad'] }}</strong>@endforeach @endif @if(isset($item['datos']['correlacion_lectura']))<br><strong>Asociación regional:</strong> {{ $item['datos']['correlacion_lectura'] }} <small>No implica causalidad.</small>@endif<br><strong>Fuente:</strong> {{ $item['datos']['fuente'] ?? 'No especificada' }}"
-                                     data-bs-html="true"></button>
-                                @endif
-                            </div>
+                             </div>
                         </div>
 
                         @if($item['config']->subtitulo_reporte)
@@ -317,13 +308,22 @@
                         @endif
 
                     </div>
-                    @if(isset($item['datos']['fuente']))
-                    <div class="perfil-tarjeta__footer">
-                        <p class="fuente-texto">
-                            Fuente: <strong>{{ $item['datos']['fuente'] }}</strong>
-                        </p>
-                    </div>
-                    @endif
+                     @if(isset($item['datos']['metodo_calculo']) || isset($item['datos']['fuente']) || isset($item['datos']['correlacion_lectura']))
+                     <details class="perfil-tarjeta__footer perfil-tarjeta__metadatos">
+                         <summary class="perfil-tarjeta__metadatos-summary">Metadatos</summary>
+                         <div class="perfil-tarjeta__metadatos-content">
+                             @if(isset($item['datos']['metodo_calculo']))
+                             <p><strong>Método:</strong> {{ $item['datos']['metodo_calculo'] }}</p>
+                             @endif
+                             @if(isset($item['datos']['correlacion_lectura']))
+                             <p><strong>Asociación regional:</strong> {{ $item['datos']['correlacion_lectura'] }} <small>No implica causalidad.</small></p>
+                             @endif
+                             @if(isset($item['datos']['fuente']))
+                             <p><strong>Fuente:</strong> {{ $item['datos']['fuente'] }}</p>
+                             @endif
+                         </div>
+                     </details>
+                     @endif
                 </div>
             </div>
             @endforeach

@@ -298,13 +298,7 @@
                                                         <i class="fa-solid fa-chart-column"></i>
                                                     </a>
                                                 @endif
-                                                @if(isset($item['datos']['metodo_calculo']) || isset($item['datos']['fuente']) || isset($item['datos']['correlacion']))
-                                                    <i class="fa-solid fa-circle-info info-tooltip-trigger perfil-tarjeta__info-icon mb-0"
-                                                        data-bs-toggle="popover" data-bs-trigger="hover focus" title="Metodología y fuente"
-                                                        data-bs-content="<strong>Método:</strong> {{ $item['datos']['metodo_calculo'] ?? 'No especificado' }}@if(isset($item['datos']['correlacion_lectura']))<br><strong>Asociación lineal:</strong> {{ $item['datos']['correlacion_lectura'] }} <small>Es una medida descriptiva y no implica causalidad.</small>@endif<br><strong>Fuente:</strong> {{ $item['datos']['fuente'] ?? 'No especificada' }}"
-                                                        data-bs-html="true"></i>
-                                                @endif
-                                            </div>
+                                             </div>
                                         </header>
 
                                         @php
@@ -518,13 +512,21 @@
                                             @endif
                                         @endif
                                     </div>
-                                    @if(isset($item['datos']['fuente']))
-                                        <div class="perfil-tarjeta__footer">
-                                            <p class="fuente-texto">
-                                                Fuente:
-                                                <strong>{{ $item['datos']['fuente'] }}</strong>
-                                            </p>
-                                        </div>
+                                    @if(isset($item['datos']['metodo_calculo']) || isset($item['datos']['fuente']) || isset($item['datos']['correlacion_lectura']))
+                                        <details class="perfil-tarjeta__footer perfil-tarjeta__metadatos">
+                                            <summary class="perfil-tarjeta__metadatos-summary">Metadatos</summary>
+                                            <div class="perfil-tarjeta__metadatos-content">
+                                                @if(isset($item['datos']['metodo_calculo']))
+                                                <p><strong>Método:</strong> {{ $item['datos']['metodo_calculo'] }}</p>
+                                                @endif
+                                                @if(isset($item['datos']['correlacion_lectura']))
+                                                <p><strong>Asociación lineal:</strong> {{ $item['datos']['correlacion_lectura'] }} <small>Es una medida descriptiva y no implica causalidad.</small></p>
+                                                @endif
+                                                @if(isset($item['datos']['fuente']))
+                                                <p><strong>Fuente:</strong> {{ $item['datos']['fuente'] }}</p>
+                                                @endif
+                                            </div>
+                                        </details>
                                     @endif
                                 </article>
                             </div>

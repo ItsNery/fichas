@@ -260,7 +260,7 @@ class ApiDocumentationController extends Controller
                         'required' => ['indicador_id', 'nivel_de_agregacion'],
                         'properties' => [
                             'indicador_id' => ['type' => 'integer'],
-                            'nivel_de_agregacion' => ['type' => 'string', 'enum' => ['municipio', 'microrregion', 'macrorregion']],
+                            'nivel_de_agregacion' => ['type' => 'string', 'enum' => ['municipio', 'microrregion', 'macrorregion', 'estatal']],
                             'municipio_ids' => ['type' => 'array', 'items' => ['type' => 'string']],
                             'region_id' => ['type' => 'integer'],
                             'anios' => ['type' => 'array', 'items' => ['type' => 'integer']],

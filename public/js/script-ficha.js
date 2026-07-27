@@ -48,10 +48,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const API_URL = appContainer.dataset.apiUrl;
     const EXPORT_URL = appContainer.dataset.exportUrl;
     const CSRF_TOKEN = appContainer.dataset.csrfToken;
-    let opcionEstatalElement = null;
 
     // --- 1. REFERENCIAS A ELEMENTOS DEL DOM (ÚNICAS) ---
-    const estatalBtn = document.getElementById("estatal-btn");
     const consultarBtn = document.getElementById("consultar-btn");
     const consultarBtnRegions = document.getElementById(
         "consultar-btn-regions",
@@ -76,42 +74,12 @@ document.addEventListener("DOMContentLoaded", function () {
         maxOptions: 217,
         // --- LÓGICA ONCHANGE CON LA REGLA CORREGIDA ---
         onChange: function (value) {
-            estatalBtn.classList.remove("active");
             const currentSelection = Array.isArray(value)
                 ? value
                 : value
                   ? [value]
                   : [];
-            let finalSelection = [...currentSelection];
-            let needsUpdate = false;
-
-            // --- REGLA 1 CORREGIDA ---
-            // Si 'estatal' está mezclado con otros municipios...
-            if (
-                finalSelection.includes("estatal") &&
-                finalSelection.length > 1
-            ) {
-                // ...la selección final son TODOS LOS MUNICIPIOS MENOS 'estatal'.
-                finalSelection = finalSelection.filter(
-                    (id) => id !== "estatal",
-                );
-                needsUpdate = true;
-            }
-
-            // Regla 2 (sin cambios): Si la selección está vacía y el indicador es absoluto, volvemos a 'estatal'.
-            if (
-                finalSelection.length === 0 &&
-                appState.indicatorTipoDato &&
-                appState.indicatorTipoDato.toLowerCase() === "absoluto"
-            ) {
-                finalSelection = ["estatal"];
-                needsUpdate = true;
-            }
-
-            // Actualizamos el selector silenciosamente si es necesario para que no haya un bucle
-            if (needsUpdate) {
-                this.setValue(finalSelection, true);
-            }
+            const finalSelection = [...currentSelection];
 
             // Actualizamos el estado de la aplicación y el dashboard con la selección final y correcta
             appState.municipioIds = finalSelection;
@@ -208,6 +176,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const macrorregionContainer = document.getElementById(
         "macrorregion-selector-container",
     );
+    const estatalContainer = document.getElementById("estatal-selector-container");
     const nivelTabs = document.querySelectorAll(".level-switcher .nav-link");
     const accordionMunicipal = document.getElementById("accordionDimensions");
     const accordionRegionsContainer = document.getElementById(
@@ -236,6 +205,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const mapContainer = document.getElementById("map-container");
     const mapLegend = document.getElementById("map-legend");
+    const mapLegendRegions = document.getElementById("map-legend-regions");
 
     const metadataContainer = document.getElementById("metadata-container");
     const descriptionElement = document.getElementById("indicator-description");
@@ -329,9 +299,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function getEmptyStateHtml(isMunicipal) {
+        const nivel = appState.nivelDeAgregacion;
         const pasoDos = isMunicipal
             ? "2. Selecciona uno o dos municipios."
-            : "2. Selecciona una microrregión o macrorregión.";
+            : nivel === "estatal"
+              ? "2. Confirma la consulta para el Estado de Puebla."
+              : "2. Selecciona una microrregión o macrorregión.";
 
         return `
             <div class="d-flex flex-column align-items-center justify-content-center h-100 py-5">
@@ -387,6 +360,10 @@ document.addEventListener("DOMContentLoaded", function () {
             );
         }
 
+        if (appState.nivelDeAgregacion === "estatal") {
+            return "Estado de Puebla";
+        }
+
         return (
             getTextoOpcion(
                 macrorregionSelector.options,
@@ -414,12 +391,12 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        const nivelTexto =
-            appState.nivelDeAgregacion === "municipio"
-                ? "Municipio"
-                : appState.nivelDeAgregacion === "microrregion"
-                  ? "Microrregión"
-                  : "Macrorregión";
+        const nivelTexto = {
+            municipio: "Municipio",
+            microrregion: "Microrregión",
+            macrorregion: "Macrorregión",
+            estatal: "Estatal",
+        }[appState.nivelDeAgregacion];
 
         target.innerText =
             `Consulta actual: Indicador: ${getNombreIndicadorActivo()} | ` +
@@ -440,7 +417,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (isMunicipal) {
             target.innerText =
-                "Puedes seleccionar hasta 2 municipios. El total estatal solo está disponible para indicadores absolutos.";
+                "Puedes seleccionar hasta 2 municipios. El nivel estatal está disponible para indicadores absolutos.";
             return;
         }
 
@@ -450,8 +427,9 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        target.innerText =
-            "Estás consultando una macrorregión. El mapa se activa cuando la consulta regional aplica.";
+        target.innerText = appState.nivelDeAgregacion === "estatal"
+            ? "Estás consultando el Estado de Puebla con municipios completos."
+            : "Estás consultando una macrorregión. El mapa se activa cuando la consulta regional aplica.";
     }
 
     function actualizarFeedbackConsulta() {
@@ -644,7 +622,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (appState.municipioIds.length > 0) {
                 params.append("municipio_ids", appState.municipioIds.join(","));
             }
-        } else {
+        } else if (appState.nivelDeAgregacion !== "estatal") {
             const regionId =
                 appState.nivelDeAgregacion === "microrregion"
                     ? appState.microrregionId
@@ -701,14 +679,11 @@ document.addEventListener("DOMContentLoaded", function () {
             });
     }
     /**
-     * Muestra u oculta la opción "Total Estatal" basándose en el tipo de dato.
-     * @param {string} tipoDato El tipo de dato del indicador actual.
+     * Actualiza el tipo de dato activo para las herramientas de la gráfica.
      */
-    function gestionarOpcionEstatal(tipoDato) {
+    function actualizarTipoDatoActivo(tipoDato) {
         appState.indicatorTipoDato = tipoDato;
         appState.showAsPercentage = false;
-        const esAbsoluto = tipoDato.toLowerCase() === "absoluto";
-        estatalBtn.style.display = esAbsoluto ? "block" : "none";
     }
 
     /**
@@ -843,15 +818,6 @@ document.addEventListener("DOMContentLoaded", function () {
             ? yearSelectorElRegions.disable()
             : yearSelectorElRegions.enable();
     }
-    estatalBtn.addEventListener("click", () => {
-        municipioSelector.clear();
-        estatalBtn.classList.add("active");
-        appState.municipioIds = ["estatal"];
-        appState.selectedYears = [];
-        gestionarBotonResumen();
-        updateDashboard();
-    });
-
     function gestionarBotonResumen() {
         if (
             appState.municipioIds.length === 1 &&
@@ -1146,13 +1112,17 @@ document.addEventListener("DOMContentLoaded", function () {
      * Muestra el mapa de coropletas para la vista estatal.
      * @param {object} mapData Objeto con {municipioId: valor}.
      */
-    function displayChoroplethMap(mapData) {
-        if (!mapMunicipal || !pueblaGeoJSON) {
+    function displayChoroplethMap(mapData, target = "municipal") {
+        const useRegionalMap = target === "regional";
+        const targetMap = useRegionalMap ? mapRegional : mapMunicipal;
+        const targetLegend = useRegionalMap ? mapLegendRegions : mapLegend;
+        if (!targetMap || !pueblaGeoJSON || !targetLegend) {
             console.error("El mapa o el GeoJSON no se han inicializado.");
             return;
         }
-        if (geojsonLayerMunicipal) {
-            mapMunicipal.removeLayer(geojsonLayerMunicipal);
+        const currentLayer = useRegionalMap ? geojsonLayerRegional : geojsonLayerMunicipal;
+        if (currentLayer) {
+            targetMap.removeLayer(currentLayer);
         }
 
         // --- HELPER: Limpieza de datos ---
@@ -1278,7 +1248,7 @@ document.addEventListener("DOMContentLoaded", function () {
             legendHTML += `<div><i class="legend-swatch" style="background:${ZERO_COLOR}; border: 1px solid #ccc;"></i> 0</div>`;
             legendHTML += `<div><i class="legend-swatch" style="background:#ccc"></i> Sin datos</div>`;
 
-            mapLegend.innerHTML = legendHTML;
+            targetLegend.innerHTML = legendHTML;
         } else {
             // CASO B: Muy pocos datos positivos (o puros ceros)
             const DATA_COLOR = "#4292c6";
@@ -1318,7 +1288,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 };
             };
 
-            mapLegend.innerHTML = `
+            targetLegend.innerHTML = `
             <h5>Leyenda</h5>
             ${
                 pueblaValue !== null
@@ -1338,7 +1308,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         // Dibujamos el mapa
-        geojsonLayerMunicipal = L.geoJson(pueblaGeoJSON, {
+        const newLayer = L.geoJson(pueblaGeoJSON, {
             style: styleFunction,
             onEachFeature: (feature, layer) => {
                 const nombre = feature.properties.nomgeo;
@@ -1350,9 +1320,14 @@ document.addEventListener("DOMContentLoaded", function () {
                     `<strong>${nombre}</strong><br>Valor: ${textoValor}`,
                 );
             },
-        }).addTo(mapMunicipal);
+        }).addTo(targetMap);
 
-        mapLegend.style.display = "block";
+        if (useRegionalMap) {
+            geojsonLayerRegional = newLayer;
+        } else {
+            geojsonLayerMunicipal = newLayer;
+        }
+        targetLegend.style.display = "block";
     }
     /**
      * Resalta un polígono (municipio o región) y hace zoom en él.
@@ -2101,9 +2076,10 @@ document.addEventListener("DOMContentLoaded", function () {
             indicadorSeleccionado &&
             indicadorSeleccionado.dataset.tipoDato.toLowerCase() === "absoluto";
         const esEstatal =
-            esMunicipio &&
-            appState.municipioIds.length === 1 &&
-            appState.municipioIds[0] === "estatal";
+            appState.nivelDeAgregacion === "estatal" ||
+            (esMunicipio &&
+                appState.municipioIds.length === 1 &&
+                appState.municipioIds[0] === "estatal");
         const esUnMunicipio =
             esMunicipio &&
             appState.municipioIds.length === 1 &&
@@ -2180,10 +2156,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         if (toggleMapBtnRegions) {
             toggleMapBtnRegions.style.display =
-                esUnaMicrorregion || esUnaMacrorregion
+                esUnaMicrorregion || esUnaMacrorregion || (esEstatal && esCasoChoropleth)
                     ? "inline-block"
                     : "none";
-            if (esUnaMicrorregion || esUnaMacrorregion) {
+            if (esUnaMicrorregion || esUnaMacrorregion || (esEstatal && esCasoChoropleth)) {
                 toggleMapBtnRegions.classList.toggle("btn-primary", mapVisiblePreference);
                 toggleMapBtnRegions.classList.toggle("btn-outline-primary", !mapVisiblePreference);
             } else {
@@ -2225,8 +2201,15 @@ document.addEventListener("DOMContentLoaded", function () {
             } else if (esCasoChoropleth) {
                 // Para el coropletas, solo mostramos el contenedor.
                 // El dibujo se hace en el .then()
-                mapContainerMunicipal.style.display = "block";
-                if (mapMunicipal) mapMunicipal.invalidateSize();
+                const choroplethContainer = esEstatal
+                    ? mapContainerRegional
+                    : mapContainerMunicipal;
+                choroplethContainer.style.display = "block";
+                if (esEstatal) {
+                    if (mapRegional) mapRegional.invalidateSize();
+                } else if (mapMunicipal) {
+                    mapMunicipal.invalidateSize();
+                }
             }
         }
 
@@ -2254,7 +2237,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             payload.municipio_ids = idsParaEnviar;
-        } else {
+        } else if (appState.nivelDeAgregacion !== "estatal") {
             let regionId =
                 appState.nivelDeAgregacion === "microrregion"
                     ? appState.microrregionId
@@ -2287,10 +2270,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     chartViewKey,
                 );
                 if (esCasoChoropleth && data.mapData) {
-                    if (mapMunicipal) {
-                        mapMunicipal.setView([19.0414, -98.2063], 6);
+                    const targetMap = esEstatal ? mapRegional : mapMunicipal;
+                    if (targetMap) {
+                        targetMap.setView([19.0414, -98.2063], 6);
                     }
-                    displayChoroplethMap(data.mapData);
+                    displayChoroplethMap(data.mapData, esEstatal ? "regional" : "municipal");
                 }
                 desplazarASeccionGrafica(activeChartContainer);
                 const nuevaUrl = generarURLdeEstado();
@@ -2336,7 +2320,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         linkActivo.classList.add("fw-bold", "text-primary");
         expandirAcordeonHacia(linkActivo);
-        gestionarOpcionEstatal(linkActivo.dataset.tipoDato || "Absoluto");
+         actualizarTipoDatoActivo(linkActivo.dataset.tipoDato || "Absoluto");
     }
 
     function restaurarEstadoDesdeURL() {
@@ -2351,7 +2335,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
         appState.selectedYears = aniosFromUrl.length > 0 ? aniosFromUrl : [];
 
-        if (indicadorIdFromUrl && nivelFromUrl && regionIdFromUrl) {
+        if (indicadorIdFromUrl && nivelFromUrl === "estatal") {
+            activarNivelProgramaticamente("estatal");
+            appState.nivelDeAgregacion = "estatal";
+            appState.indicatorId = indicadorIdFromUrl;
+            linkActivo = document.querySelector(
+                `.indicador-link[data-indicador-id='${indicadorIdFromUrl}']`,
+            );
+            appState.indicatorEsComplejo = linkActivo
+                ? linkActivo.dataset.esComplejo === "true"
+                : false;
+        } else if (indicadorIdFromUrl && nivelFromUrl && regionIdFromUrl) {
             activarNivelProgramaticamente(nivelFromUrl);
 
             appState.nivelDeAgregacion = nivelFromUrl;
@@ -2375,6 +2369,27 @@ document.addEventListener("DOMContentLoaded", function () {
                 microrregionSelector.clear(true);
             }
         } else if (indicadorIdFromUrl && municipioIdsFromUrl) {
+            if (municipioIdsFromUrl === "estatal") {
+                activarNivelProgramaticamente("estatal");
+                appState.nivelDeAgregacion = "estatal";
+                appState.indicatorId = indicadorIdFromUrl;
+                linkActivo = document.querySelector(
+                    `.indicador-link[data-indicador-id='${indicadorIdFromUrl}']`,
+                );
+                appState.indicatorEsComplejo = linkActivo
+                    ? linkActivo.dataset.esComplejo === "true"
+                    : false;
+                appState.municipioIds = [];
+                appState.microrregionId = null;
+                appState.macrorregionId = null;
+                activarIndicadorEnUI(linkActivo);
+                actualizarGuiaVista();
+                actualizarResumenConsulta();
+                actualizarFeedbackConsulta();
+                checkIfCanConsult();
+                if (appState.indicatorId) updateDashboard();
+                return;
+            }
             activarNivelProgramaticamente("municipio");
 
             appState.nivelDeAgregacion = "municipio";
@@ -2387,39 +2402,29 @@ document.addEventListener("DOMContentLoaded", function () {
             appState.indicatorEsComplejo = linkActivo
                 ? linkActivo.dataset.esComplejo === "true"
                 : false;
-            estatalBtn.classList.toggle(
-                "active",
-                appState.municipioIds.length === 1 &&
-                    appState.municipioIds[0] === "estatal",
-            );
         } else {
             activarNivelProgramaticamente("municipio");
 
             linkActivo = document.querySelector(".indicador-link");
             if (linkActivo) {
                 const tipoDato = linkActivo.dataset.tipoDato || "Absoluto";
-                let idSeleccionInicial = "estatal";
-
-                if (tipoDato.toLowerCase() !== "absoluto") {
+                if (tipoDato.toLowerCase() === "absoluto") {
+                    activarNivelProgramaticamente("estatal");
+                    appState.nivelDeAgregacion = "estatal";
+                    appState.municipioIds = [];
+                } else {
+                    activarNivelProgramaticamente("municipio");
                     const primerMunicipio = document.querySelector(
-                        "#municipio-selector option:not([value='estatal'])",
+                        "#municipio-selector option",
                     );
-                    if (primerMunicipio) {
-                        idSeleccionInicial = primerMunicipio.value;
-                    }
+                    appState.nivelDeAgregacion = "municipio";
+                    appState.municipioIds = primerMunicipio ? [primerMunicipio.value] : [];
+                    municipioSelector.setValue(appState.municipioIds, true);
                 }
 
-                appState.nivelDeAgregacion = "municipio";
-                appState.municipioIds = [idSeleccionInicial];
                 appState.indicatorId = linkActivo.dataset.indicadorId;
                 appState.indicatorEsComplejo =
                     linkActivo.dataset.esComplejo === "true";
-
-                municipioSelector.setValue(appState.municipioIds, true);
-                estatalBtn.classList.toggle(
-                    "active",
-                    idSeleccionInicial === "estatal",
-                );
             }
         }
 
@@ -2439,12 +2444,6 @@ document.addEventListener("DOMContentLoaded", function () {
      */
     async function CargaInicial() {
         await ensureMapsInitialized();
-
-        opcionEstatalElement = {
-            value: "estatal",
-            text: "-- Total Estatal --",
-            orden: 0,
-        };
 
         chartContainer.innerHTML = getEmptyStateHtml(true);
         chartContainerRegions.innerHTML = getEmptyStateHtml(false);
@@ -2566,6 +2565,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 nivel === "microrregion" ? "block" : "none";
             macrorregionContainer.style.display =
                 nivel === "macrorregion" ? "block" : "none";
+            if (estatalContainer) {
+                estatalContainer.style.display = nivel === "estatal" ? "block" : "none";
+            }
 
             // 3. Filtramos el acordeón de la vista regional
             if (nivel !== "municipio") {
@@ -2599,6 +2601,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                     appState.microrregionId = null;
                 }
+                if (nivel === "estatal") {
+                    appState.microrregionId = null;
+                    appState.macrorregionId = null;
+                }
                 setTimeout(() => {
                     if (mapRegional) mapRegional.invalidateSize();
                 }, 10);
@@ -2613,29 +2619,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 setTimeout(() => {
                     if (mapMunicipal) mapMunicipal.invalidateSize();
                 }, 10);
-                const linkActivo = document.querySelector(
-                    "#accordionDimensions .indicador-link",
-                );
-                let tipoDatoDefecto = "Absoluto"; // Asumir Absoluto si algo falla
-
-                if (linkActivo) {
-                    tipoDatoDefecto = linkActivo.dataset.tipoDato || "Absoluto";
-                }
-
-                // 2. LLAMAMOS A LA FUNCIÓN que gestiona el botón estatal
-                // Esto SÓLO muestra u oculta el botón, no selecciona nada.
-                gestionarOpcionEstatal(tipoDatoDefecto);
-
-                // 3. (Opcional pero recomendado) Dejamos la selección de TomSelect en 'estatal'
-                // si el tipo de dato es absoluto, o vacío si no lo es.
-                if (tipoDatoDefecto.toLowerCase() === "absoluto") {
-                    appState.municipioIds = ["estatal"];
-                    // No usamos setValue, solo activamos el botón visualmente
-                    estatalBtn.classList.add("active");
-                } else {
-                    appState.municipioIds = [];
-                    estatalBtn.classList.remove("active");
-                }
+                appState.municipioIds = [];
             }
 
             actualizarGuiaVista(
@@ -2666,24 +2650,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const tipoDatoNuevo = target.dataset.tipoDato || "Absoluto";
             appState.indicatorEsComplejo = target.dataset.esComplejo === "true";
-            gestionarOpcionEstatal(tipoDatoNuevo);
-
-            if (
-                tipoDatoNuevo.toLowerCase() !== "absoluto" &&
-                appState.municipioIds.includes("estatal")
-            ) {
-                const primerMunicipio = document.querySelector(
-                    "#municipio-selector option:not([value='estatal'])",
-                );
-                let primerMunicipioId = null;
-                if (primerMunicipio) {
-                    primerMunicipioId = primerMunicipio.value;
-                }
-                if (primerMunicipioId) {
-                    appState.municipioIds = [primerMunicipioId];
-                    municipioSelector.setValue(primerMunicipioId);
-                }
-            }
+             actualizarTipoDatoActivo(tipoDatoNuevo);
 
             // Actualizamos el estado
             appState.indicatorId = target.dataset.indicadorId;
@@ -2759,6 +2726,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 appState.nivelDeAgregacion === "macrorregion" &&
                 appState.macrorregionId
             ) {
+                canConsult = true;
+            } else if (appState.nivelDeAgregacion === "estatal") {
                 canConsult = true;
             }
         }

@@ -47,6 +47,8 @@ $currentUrl = url()->current();
                             data-bs-target="#pane-regiones" type="button" role="tab" data-nivel="microrregion">Microrregión</button>
                         <button class="nav-link rounded-pill py-1 px-2 small" id="pill-macrorregiones-tab"
                             data-bs-target="#pane-regiones" type="button" role="tab" data-nivel="macrorregion">Macrorregión</button>
+                        <button class="nav-link rounded-pill py-1 px-2 small" id="pill-estatal-tab"
+                            data-bs-target="#pane-regiones" type="button" role="tab" data-nivel="estatal">Estatal</button>
                     </div>
                 </div>
 
@@ -178,9 +180,6 @@ $currentUrl = url()->current();
                                                         </option>
                                                         @endforeach
                                                     </select>
-                                                    <button id="estatal-btn" class="btn btn-outline-secondary" type="button" title="Ver Total Estatal">
-                                                        <i class="fas fa-globe-americas"></i>
-                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
@@ -210,7 +209,7 @@ $currentUrl = url()->current();
                                     Consulta actual: Aún no has seleccionado un indicador.
                                 </div>
                                 <div id="view-guidance" class="alert alert-info border-0 rounded-4 py-2 px-3 small mb-3">
-                                    Puedes seleccionar hasta 2 municipios. El total estatal solo está disponible para indicadores absolutos.
+                                     Puedes seleccionar hasta 2 municipios. El nivel estatal está disponible para indicadores absolutos.
                                 </div>
                                 <div class="viz-wrapper position-relative">
                                     <div id="chart-container" style="min-height: 500px; width: 100%;">
@@ -300,6 +299,11 @@ $currentUrl = url()->current();
                                 <div class="filter-bar p-2 bg-light mb-3 rounded-4 shadow-sm">
                                     <div class="row g-2 align-items-center">
                                         <div class="col-md-5">
+                                            <div id="estatal-selector-container" style="display: none;">
+                                                <div class="form-control-sm bg-white border rounded px-3 py-2 text-muted">
+                                                    <i class="fas fa-globe-americas me-2"></i>Estado de Puebla
+                                                </div>
+                                            </div>
                                             <div id="microrregion-selector-container">
                                                 <select id="microrregion-selector" class="form-control-sm">
                                                     @foreach ($microrregiones as $region)

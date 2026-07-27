@@ -81,7 +81,7 @@ class FichaController extends Controller
     {
         $validated = $request->validate([
             'indicador_id'        => 'required|integer|exists:indicadors,id',
-            'nivel_de_agregacion' => 'required|string|in:municipio,microrregion,macrorregion',
+            'nivel_de_agregacion' => 'required|string|in:municipio,microrregion,macrorregion,estatal',
             'municipio_ids'       => 'nullable|array',
             'municipio_ids.*'     => 'string',
             'region_id'           => 'nullable|integer',
@@ -107,9 +107,12 @@ class FichaController extends Controller
 
         $indicador = Indicador::find($validated['indicador_id']);
         $nivel = $validated['nivel_de_agregacion'];
+        if ($nivel === 'estatal' && strtolower(trim((string) $indicador->tipo_dato)) !== 'absoluto') {
+            abort(422, 'El nivel estatal solo está disponible para indicadores absolutos.');
+        }
         $selection = $queryService->prepareGeographicSelection($nivel, $validated);
 
-        if (in_array('estatal', $selection['ids'] ?? [])) {
+        if ($nivel === 'estatal' || in_array('estatal', $selection['ids'] ?? [])) {
             $anioParaMapa = $chartData['selected_years'][0] ?? $chartData['available_years']->first() ?? null;
             if ($anioParaMapa) {
                 $chartData['mapData'] = app(MapDataService::class)->getMapData($indicador, $anioParaMapa);
@@ -129,7 +132,7 @@ class FichaController extends Controller
     {
         $validated = $request->validate([
             'indicador_id'        => 'required|integer|exists:indicadors,id',
-            'nivel_de_agregacion' => 'required|string|in:municipio,microrregion,macrorregion',
+            'nivel_de_agregacion' => 'required|string|in:municipio,microrregion,macrorregion,estatal',
             'municipio_ids'       => 'nullable|array',
             'municipio_ids.*'     => 'string',
             'region_id'           => 'nullable|integer',

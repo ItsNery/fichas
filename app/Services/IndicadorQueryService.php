@@ -165,7 +165,7 @@ class IndicadorQueryService
             $chartData['metodo_calculo'] = $indicador->metodo_calculo;
         } elseif (
             $esPiramidePoblacional &&
-            (($nivel === 'municipio' && count($validated['municipio_ids'] ?? []) === 1) || in_array($nivel, ['microrregion', 'macrorregion']))
+            (($nivel === 'municipio' && count($validated['municipio_ids'] ?? []) === 1) || in_array($nivel, ['microrregion', 'macrorregion', 'estatal']))
         ) {
             $chartData = $this->handlePiramideChart($indicador, $selection);
         } elseif ($nivel === 'municipio' && count($selection['ids']) > 1) {
@@ -227,6 +227,11 @@ class IndicadorQueryService
             } elseif (in_array('estatal', $municipioIds)) {
                 $titulo = 'Total Estatal';
             }
+        } elseif ($nivel === 'estatal') {
+            $municipios = Municipio::orderBy('nombre')->get();
+            $titulo = 'Estado de Puebla';
+            $municipioIds = $municipios->pluck('id')->all();
+            $nombresMunicipios = $municipios->pluck('nombre')->all();
         } else {
             if ($validated['region_id']) {
                 if ($nivel === 'microrregion') {

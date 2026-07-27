@@ -284,7 +284,7 @@ data, gobierno abierto')
                         <td><code>nivel_de_agregacion</code></td>
                         <td>String</td>
                         <td>Sí</td>
-                        <td>"municipio", "microrregion" o "macrorregion". <em>Ej: <code>"municipio"</code></em></td>
+                        <td>"municipio", "microrregion", "macrorregion" o "estatal". <em>Ej: <code>"municipio"</code></em></td>
                     </tr>
                     <tr>
                         <td><code>municipio_ids</code></td>
@@ -297,7 +297,7 @@ data, gobierno abierto')
                         <td><code>region_id</code></td>
                         <td>Entero</td>
                         <td>Condicional</td>
-                        <td>Requerido si el nivel es "microrregion" o "macrorregion". <em>Ej: <code>3</code></em></td>
+                        <td>Requerido si el nivel es "microrregion" o "macrorregion". No se usa para "estatal". <em>Ej: <code>3</code></em></td>
                     </tr>
                     <tr>
                         <td><code>anios</code></td>

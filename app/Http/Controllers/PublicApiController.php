@@ -44,7 +44,7 @@ class PublicApiController extends Controller
             // Log::info('API DEBUG: Iniciando validación');
             $validated = $request->validate([
                 'indicador_id'        => 'required|integer|exists:indicadors,id',
-                'nivel_de_agregacion' => 'required|string|in:municipio,microrregion,macrorregion',
+                'nivel_de_agregacion' => 'required|string|in:municipio,microrregion,macrorregion,estatal',
                 'municipio_ids'       => 'nullable|array',
                 'municipio_ids.*'     => 'string',
                 'region_id'           => 'nullable|integer',
