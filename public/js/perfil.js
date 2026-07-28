@@ -752,8 +752,11 @@ function initPopovers() {
                                             html += `    <span class="text-muted" style="font-size: 10px;">Valor: ${sim.valor}</span>`;
                                             html += `  </div>`;
                                             html += `  <div class="d-flex gap-1">`;
-                                            html += `    <a href="/ficha/municipio/${sim.slug}/perfil" class="btn btn-outline-secondary btn-xs rounded-pill" style="font-size: 9px; padding: 1px 6px;">Ver</a>`;
-                                            html += `    <a href="/ficha/municipio/comparar/${window.FichaConfig.municipioSlug}/${sim.slug}" class="btn btn-vino btn-xs text-white rounded-pill" style="font-size: 9px; padding: 1px 6px; background-color: #861e34; border-color: #861e34;">Vs</a>`;
+                                     const slug = encodeURIComponent(sim.slug);
+                                     const perfilUrl = window.FichaConfig.perfilUrlTemplate.replace("__SLUG__", slug);
+                                     const compararUrl = window.FichaConfig.compararUrlTemplate.replace("__SLUG__", slug);
+                                     html += `    <a href="${perfilUrl}" class="btn btn-outline-secondary btn-xs rounded-pill" style="font-size: 9px; padding: 1px 6px;">Ver</a>`;
+                                     html += `    <a href="${compararUrl}" class="btn btn-vino btn-xs text-white rounded-pill" style="font-size: 9px; padding: 1px 6px; background-color: #861e34; border-color: #861e34;">Vs</a>`;
                                             html += `  </div>`;
                                             html += `</li>`;
                                         });
@@ -783,6 +786,18 @@ function initPopovers() {
         } else {
             return new bootstrap.Popover(popoverTriggerEl);
         }
+    });
+
+    document.addEventListener("click", function (event) {
+        if (event.target.closest(".similarity-popover-trigger, .popover")) return;
+
+        popoverList.forEach((popover) => popover.hide());
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key !== "Escape") return;
+
+        popoverList.forEach((popover) => popover.hide());
     });
 }
 

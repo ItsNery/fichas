@@ -668,6 +668,11 @@
             'municipio' => $municipio->id,
             'config' => '__CONFIG__',
         ]);
+        $perfilUrlTemplate = route('ficha-municipal.perfil', '__SLUG__');
+        $compararUrlTemplate = route('ficha-municipal.comparar', [
+            'slug1' => $municipio->slug,
+            'slug2' => '__SLUG__',
+        ]);
     @endphp
     <script>
         window.FichaConfig = {
@@ -676,6 +681,8 @@
             municipioSlug: "{{ $municipio->slug }}",
             geojsonUrl: "{{ asset('geojson/municipios_puebla_slim.geojson ') }}",
             similitudUrl: @json($similitudUrl),
+            perfilUrlTemplate: @json($perfilUrlTemplate),
+            compararUrlTemplate: @json($compararUrlTemplate),
             perfilData: @json($perfil)
         };
     </script>
