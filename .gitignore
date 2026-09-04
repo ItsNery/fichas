@@ -18,3 +18,5 @@ yarn-error.log
 /public/geojson
 /public/img
 fichas_municipales.sql
+opencode.json
+/scripts/*
