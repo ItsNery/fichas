@@ -145,7 +145,7 @@ $currentUrl = url()->current();
                                     <h5 id="chart-title" class="chart-panel__title mb-0 fw-bold text-dark">Selecciona un municipio</h5>
                                     <div class="chart-panel__actions d-flex gap-2">
                                         <div id="resumen-container" style="display: none;">
-                                            <a href="{{ route('ficha-municipal.show', ['municipio' => 'ID_PLACEHOLDER']) }}"
+                                            <a href="{{ route('ficha-municipal.perfil', ['municipio' => 'ID_PLACEHOLDER']) }}"
                                                 id="resumen-btn" class="btn btn-sm btn-outline-info rounded-sm disabled" title="Resumen Municipal">
                                                 <i class="fa-solid fa-file-invoice me-1"></i> Resumen
                                             </a>

@@ -6,6 +6,7 @@ use App\Models\DatoHistorico;
 use App\Models\Variable;
 use App\Models\Indicador;
 use App\Models\Dimension;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -62,6 +63,61 @@ class HomeController extends Controller
         $indicadoresComplejos = Indicador::where('visible_en_ficha', true)
             ->where('es_complejo', '1')->orderBy('nombre_amigable')->get();
         $dimensiones = Dimension::where('visible_en_ficha', true)->orderBy('nombre')->get();
-        return view('datos-abiertos', ['dimensiones' => $dimensiones], ['indicadoresComplejos' => $indicadoresComplejos]);
+
+        return view('datos-abiertos', compact('dimensiones', 'indicadoresComplejos'));
+    }
+
+    public function exportarCoyuntura()
+    {
+        $datos = DB::table('sei.indicadores_estrategicos_coyuntura as indicador')
+            ->leftJoin('sei.cat_coyuntura_tipos_indicador as tipo', 'tipo.id', '=', 'indicador.tipo_indicador_id')
+            ->leftJoin('sei.cat_coyuntura_tematicas_snieg as snieg', 'snieg.id', '=', 'indicador.tematica_snieg_id')
+            ->leftJoin('sei.cat_coyuntura_tematicas as tematica', 'tematica.id', '=', 'indicador.tematica_id')
+            ->leftJoin('sei.cat_coyuntura_pilares_desarrollo as pilar', 'pilar.id', '=', 'indicador.pilar_desarrollo_id')
+            ->leftJoin('sei.cat_coyuntura_periodicidades as periodicidad', 'periodicidad.id', '=', 'indicador.periodicidad_id')
+            ->leftJoin('sei.cat_coyuntura_unidades_medida as unidad', 'unidad.id', '=', 'indicador.unidad_medida_id')
+            ->leftJoin('sei.datos_indicadores_estrategicos_coyuntura as dato', 'dato.indicador_id', '=', 'indicador.id')
+            ->leftJoin('sei.periodos_indicadores_estrategicos_coyuntura as periodo', 'periodo.id', '=', 'dato.periodo_id')
+            ->where('indicador.activo', true)
+            ->select([
+                'indicador.nombre as indicador',
+                'tipo.nombre as tipo_indicador',
+                'snieg.nombre as tematica_snieg',
+                'tematica.nombre as tematica',
+                'pilar.nombre as pilar_desarrollo',
+                'periodicidad.nombre as periodicidad',
+                'unidad.nombre as unidad_medida',
+                'indicador.fuente',
+                'indicador.url_fuente',
+                'periodo.etiqueta as periodo',
+                'periodo.anio_inicio',
+                'periodo.anio_fin',
+                'periodo.fecha_inicio',
+                'periodo.fecha_fin',
+                'dato.valor_dato',
+                'dato.valor_texto',
+                'dato.fecha_actualizacion',
+                'dato.observaciones',
+            ])
+            ->orderBy('indicador.orden')
+            ->orderBy('indicador.nombre')
+            ->orderBy('periodo.fecha_fin');
+
+        return response()->streamDownload(function () use ($datos) {
+            $salida = fopen('php://output', 'w');
+            fwrite($salida, "\xEF\xBB\xBF");
+            fputcsv($salida, [
+                'indicador', 'tipo_indicador', 'tematica_snieg', 'tematica', 'pilar_desarrollo',
+                'periodicidad', 'unidad_medida', 'fuente', 'url_fuente',
+                'periodo', 'anio_inicio', 'anio_fin', 'fecha_inicio', 'fecha_fin', 'valor_dato',
+                'valor_texto', 'fecha_actualizacion', 'observaciones',
+            ]);
+
+            foreach ($datos->cursor() as $fila) {
+                fputcsv($salida, (array) $fila);
+            }
+
+            fclose($salida);
+        }, 'indicadores-coyuntura.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 }

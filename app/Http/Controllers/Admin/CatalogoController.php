@@ -366,7 +366,7 @@ class CatalogoController extends Controller
                 'orden'           => $varData['orden'] ?? $idx,
                 'es_destacada'    => !empty($varData['es_destacada']),
                 'es_kpi'          => !empty($varData['es_kpi']),
-                'visible_en_ficha' => !array_key_exists('visible_en_ficha', $varData) || !empty($varData['visible_en_ficha']),
+                'visible_en_ficha' => !empty($varData['visible_en_ficha']),
                 'es_construida'   => !empty($varData['es_construida']),
                 'tipo_valor'      => $varData['tipo_valor'] ?? null,
                 'mapeo_valores'   => null,

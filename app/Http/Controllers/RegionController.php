@@ -141,6 +141,16 @@ class RegionController extends Controller
             $vars = $variablesVisibles($config);
             foreach ($vars as $var) {
                 $variablesNecesarias[] = $var->id;
+                if ($var->es_construida && $var->formula_config) {
+                    $variablesNecesarias = array_merge(
+                        $variablesNecesarias,
+                        array_filter([
+                            $var->formula_config['numerador_variable_id'] ?? null,
+                            $var->formula_config['denominador_variable_id'] ?? null,
+                        ]),
+                        $var->formula_config['variable_ids'] ?? [],
+                    );
+                }
             }
         }
         $variablesNecesarias = array_unique($variablesNecesarias);
@@ -385,6 +395,10 @@ class RegionController extends Controller
                 }
             }
             $datosParaValor = $datosIndicador->whereIn('variable_id', $variablesParaValor->pluck('id'));
+            $formulaConfig = $primeraVar?->es_construida ? ($primeraVar->formula_config ?? []) : [];
+            $esRatioConstruido = ($primeraVar?->formula_tipo === 'division')
+                && !empty($formulaConfig['numerador_variable_id'])
+                && !empty($formulaConfig['denominador_variable_id']);
 
             $valorRegional = 0;
             $valorDisplay = "";
@@ -411,13 +425,21 @@ class RegionController extends Controller
                     $valorDisplay = $varMayor . ' (' . number_format($promedioVarMayor, 2) . '%)';
                     $valorRegional = $promedioVarMayor;
                 } else {
-                    $valorRegional = $esRelacionSexo
+                    $valorRegional = $esRatioConstruido
+                        ? $this->calcularRatioRegional(
+                            $datosBrutos,
+                            $anioMasComun,
+                            (int) $formulaConfig['numerador_variable_id'],
+                            (int) $formulaConfig['denominador_variable_id'],
+                            (float) ($formulaConfig['multiplicador'] ?? 1),
+                        )
+                        : ($esRelacionSexo
                         ? ($aggregation->ratio(
                             $datosBrutos->where('anio', $anioMasComun),
                             $hombresId,
                             $mujeresId
                         ) ?? 0)
-                        : ($aggregation->aggregate($datosParaValor, $aggregationMethod) ?? 0);
+                        : ($aggregation->aggregate($datosParaValor, $aggregationMethod) ?? 0));
 
                     if ($esMoneda) {
                         $valorDisplay = '$' . number_format($valorRegional, 2);
@@ -564,7 +586,7 @@ class RegionController extends Controller
                     'valor_actual' => $valorDisplay,
                     'total' => $valorRegional,
                     'anio' => $anioMasComun,
-                    'aggregation_method' => $aggregationMethod,
+                    'aggregation_method' => $esRatioConstruido ? 'weighted_ratio' : $aggregationMethod,
                     'coverage' => $aggregation->coverage($datosIndicador, $municipiosIds),
                     'ranking' => $rankingCompleto,
                     'ranking_display' => $rankingVista,
@@ -642,6 +664,22 @@ class RegionController extends Controller
             'alcanceTerritorial' => $alcanceTerritorial,
             'perfil' => $perfil
         ];
+    }
+
+    private function calcularRatioRegional($rows, ?int $anio, int $numeradorId, int $denominadorId, float $multiplicador): float
+    {
+        if (!$anio) return 0.0;
+
+        $numerador = $rows
+            ->where('anio', $anio)
+            ->where('variable_id', $numeradorId)
+            ->sum('valor');
+        $denominador = $rows
+            ->where('anio', $anio)
+            ->where('variable_id', $denominadorId)
+            ->sum('valor');
+
+        return $denominador > 0 ? ($numerador * $multiplicador) / $denominador : 0.0;
     }
 
     /**

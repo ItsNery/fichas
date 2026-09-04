@@ -65,6 +65,8 @@ Route::prefix('ficha/municipio')->name('ficha-municipal.')->group(function () {
 
 Route::get('/datos-abiertos', [HomeController::class, 'datosAbiertos'])->name('datos-abiertos.index');
 Route::get('/datos-abiertos/exportar/{tipo}', [App\Http\Controllers\Admin\CatalogoController::class, 'exportarCatalogoPublico'])->name('datos-abiertos.export');
+Route::get('/datos-abiertos/exportar-indicadores-coyuntura', [HomeController::class, 'exportarCoyuntura'])
+    ->name('datos-abiertos.export-coyuntura');
 
 // --- Módulo 3: Perfiles Regionales ---
 Route::name('regiones.')->group(function () {

@@ -1,0 +1,11 @@
+{
+    "schema_version": 2,
+    "commit": "",
+    "indexed_at": "2026-08-27T22:41:31Z",
+    "project": "fichas_municipales",
+    "nodes": 5209,
+    "edges": 12079,
+    "original_size": 11337728,
+    "compressed_size": 1478320,
+    "compression_level": 9
+}

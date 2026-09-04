@@ -237,6 +237,35 @@ data, gobierno abierto')
     </div>
 </div>
 
+{{-- Indicadores de Coyuntura (SEI) --}}
+<div class="container my-5">
+    <div class="text-center border-bottom pb-4 mb-5">
+        <h1 class="display-4 fw-bold">Indicadores de Coyuntura</h1>
+        <p class="lead text-muted">
+            Descarga los datos públicos de los indicadores de coyuntura del Sistema Estatal de Información.
+        </p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 text-center shadow-sm border-success">
+                <div class="card-body">
+                    <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
+                    <h5 class="card-title">Base de Datos de Indicadores de Coyuntura</h5>
+                    <p class="card-text small text-muted">
+                        Incluye metadatos y series históricas únicamente de los indicadores visibles al público.
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent border-0 pb-3">
+                    <a href="{{ route('datos-abiertos.export-coyuntura') }}" class="btn btn-outline-success">
+                        <i class="fas fa-download me-1"></i> Descargar Datos (.csv)
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="container my-5">
     {{-- Encabezado --}}
     <div class="text-center border-bottom pb-4 mb-5">

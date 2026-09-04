@@ -26,10 +26,7 @@ class IndicadorQueryService
         $this->usarVariablesPublicas($indicador);
         $nivel     = $validated['nivel_de_agregacion'];
         $selection = $this->prepareGeographicSelection($nivel, $validated);
-        $esPiramidePoblacional = str_contains(
-            mb_strtolower($indicador->nombre_amigable ?? '', 'UTF-8'),
-            'población por grupos de edad'
-        );
+        $esPiramidePoblacional = $this->esPiramide($indicador);
 
         if ($indicador->es_complejo) {
             $chartData     = null;
@@ -293,6 +290,15 @@ class IndicadorQueryService
             ->where('visible_en_ficha', true)
             ->get()
             ->keyBy('nombre_tecnico');
+        $mapaDetectado = $this->detectarMapaPiramide($indicador->variables, $variableIds);
+        if ($mapaDetectado) {
+            $mapaPiramide = $mapaDetectado;
+            $nombresTecnicos = collect($mapaPiramide)->flatten()->unique()->all();
+            $variables = $indicador->variables
+                ->whereIn('nombre_tecnico', $nombresTecnicos)
+                ->where('visible_en_ficha', true)
+                ->keyBy('nombre_tecnico');
+        }
         $hombresData     = [];
         $mujeresData     = [];
         $categorias      = array_keys($mapaPiramide);
@@ -514,10 +520,7 @@ class IndicadorQueryService
         $aggregation = app(GeographicAggregationService::class);
         $selectedYears = $validated['anios'] ?? [];
 
-        $esPiramidePoblacional = str_contains(
-            mb_strtolower($indicador->nombre_amigable ?? '', 'UTF-8'),
-            'población por grupos de edad'
-        );
+        $esPiramidePoblacional = $this->esPiramide($indicador);
         if ($esPiramidePoblacional && ($nivel !== 'municipio' || in_array('estatal', $selection['ids'])) && count($selectedYears) <= 1) {
 
             $anio = null;
@@ -724,6 +727,64 @@ class IndicadorQueryService
             ->havingRaw('COUNT(DISTINCT municipio_id) >= ?', [$countRequired])
             ->orderBy('anio', 'desc')
             ->pluck('anio');
+    }
+
+    private function esPiramide(Indicador $indicador): bool
+    {
+        $tipo = Str::slug(Str::ascii((string) $indicador->tipo_grafico_default));
+        $nombre = mb_strtolower((string) $indicador->nombre_amigable, 'UTF-8');
+
+        return $tipo === 'piramide' || str_contains($nombre, 'población por grupos de edad');
+    }
+
+    private function detectarMapaPiramide($variables, ?array $variableIds): array
+    {
+        $permitidas = $variableIds ? collect($variableIds)->map(fn ($id) => (int) $id)->all() : null;
+        $grupos = [];
+
+        foreach ($variables as $variable) {
+            if ($permitidas && !in_array((int) $variable->id, $permitidas, true)) continue;
+
+            $texto = mb_strtolower(Str::ascii(
+                $variable->nombre_tecnico . ' ' . $variable->nombre_amigable
+            ), 'UTF-8');
+            $sexo = str_contains($texto, 'hombre') || str_contains($texto, 'mascul') ? 'hom' : null;
+            $sexo ??= str_contains($texto, 'mujer') || str_contains($texto, 'femen') ? 'muj' : null;
+            if (!$sexo) continue;
+
+            $inicio = null;
+            $fin = null;
+            if (preg_match('/(\d{1,3})\s*(?:a|al|_|-)\s*(\d{1,3})/', $texto, $match)) {
+                $inicio = (int) $match[1];
+                $fin = (int) $match[2];
+            } elseif (preg_match('/(\d{1,3})\s*(?:_|-)?\s*(?:mm|mas)/', $texto, $match)) {
+                $inicio = (int) $match[1];
+            } elseif (str_contains($texto, 'no especific')) {
+                $inicio = -1;
+            }
+
+            if ($inicio === null) continue;
+
+            $key = $inicio . '_' . ($fin ?? 'mas');
+            $grupos[$key]['inicio'] = $inicio;
+            $grupos[$key]['fin'] = $fin;
+            $grupos[$key]['label'] = $inicio < 0
+                ? 'No especificado'
+                : ($fin === null ? "{$inicio} años y más" : "{$inicio} a {$fin} años");
+            $grupos[$key][$sexo] = $variable->nombre_tecnico;
+        }
+
+        if (count($grupos) < 2 || !collect($grupos)->contains(fn ($group) => isset($group['hom']) && isset($group['muj']))) {
+            return [];
+        }
+
+        uasort($grupos, fn ($a, $b) => $b['inicio'] <=> $a['inicio']);
+        return collect($grupos)->mapWithKeys(fn ($group) => [
+            $group['label'] => [
+                'hom' => $group['hom'] ?? null,
+                'muj' => $group['muj'] ?? null,
+            ],
+        ])->all();
     }
 
     private function usarVariablesPublicas(Indicador $indicador): void
