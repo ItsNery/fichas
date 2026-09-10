@@ -7,7 +7,7 @@
     <title>Resumen Municipal - {{ $municipio->nombre }}</title>
     <style>
         /* --- FUENTES (Optimización recomendada) --- */
-        @font-face {
+        /* @font-face {
             font-family: 'Gilroy';
             src: url(data:font/truetype;charset=utf-8;base64,TU_FONT_REGULAR_EN_BASE64) format("truetype");
             font-weight: 400;
@@ -19,7 +19,21 @@
             src: url(data:font/truetype;charset=utf-8;base64,TU_FONT_BOLD_EN_BASE64) format("truetype");
             font-weight: 700;
             font-style: normal;
+        } */
+        @font-face {
+            font-family: 'Gilroy';
+            src: url("{{ public_path('fonts/Gilroy-Regular.ttf') }}") format("truetype");
+            font-weight: 400;
+            font-style: normal;
         }
+
+        @font-face {
+            font-family: 'Gilroy';
+            src: url("{{ public_path('fonts/Gilroy-Bold.ttf') }}") format("truetype");
+            font-weight: 700;
+            font-style: normal;
+        }
+
 
         /* --- Configuración General --- */
         @page {
@@ -207,7 +221,7 @@
             </tr>
         </table>
     </div>
-<main>
+    <main>
         <h1 class="municipio">{{ $municipio->nombre }}</h1>
         <p class="meta-info">
             <strong>Región:</strong> {{ $municipio->microrregion->macrorregion->nombre }} /
@@ -215,7 +229,6 @@
         </p>
 
         @foreach ($datosAgrupados as $dimensionData)
-            
             <h2>{{ $dimensionData['nombre'] }}</h2>
 
             @foreach ($dimensionData['tematicas'] as $tematica => $kpis)
@@ -227,33 +240,31 @@
                             <tr>
                                 @foreach ($chunk as $kpi)
                                     <td>
-                                        
+
                                         @if ($kpi['valor'] === 'lista' && !empty($kpi['valor_display']) && $kpi['valor_display']->count() > 0)
-                                            
                                             {{-- CASO A: Es nuestro KPI especial de Instrumentos --}}
                                             <div class="kpi-item">
                                                 <p class="label">{{ $kpi['nombre'] }}</p>
-                                                
+
                                                 <table class="instrument-table">
                                                     <tbody>
                                                         @foreach ($kpi['valor_display'] as $instrumento)
                                                             <tr>
                                                                 <td>{{ $instrumento->nombre }}</td>
-                                                                <td class="year-col">{{ $instrumento->pivot->anio }}</td>
+                                                                <td class="year-col">{{ $instrumento->pivot->anio }}
+                                                                </td>
                                                             </tr>
                                                         @endforeach
                                                     </tbody>
                                                 </table>
                                             </div>
-                                
                                         @else
-                                            
                                             {{-- CASO B: Es un KPI normal --}}
                                             <div class="kpi-item">
                                                 <p class="label">{{ $kpi['nombre'] }} ({{ $kpi['anio'] }})</p>
                                                 <p class="value">
                                                     {{ is_numeric($kpi['valor_display']) ? number_format($kpi['valor_display'], 2) : $kpi['valor_display'] }}
-                                
+
                                                     @if (!empty($kpi['unidad']))
                                                         @if ($kpi['unidad'] == 'Porcentaje')
                                                             <span class="unit">%</span>
@@ -263,10 +274,9 @@
                                                     @endif
                                                 </p>
                                             </div>
-                                
                                         @endif
-                                
-                                        </td>
+
+                                    </td>
                                 @endforeach
 
                                 {{-- Rellenar celdas vacías --}}
