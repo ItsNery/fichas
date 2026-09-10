@@ -208,7 +208,7 @@
 
 <body>
     <div class="header">
-        <img src="https://sei.puebla.gob.mx/betafichas/img/Cintillo-SEI.png" alt="Logos" style="width: 100%">
+        <img src="https://sei.puebla.gob.mx/images/logos/Cintillo SEI-07.png" alt="Logos" style="width: 100%">
         <p class="report-title"><strong>Ficha de Resumen Municipal</strong></p>
     </div>
 
