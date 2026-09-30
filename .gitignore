@@ -25,3 +25,4 @@ fichas_municipales.rar
 opencode.json
 scripts/*
 /docs/*
+!/docs/manual-de-usuario.md

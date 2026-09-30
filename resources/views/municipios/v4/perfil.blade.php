@@ -24,7 +24,7 @@
 
                 <div class="municipio-v4__hero-grid">
                     <div>
-                        <p class="municipio-v4__eyebrow">Ficha municipal · Nueva versión</p>
+                        <p class="municipio-v4__eyebrow">Ficha municipal</p>
                         <h1>{{ $municipio->nombre }}</h1>
                         <p class="municipio-v4__location">
                             {{ $municipio->microrregion?->macrorregion?->nombre ?? 'Estado de Puebla' }}
@@ -34,7 +34,7 @@
                         <p class="municipio-v4__hero-note">Consulta indicadores, comparaciones y señales territoriales en un solo lugar.</p>
                         <div class="municipio-v4__actions">
                             <a class="btn municipio-v4__button municipio-v4__button--primary" href="{{ route('ficha-municipal.perfil', $municipio->slug) }}">
-                                Ver ficha actual
+                                Abrir ficha clásica
                             </a>
                             <a class="btn municipio-v4__button municipio-v4__button--secondary" href="{{ route('ficha-municipal.perfil.pdf', $municipio->slug) }}" target="_blank">
                                 <i class="fa-solid fa-file-pdf" aria-hidden="true"></i> Descargar PDF

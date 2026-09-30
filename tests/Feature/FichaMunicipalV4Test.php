@@ -53,7 +53,7 @@ class FichaMunicipalV4Test extends TestCase
         $response = $this->get(route('ficha-municipal.v4', $municipio->slug));
 
         $response->assertOk()
-            ->assertSee('Ficha municipal · Nueva versión')
+            ->assertSee('Ficha municipal')
             ->assertSee($dimension->nombre)
             ->assertSee('1 indicadores')
             ->assertDontSee('Indicador oculto');

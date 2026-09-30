@@ -259,6 +259,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const fullscreenBtnRegions = document.getElementById(
         "fullscreen-btn-regions",
     );
+    const printBtn = document.getElementById("print-btn");
+    const printBtnRegions = document.getElementById("print-btn-regions");
     let fullscreenChart = null;
     const chartInstances = {
         municipio: null,
@@ -453,6 +455,11 @@ document.addEventListener("DOMContentLoaded", function () {
             !appState.macrorregionId
         ) {
             message = "Falta elegir una macrorregión.";
+        } else if (
+            appState.nivelDeAgregacion === "estatal" &&
+            appState.indicatorTipoDato?.toLowerCase() !== "absoluto"
+        ) {
+            message = "El nivel estatal solo está disponible para indicadores absolutos.";
         } else {
             message = "La consulta está lista para ejecutarse.";
         }
@@ -684,6 +691,19 @@ document.addEventListener("DOMContentLoaded", function () {
     function actualizarTipoDatoActivo(tipoDato) {
         appState.indicatorTipoDato = tipoDato;
         appState.showAsPercentage = false;
+
+        const estatalTab = document.querySelector(
+            '#pills-tab-nivel [data-nivel="estatal"]',
+        );
+        if (!estatalTab) return;
+
+        const permiteAgregacionEstatal =
+            tipoDato.toLowerCase() === "absoluto";
+        estatalTab.disabled = !permiteAgregacionEstatal;
+        estatalTab.setAttribute("aria-disabled", String(!permiteAgregacionEstatal));
+        estatalTab.title = permiteAgregacionEstatal
+            ? "Consultar el total estatal"
+            : "El nivel estatal solo está disponible para indicadores absolutos";
     }
 
     /**
@@ -1493,8 +1513,16 @@ document.addEventListener("DOMContentLoaded", function () {
         titleElement.innerText = datosParaGrafico.titulo;
         const isMunicipal = appState.nivelDeAgregacion === "municipio";
         const activeExportBtn = isMunicipal ? exportBtn : exportBtnRegions;
+        const activeFullscreenBtn = isMunicipal
+            ? fullscreenBtn
+            : fullscreenBtnRegions;
+        const activePrintBtn = isMunicipal ? printBtn : printBtnRegions;
         exportBtn.style.display = "none";
         exportBtnRegions.style.display = "none";
+        if (fullscreenBtn) fullscreenBtn.style.display = "none";
+        if (fullscreenBtnRegions) fullscreenBtnRegions.style.display = "none";
+        if (printBtn) printBtn.style.display = "none";
+        if (printBtnRegions) printBtnRegions.style.display = "none";
 
         // --- MODAL DE MUNICIPIOS ---
         const verMunicipiosBtn = document.getElementById("ver-municipios-btn");
@@ -1563,13 +1591,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 datosParaGrafico.metodo_calculo || "No disponible.";
 
         if (datosParaGrafico.series && datosParaGrafico.series.length > 0) {
-            if (fullscreenBtn) fullscreenBtn.style.display = "block";
-            if (fullscreenBtnRegions)
-                fullscreenBtnRegions.style.display = "block";
+            if (activeFullscreenBtn) activeFullscreenBtn.style.display = "block";
+            if (activePrintBtn) activePrintBtn.style.display = "block";
         } else {
-            if (fullscreenBtn) fullscreenBtn.style.display = "none";
-            if (fullscreenBtnRegions)
-                fullscreenBtnRegions.style.display = "none";
+            if (activeFullscreenBtn) activeFullscreenBtn.style.display = "none";
+            if (activePrintBtn) activePrintBtn.style.display = "none";
         }
 
         if (Array.isArray(years) && years.length > 0) {
@@ -2035,6 +2061,24 @@ document.addEventListener("DOMContentLoaded", function () {
         if (appState.isLoading || !appState.indicatorId) {
             return;
         }
+
+        const indicadorSeleccionado = document.querySelector(
+            `.indicador-link[data-indicador-id='${appState.indicatorId}']`,
+        );
+        const esAbsoluto =
+            indicadorSeleccionado &&
+            indicadorSeleccionado.dataset.tipoDato.toLowerCase() === "absoluto";
+
+        if (appState.nivelDeAgregacion === "estatal" && !esAbsoluto) {
+            const mensaje =
+                "Este indicador no se puede consultar como total estatal porque sus valores no son sumables.";
+            chartTitleRegions.innerText = "Consulta no disponible";
+            chartContainerRegions.innerHTML =
+                `<p class="text-muted text-center pt-5 px-4">${mensaje}</p>`;
+            actualizarGuiaVista(mensaje);
+            return;
+        }
+
         appState.isLoading = true;
 
         setUIInteractivity(true);
@@ -2069,12 +2113,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         // Lógica de decisión
-        const indicadorSeleccionado = document.querySelector(
-            `.indicador-link[data-indicador-id='${appState.indicatorId}']`,
-        );
-        const esAbsoluto =
-            indicadorSeleccionado &&
-            indicadorSeleccionado.dataset.tipoDato.toLowerCase() === "absoluto";
         const esEstatal =
             appState.nivelDeAgregacion === "estatal" ||
             (esMunicipio &&
@@ -2474,8 +2512,12 @@ document.addEventListener("DOMContentLoaded", function () {
             // Manejo manual de la activación visual de los botones
             document
                 .querySelectorAll(".level-switcher .nav-link")
-                .forEach((el) => el.classList.remove("active"));
+                .forEach((el) => {
+                    el.classList.remove("active");
+                    el.setAttribute("aria-selected", "false");
+                });
             target.classList.add("active");
+            target.setAttribute("aria-selected", "true");
 
             // Mostrar el pane principal correspondiente manualmente
             const targetPaneId = target.getAttribute("data-bs-target");
@@ -2639,6 +2681,10 @@ document.addEventListener("DOMContentLoaded", function () {
             // console.log("Estado actualizado:", appState);
             exportBtn.style.display = "none";
             exportBtnRegions.style.display = "none";
+            if (fullscreenBtn) fullscreenBtn.style.display = "none";
+            if (fullscreenBtnRegions) fullscreenBtnRegions.style.display = "none";
+            if (printBtn) printBtn.style.display = "none";
+            if (printBtnRegions) printBtnRegions.style.display = "none";
         });
     });
 
@@ -2672,6 +2718,10 @@ document.addEventListener("DOMContentLoaded", function () {
             // 4. Ocultamos los contenedores
             yearSelectorContainer.style.display = "none";
             yearSelectorContainerRegions.style.display = "none";
+            if (fullscreenBtn) fullscreenBtn.style.display = "none";
+            if (fullscreenBtnRegions) fullscreenBtnRegions.style.display = "none";
+            if (printBtn) printBtn.style.display = "none";
+            if (printBtnRegions) printBtnRegions.style.display = "none";
 
             // Actualizamos estilos (sin cambios)
             todosLosIndicadores.forEach((el) =>
@@ -2727,7 +2777,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 appState.macrorregionId
             ) {
                 canConsult = true;
-            } else if (appState.nivelDeAgregacion === "estatal") {
+            } else if (
+                appState.nivelDeAgregacion === "estatal" &&
+                appState.indicatorTipoDato?.toLowerCase() === "absoluto"
+            ) {
                 canConsult = true;
             }
         }

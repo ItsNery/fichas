@@ -88,7 +88,7 @@
                             <h5 class="fw-bold text-gold mb-3">Municipios:</h5>
                             <div class="d-flex flex-wrap gap-2 hero-ficha__region-list" style="max-height: 200px; overflow-y: auto; scrollbar-width: thin;">
                                 @foreach($municipios as $muni)
-                                    <a href="{{ route('ficha-municipal.perfil', $muni->slug) }}" class="badge bg-white bg-opacity-10 text-white text-decoration-none border border-white border-opacity-25" style="transition: all 0.2s;" title="Ver ficha de {{ $muni->nombre }}">
+                                    <a href="{{ route('ficha-municipal.v4', $muni->slug) }}" class="badge bg-white bg-opacity-10 text-white text-decoration-none border border-white border-opacity-25" style="transition: all 0.2s;" title="Ver ficha de {{ $muni->nombre }}">
                                         {{ $muni->nombre }}
                                     </a>
                                 @endforeach
@@ -215,7 +215,7 @@
                                 @endif
                             </h3>
                             <div class="d-flex align-items-center gap-2">
-                                @if(isset($item['config']->indicador))
+                                @if(isset($item['config']->indicador) && ($tipoRegion !== 'Estatal' || strtolower(trim((string) $item['config']->indicador->tipo_dato)) === 'absoluto'))
                                     <a href="{{ route('banco-indicadores.index', $tipoRegion === 'Estatal' ? ['indicador_id' => $item['config']->indicador->id, 'nivel' => 'municipio', 'municipio_ids' => 'estatal'] : ['indicador_id' => $item['config']->indicador->id, 'nivel' => $tipoRegion === 'Macrorregión' ? 'macrorregion' : 'microrregion', 'region_id' => $region->id]) }}"
                                    class="perfil-tarjeta__info-icon text-muted"
                                    title="Ver gráfico en Banco de Indicadores"
@@ -225,8 +225,16 @@
                                    style="font-size: 1rem; transition: color 0.2s;"
                                    onmouseover="this.style.color='#861e34'"
                                    onmouseout="this.style.color=''">
-                                    <i class="fa-solid fa-chart-column"></i>
-                                </a>
+                                     <i class="fa-solid fa-chart-column"></i>
+                                    </a>
+                                @elseif(isset($item['config']->indicador))
+                                    <span class="perfil-tarjeta__info-icon text-muted opacity-50"
+                                        title="Este indicador no se puede agregar como total estatal"
+                                        data-bs-toggle="tooltip"
+                                        data-bs-placement="top"
+                                        style="font-size: 1rem; cursor: not-allowed;">
+                                        <i class="fa-solid fa-chart-column"></i>
+                                    </span>
                                 @endif
                              </div>
                         </div>
@@ -296,7 +304,7 @@
                                         @foreach($item['datos']['ranking'] as $posicion => $ranking)
                                         <tr data-ranking-name="{{ Str::ascii(mb_strtolower($ranking['name'], 'UTF-8')) }}">
                                             <td>{{ $posicion + 1 }}</td>
-                                            <td><a href="{{ route('ficha-municipal.perfil', $municipios->firstWhere('id', $ranking['id'])?->slug ?? '#') }}">{{ $ranking['name'] }}</a></td>
+                                            <td><a href="{{ route('ficha-municipal.v4', $municipios->firstWhere('id', $ranking['id'])?->slug ?? '#') }}">{{ $ranking['name'] }}</a></td>
                                             <td class="text-end">{{ number_format($ranking['orderValue'], 2) }}</td>
                                         </tr>
                                         @endforeach

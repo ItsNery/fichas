@@ -110,7 +110,7 @@
             </div>
 
             {{-- Contenedor principal del carrusel --}}
-            <div class="main-carousel" data-flickity='{ "autoPlay": true }'>
+            <div class="main-carousel">
                 @foreach ($indicadoresDestacados as $indicador)
                     {{-- Cada "slide" del carrusel --}}
                     <div class="carousel-cell">
@@ -122,7 +122,7 @@
                                 <p class="card-title display-5 fw-bold">{{ $indicador['valor'] }}</p>
 
                                 {{-- Contenedor para el mini-gráfico --}}
-                                <div class="sparkline-chart" data-series="{{ json_encode($indicador['sparkline']) }}">
+                                <div class="sparkline-chart" data-series="{{ json_encode($indicador['sparkline']) }}" aria-hidden="true">
                                 </div>
                             </div>
                             <div class="card-footer bg-transparent border-0 pb-3">
@@ -204,7 +204,7 @@
                 contain: true,
                 pageDots: false, // Opcional: quita los puntos de navegación
                 wrapAround: true, // Opcional: hace el carrusel infinito
-                autoPlay: true,
+                autoPlay: false,
             });
         }
 

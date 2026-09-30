@@ -56,7 +56,7 @@ class OmnisearchController extends Controller
                 'text' => $m->nombre,
                 'type' => 'Municipio',
                 'icon' => 'fa-map-marker-alt',
-                'url'  => route('ficha-municipal.perfil', $m->slug),
+                'url'  => route('ficha-municipal.v4', $m->slug),
             ]);
         $results = $results->merge($municipios);
 
