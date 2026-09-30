@@ -34,7 +34,7 @@
                     <div class="hero-comparar__card hero-comparar__card--left text-start p-4">
                         <span class="badge bg-gold mb-2 text-uppercase">Municipio 1</span>
                         <h2 class="display-5 fw-bold mb-1">
-                            <a href="{{ route('ficha-municipal.v4', $municipio1->slug) }}"
+                            <a href="{{ route('ficha-municipal.perfil', $municipio1->slug) }}"
                                 class="text-white">{{ $municipio1->nombre }}</a>
                         </h2>
                         <p class="text-white-50 small mb-4">
@@ -73,7 +73,7 @@
                     <div class="hero-comparar__card hero-comparar__card--right text-start p-4">
                         <span class="badge bg-gold mb-2 text-uppercase">Municipio 2</span>
                         <h2 class="display-5 fw-bold mb-1">
-                            <a href="{{ route('ficha-municipal.v4', $municipio2->slug) }}"
+                            <a href="{{ route('ficha-municipal.perfil', $municipio2->slug) }}"
                                 class="text-white">{{ $municipio2->nombre }}</a>
                         </h2>
                         <p class="text-white-50 small mb-4">

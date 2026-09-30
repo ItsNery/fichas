@@ -13,7 +13,6 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\MunicipioController as AdminMunicipioController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\FichaController;
-use App\Http\Controllers\FichaMunicipalV4Controller;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MunicipioController;
 use App\Http\Controllers\OmnisearchController;
@@ -46,9 +45,6 @@ Route::prefix('banco-indicadores')->name('banco-indicadores.')->group(function (
 // --- Módulo 2: Fichas Municipales ---
 Route::prefix('ficha/municipio')->name('ficha-municipal.')->group(function () {
     Route::get('/', [FichaController::class, 'directorioVisual'])->name('index');
-    Route::get('/{municipio:slug}/v4', [FichaMunicipalV4Controller::class, 'index'])->name('v4');
-    Route::get('/{municipio:slug}/v4/api/seccion/{dimension}', [FichaMunicipalV4Controller::class, 'section'])->name('v4.section');
-    Route::get('/v4/api/municipios', [FichaMunicipalV4Controller::class, 'searchComparison'])->name('v4.municipios');
     Route::get('/comparar/{slug1}/{slug2}', [FichaController::class, 'compararMunicipal'])->name('comparar');
     Route::get('/comparar/{slug1}/{slug2}/pdf', [FichaController::class, 'exportarComparativaPDF'])->name('comparar.pdf');
     Route::get('/api/similitud-indicador/{municipio}/{config}', [FichaController::class, 'getSimilitudIndicador'])->name('api.indicador.similitud');

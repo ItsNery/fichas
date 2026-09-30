@@ -88,7 +88,7 @@
                             <h5 class="fw-bold text-gold mb-3">Municipios:</h5>
                             <div class="d-flex flex-wrap gap-2 hero-ficha__region-list" style="max-height: 200px; overflow-y: auto; scrollbar-width: thin;">
                                 @foreach($municipios as $muni)
-                                    <a href="{{ route('ficha-municipal.v4', $muni->slug) }}" class="badge bg-white bg-opacity-10 text-white text-decoration-none border border-white border-opacity-25" style="transition: all 0.2s;" title="Ver ficha de {{ $muni->nombre }}">
+                                    <a href="{{ route('ficha-municipal.perfil', $muni->slug) }}" class="badge bg-white bg-opacity-10 text-white text-decoration-none border border-white border-opacity-25" style="transition: all 0.2s;" title="Ver ficha de {{ $muni->nombre }}">
                                         {{ $muni->nombre }}
                                     </a>
                                 @endforeach
@@ -304,7 +304,7 @@
                                         @foreach($item['datos']['ranking'] as $posicion => $ranking)
                                         <tr data-ranking-name="{{ Str::ascii(mb_strtolower($ranking['name'], 'UTF-8')) }}">
                                             <td>{{ $posicion + 1 }}</td>
-                                            <td><a href="{{ route('ficha-municipal.v4', $municipios->firstWhere('id', $ranking['id'])?->slug ?? '#') }}">{{ $ranking['name'] }}</a></td>
+                                            <td><a href="{{ route('ficha-municipal.perfil', $municipios->firstWhere('id', $ranking['id'])?->slug ?? '#') }}">{{ $ranking['name'] }}</a></td>
                                             <td class="text-end">{{ number_format($ranking['orderValue'], 2) }}</td>
                                         </tr>
                                         @endforeach

@@ -260,7 +260,7 @@ class RegionProfilePyramidTest extends TestCase
 
         $response = $this->get(route('regiones.micro.perfil', $micro->slug));
 
-        $response->assertRedirect(route('ficha-municipal.v4', $municipio->slug));
+        $response->assertRedirect(route('ficha-municipal.perfil', $municipio->slug));
         $response->assertSessionHas('info', "Esta microrregión no tiene información municipal desagregable en el sistema. Te hemos redirigido a la ficha de Puebla, donde se encuentra la información disponible.");
     }
 
