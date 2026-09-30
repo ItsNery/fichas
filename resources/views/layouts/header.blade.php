@@ -8,7 +8,7 @@
                 <div class="logos-group left">
                     <a href="https://puebla.gob.mx/" target="_blank" title="Gobierno del Estado de Puebla">
                         {{-- Asegúrate de poner la ruta correcta de tu tira de logos --}}
-                        <img src="{{ asset('img/Logos-SPFA.png') }}" alt="Gobierno de Puebla">
+                        <img src="{{ asset('img/Logos-SPFA_.png') }}" alt="Gobierno de Puebla">
                     </a>
                 </div>
 
@@ -54,8 +54,7 @@
 
             {{-- ENLACE 3: Fichas Municipales --}}
             <li>
-                <a href="{{ route('ficha-municipal.index') }}"
-                    class="{{ request()->is('ficha*') ? 'active' : '' }}">
+                <a href="{{ route('ficha-municipal.index') }}" class="{{ request()->is('ficha*') ? 'active' : '' }}">
                     Fichas Municipales
                 </a>
             </li>
@@ -69,7 +68,7 @@
 
             {{-- EJEMPLO DE DROPDOWN CON LÓGICA 'ACTIVE' --}}
             {{-- Si estás dentro de cualquier sub-ruta de 'informacion', el padre se pinta activo --}}
-             {{-- <li class="dropdown">
+            {{-- <li class="dropdown">
                 <a href="#" class="{{ request()->is('informacion*') ? 'active' : '' }}">
                     Información <span class="arrow">▾</span>
                 </a>
