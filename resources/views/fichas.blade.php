@@ -39,23 +39,27 @@ $currentUrl = url()->current();
                 <h2 class="h4 mb-3 fw-bold">Banco de Indicadores</h2>
 
                 {{-- Selector de Nivel (Segmented Control) - Persistente --}}
-                <div class="level-switcher mb-3">
-                    <div class="nav nav-pills nav-fill bg-light rounded-sm p-1 shadow-sm" id="pills-tab-nivel" role="tablist">
+                    <div class="level-switcher mb-3">
+                        <div class="nav nav-pills nav-fill bg-light rounded-sm p-1 shadow-sm" id="pills-tab-nivel" role="tablist">
                         <button class="nav-link active py-1 px-2 small" id="pill-municipios-tab"
-                            data-bs-target="#pane-municipios" type="button" role="tab" data-nivel="municipio">Municipio</button>
+                            data-bs-target="#pane-municipios" type="button" role="tab" data-nivel="municipio"
+                            aria-controls="pane-municipios" aria-selected="true" tabindex="0">Municipio</button>
                         <button class="nav-link py-1 px-2 small" id="pill-microrregiones-tab"
-                            data-bs-target="#pane-regiones" type="button" role="tab" data-nivel="microrregion">Microrregión</button>
+                            data-bs-target="#pane-regiones" type="button" role="tab" data-nivel="microrregion"
+                            aria-controls="pane-regiones" aria-selected="false" tabindex="-1">Microrregión</button>
                         <button class="nav-link py-1 px-2 small" id="pill-macrorregiones-tab"
-                            data-bs-target="#pane-regiones" type="button" role="tab" data-nivel="macrorregion">Macrorregión</button>
+                            data-bs-target="#pane-regiones" type="button" role="tab" data-nivel="macrorregion"
+                            aria-controls="pane-regiones" aria-selected="false" tabindex="-1">Macrorregión</button>
                         <button class="nav-link py-1 px-2 small" id="pill-estatal-tab"
-                            data-bs-target="#pane-regiones" type="button" role="tab" data-nivel="estatal">Estatal</button>
+                            data-bs-target="#pane-regiones" type="button" role="tab" data-nivel="estatal"
+                            aria-controls="pane-regiones" aria-selected="false" tabindex="-1">Estatal</button>
                     </div>
                 </div>
 
                 {{-- Contenido de Búsqueda y Acordeón --}}
                 <div class="tab-content" id="pills-sidebar-content">
                     {{-- Pane Municipal --}}
-                    <div class="tab-pane fade show active" id="sidebar-pane-municipios" role="tabpanel">
+                    <div class="tab-pane fade show active" id="sidebar-pane-municipios" role="tabpanel" aria-hidden="false">
                         <div class="p-3 border-bottom bg-light rounded-3 mb-3">
                             <div class="input-group">
                                 <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-search text-muted"></i></span>
@@ -115,7 +119,7 @@ $currentUrl = url()->current();
                     </div>
 
                     {{-- Pane Regional --}}
-                    <div class="tab-pane fade" id="sidebar-pane-regiones" role="tabpanel">
+                    <div class="tab-pane fade" id="sidebar-pane-regiones" role="tabpanel" aria-hidden="true">
                         <div class="p-3 border-bottom bg-light rounded-3 mb-3">
                             <div class="input-group">
                                 <span class="input-group-text bg-transparent border-end-0"><i class="fas fa-search text-muted"></i></span>
@@ -135,7 +139,8 @@ $currentUrl = url()->current();
                 <div class="tab-content" id="pills-main-content">
 
                     {{-- Vista Municipal --}}
-                    <div class="tab-pane fade show active" id="pane-municipios" role="tabpanel">
+                    <div class="tab-pane fade show active" id="pane-municipios" role="tabpanel" tabindex="0"
+                        aria-labelledby="pill-municipios-tab" aria-hidden="false">
                         <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
                             <div class="card-header bg-white py-3 border-bottom-0">
                                 <div class="chart-panel__header">
@@ -202,7 +207,7 @@ $currentUrl = url()->current();
                                 </div>
 
                                 {{-- Contenedor de Gráfica --}}
-                                <div id="consult-feedback" class="small text-muted mb-2">
+                                <div id="consult-feedback" class="small text-muted mb-2 text-corra-regular">
                                     Elige un indicador y al menos un municipio para habilitar la consulta.
                                 </div>
                                 <div id="view-summary" class="alert alert-light border rounded-4 py-2 px-3 small mb-3">
@@ -223,11 +228,16 @@ $currentUrl = url()->current();
                                     </div>
 
                                     {{-- Mapa Flotante --}}
-                                    <div id="map-container" class="floating-map-overlay shadow-lg" style="display: none;">
-                                        <div class="map-overlay-header d-flex justify-content-between align-items-center px-2 py-1 bg-white border-bottom">
-                                            <span class="small fw-bold text-muted">Vista Espacial</span>
-                                            <button type="button" class="btn-close" style="font-size: 0.6rem;" onclick="document.getElementById('toggle-map-btn').click()"></button>
-                                        </div>
+                                        <div id="map-container" class="floating-map-overlay shadow-lg" style="display: none;">
+                                            <div class="map-overlay-header d-flex justify-content-between align-items-center px-2 py-1 bg-white border-bottom">
+                                                <span class="small fw-bold text-muted">Vista Espacial</span>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <button id="map-fullscreen-btn" type="button" class="btn btn-sm btn-link p-0 text-secondary" aria-label="Ver mapa a pantalla completa" title="Pantalla completa">
+                                                        <i class="fas fa-expand" aria-hidden="true"></i>
+                                                    </button>
+                                                    <button type="button" class="btn-close" style="font-size: 0.6rem;" aria-label="Cerrar mapa" onclick="document.getElementById('toggle-map-btn').click()"></button>
+                                                </div>
+                                            </div>
                                         <div id="map" style="height: 220px; width: 220px;"></div>
                                         <div id="map-legend" class="p-1 bg-white border-top small text-center"></div>
                                     </div>
@@ -269,7 +279,8 @@ $currentUrl = url()->current();
                     </div>
 
                     {{-- Vista Regional --}}
-                    <div class="tab-pane fade" id="pane-regiones" role="tabpanel">
+                    <div class="tab-pane fade" id="pane-regiones" role="tabpanel" tabindex="0"
+                        aria-hidden="true">
                         <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
                             <div class="card-header bg-white py-3 border-bottom-0">
                                 <div class="chart-panel__header">
@@ -341,10 +352,10 @@ $currentUrl = url()->current();
                                     <div id="consult-feedback-regions" class="small text-muted mb-2">
                                         Elige un indicador y una región para habilitar la consulta.
                                     </div>
-                                    <div id="view-summary-regions" class="alert alert-light border rounded-sm py-2 px-3 small mb-3">
+                                    <div id="view-summary-regions" class="alert alert-light border rounded-sm py-2 px-3 small mb-3 text-corra-regular">
                                         Consulta actual: Aún no has seleccionado un indicador regional.
                                     </div>
-                                    <div id="view-guidance-regions" class="alert alert-info border-0 rounded-sm py-2 px-3 small mb-3">
+                                    <div id="view-guidance-regions" class="alert alert-info border-0 rounded-sm py-2 px-3 small mb-3 text-corra-regular">
                                          La consulta regional utiliza municipios completos; algunas intersecciones oficiales no se muestran porque la información no puede desagregarse por porciones territoriales. <a href="{{ config('regionalizacion.url') }}" target="_blank" rel="noopener noreferrer">Consulta la regionalización oficial vigente</a>.
                                     </div>
                                     <div id="chart-container-regions" style="min-height: 500px; width: 100%;">
@@ -359,11 +370,16 @@ $currentUrl = url()->current();
                                     </div>
 
                                     {{-- Mapa Flotante (Regiones) --}}
-                                    <div id="map-container-regions" class="floating-map-overlay shadow-lg" style="display: none;">
-                                        <div class="map-overlay-header d-flex justify-content-between align-items-center px-2 py-1 bg-white border-bottom">
-                                            <span class="small fw-bold text-muted">Vista Espacial</span>
-                                            <button type="button" class="btn-close" style="font-size: 0.6rem;" onclick="document.getElementById('toggle-map-btn-regions').click()"></button>
-                                        </div>
+                                        <div id="map-container-regions" class="floating-map-overlay shadow-lg" style="display: none;">
+                                            <div class="map-overlay-header d-flex justify-content-between align-items-center px-2 py-1 bg-white border-bottom">
+                                                <span class="small fw-bold text-muted">Vista Espacial</span>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <button id="map-fullscreen-btn-regions" type="button" class="btn btn-sm btn-link p-0 text-secondary" aria-label="Ver mapa a pantalla completa" title="Pantalla completa">
+                                                        <i class="fas fa-expand" aria-hidden="true"></i>
+                                                    </button>
+                                                    <button type="button" class="btn-close" style="font-size: 0.6rem;" aria-label="Cerrar mapa" onclick="document.getElementById('toggle-map-btn-regions').click()"></button>
+                                                </div>
+                                            </div>
                                         <div id="map-regions" style="height: 220px; width: 220px;"></div>
                                         <div id="map-legend-regions" class="p-1 bg-white border-top small text-center"></div>
                                     </div>

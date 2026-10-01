@@ -237,7 +237,10 @@ p {
     opacity: 0;
     visibility: hidden;
     transform: translateY(20px);
-    transition: opacity 0.3s, visibility 0.3s, transform 0.3s;
+    transition:
+        opacity 0.3s,
+        visibility 0.3s,
+        transform 0.3s;
 }
 
 /* Clase para mostrar el botón con animación */
@@ -375,7 +378,6 @@ p {
     transform: rotate(-45deg) translate(5px, -6px);
 }
 
-
 /* ==========================================================================
    3. NAVEGACIÓN PRINCIPAL (STICKY & DESKTOP)
    ========================================================================== */
@@ -415,10 +417,9 @@ p {
     list-style: none;
     padding: 0;
     margin: 0;
-
 }
 
-.nav-links>li>a {
+.nav-links > li > a {
     display: block;
     padding: 18px 20px;
     font-size: 1rem;
@@ -428,8 +429,8 @@ p {
     transition: color 0.3s ease;
 }
 
-.nav-links>li>a::after {
-    content: '';
+.nav-links > li > a::after {
+    content: "";
     position: absolute;
     bottom: 10px;
     left: 50%;
@@ -441,13 +442,13 @@ p {
     border-radius: 2px;
 }
 
-.nav-links>li>a:hover,
-.nav-links>li>a.active {
+.nav-links > li > a:hover,
+.nav-links > li > a.active {
     color: var(--color2);
 }
 
-.nav-links>li>a:hover::after,
-.nav-links>li>a.active::after {
+.nav-links > li > a:hover::after,
+.nav-links > li > a.active::after {
     width: 70%;
 }
 
@@ -540,12 +541,10 @@ p {
     margin-top: 2px;
 }
 
-
 /* ==========================================================================
    5. RESPONSIVE / MÓVIL (max-width: 991px)
    ========================================================================== */
 @media (max-width: 991px) {
-
     .header-logos-container {
         padding: 8px 0;
     }
@@ -599,13 +598,13 @@ p {
         gap: 0;
     }
 
-    .nav-links>li>a {
+    .nav-links > li > a {
         padding: 15px 25px;
         border-bottom: 1px solid #f0f0f0;
         font-size: 1.05rem;
     }
 
-    .nav-links>li>a::after {
+    .nav-links > li > a::after {
         content: none;
     }
 
@@ -646,16 +645,16 @@ p {
         transform: rotate(90deg);
     }
 
-    .dropdown:hover>.dropdown-content,
-    .dropdown-nested:hover>.dropdown-content-nested {
+    .dropdown:hover > .dropdown-content,
+    .dropdown-nested:hover > .dropdown-content-nested {
         display: none !important;
     }
 
-    .dropdown.active>.dropdown-content {
+    .dropdown.active > .dropdown-content {
         display: block !important;
     }
 
-    .dropdown-nested.active>.dropdown-content-nested {
+    .dropdown-nested.active > .dropdown-content-nested {
         display: block !important;
     }
 }
@@ -664,7 +663,6 @@ p {
    6. MÓVIL PEQUEÑO (max-width: 480px)
    ========================================================================== */
 @media (max-width: 480px) {
-
     .logos-wrapper {
         flex-direction: column;
         align-items: flex-start;
@@ -795,19 +793,19 @@ footer {
 }
 
 .gilroy-bold {
-    font-family: 'Gilroy-Bold', sans-serif;
+    font-family: "Gilroy-Bold", sans-serif;
 }
 
 .corra-bold {
-    font-family: 'Corra-Montserra-Bold', sans-serif;
+    font-family: "Corra-Montserra-Bold", sans-serif;
 }
 
 .corra-regular {
-    font-family: 'Corra-Montserra-Regular', sans-serif;
+    font-family: "Corra-Montserra-Regular", sans-serif;
 }
 
 .corra-light {
-    font-family: 'Corra-Montserra-Light', sans-serif;
+    font-family: "Corra-Montserra-Light", sans-serif;
 }
 
 .accordion-button-dimension {
@@ -876,7 +874,7 @@ footer {
     /* Opcional: un fondo muy sutil para diferenciar el área */
     background-color: #f8f9fa;
     padding: 1.5rem;
-    border-radius: .5rem;
+    border-radius: 0.5rem;
 }
 
 /* Estilo para los títulos (Detalles, Acciones) */
@@ -1010,7 +1008,7 @@ footer {
     position: relative;
     height: 80vh;
     min-height: 500px;
-    background: url('../img/fondos/Fondo-hero.webp') no-repeat center center;
+    background: url("../img/fondos/Fondo-hero.webp") no-repeat center center;
     background-size: cover;
     display: flex;
     align-items: center;
@@ -1372,7 +1370,7 @@ footer {
 
 .stat-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
 }
 
 .stat-card .stat-value {
@@ -1540,6 +1538,7 @@ footer {
 }
 
 .tematica-button {
+    font-family: "Corra-Montserra-Regular", sans-serif;
     font-size: 0.9rem !important;
     font-weight: 600 !important;
     color: #64748b !important;
@@ -1680,7 +1679,6 @@ footer {
 }
 
 @media print {
-
     /* 1. OCULTAR LO QUE NO SIRVE EN PAPEL */
     .catalogo-col,
     .filter-bar,
@@ -1753,7 +1751,7 @@ footer {
         text-align: center;
     }
 
-    .floating-map-overlay>div {
+    .floating-map-overlay > div {
         margin: 0 auto !important;
     }
 
@@ -1771,7 +1769,8 @@ footer {
     }
 
     .metadata-block::after {
-        content: "Ficha generada el " attr(data-fecha-impresion) " | Banco de Indicadores - PIMREP";
+        content: "Ficha generada el " attr(data-fecha-impresion)
+            " | Banco de Indicadores - PIMREP";
         display: block;
         text-align: center;
         font-size: 10px;
@@ -1811,7 +1810,10 @@ footer {
 /* Estilos para el directorio de municipios */
 .directory-banner {
     height: 350px;
-    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1716818732769-55fec1b05f44?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D') center/cover;
+    background:
+        linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
+        url("https://images.unsplash.com/photo-1716818732769-55fec1b05f44?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")
+            center/cover;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1880,7 +1882,12 @@ footer {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(0deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.4) 50%, rgba(0, 0, 0, 0) 100%);
+    background: linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.9) 0%,
+        rgba(0, 0, 0, 0.4) 50%,
+        rgba(0, 0, 0, 0) 100%
+    );
     display: flex;
     flex-direction: column;
     justify-content: flex-end;

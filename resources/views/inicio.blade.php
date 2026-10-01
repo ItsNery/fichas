@@ -4,135 +4,208 @@
 @section('meta-description', 'Página principal del Portal de Información Municipal y Regional del Estado de Puebla')
 @section('css')
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/flickity@2/dist/flickity.min.css">
 @endsection
 @section('jss')
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
-    <script src="https://unpkg.com/flickity@2/dist/flickity.pkgd.min.js"></script>
 @endsection
 
 @section('content')
-    {{-- Hero Section --}}
-    <section class="hero-section text-white text-center">
-        <div class="hero-overlay"></div>
-        <div class="container d-flex flex-column justify-content-center h-100">
-            <h1 class="display-4 fw-bold mb-3">Portal de Información Municipal y Regional del Estado de Puebla</h1>
-            <p class="lead mb-5">Información estadística y geográfica para la toma de decisiones.</p>
+    @php
+        $indicadoresSecundarios = array_slice($indicadoresDestacados, 0, 4);
+    @endphp
 
+    <section class="editorial-hero editorial-hero--landscape text-white">
+        <div class="editorial-hero__overlay"></div>
+        <div class="container editorial-hero__content text-center">
             <div class="row justify-content-center">
+                <div class="col-lg-9 col-xl-8">
+                    <span class="editorial-hero__eyebrow">
+                        Puebla, territorio en cifras
+                    </span>
+                    <h1>
+                        Portal de Información Municipal y Regional
+                    </h1>
+                    <p class="editorial-hero__lead">Información estadística y geográfica para conocer, comparar y tomar
+                        decisiones sobre el estado.</p>
+                    <div id="explora" class="editorial-hero__search-panel">
+                        <p class="editorial-hero__search-label"><i class="fas fa-search me-2" aria-hidden="true"></i>Explora
+                            Puebla en datos</p>
+                        <div class="omnisearch-container w-100">
+                            <label for="omnisearch-input" class="visually-hidden">Busca municipios, indicadores o
+                                regiones</label>
+                            <select id="omnisearch-input" placeholder="Busca municipios, indicadores o regiones"></select>
+                        </div>
+                        <div class="hero-search-examples" aria-label="Búsquedas sugeridas">
+                            <span>Prueba con:</span>
+                            <span class="hero-search-suggestions">
+                                <button type="button" class="hero-search-chip" data-search-term="Puebla">Puebla</button>
+                                <button type="button" class="hero-search-chip" data-search-term="Población total">Población
+                                    total</button>
+                                <button type="button" class="hero-search-chip" data-search-term="Sierra Norte">Sierra
+                                    Norte</button>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="editorial-links-section">
+        <div class="container">
+            <nav class="editorial-links" aria-label="Explora el portal">
+                <a href="{{ route('ficha-municipal.index') }}"><i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                    Municipios</a>
+                <a href="{{ route('banco-indicadores.index') }}"><i class="fas fa-chart-line" aria-hidden="true"></i>
+                    Indicadores</a>
+                <a href="{{ route('regiones.estatal.perfil') }}"><i class="fas fa-map" aria-hidden="true"></i> Perfiles
+                    regionales</a>
+                <a href="{{ route('datos-abiertos.index') }}"><i class="fas fa-download" aria-hidden="true"></i> Datos
+                    abiertos</a>
+            </nav>
+        </div>
+    </section>
+
+    <section class="editorial-data-section">
+        <div class="container">
+            <div class="editorial-section-heading">
+                <div>
+                    <span class="section-eyebrow">PUEBLA HOY</span>
+                    <h2>Indicadores para entender el presente</h2>
+                </div>
+                <a href="{{ route('banco-indicadores.index') }}">Explorar todos <i class="fas fa-arrow-right ms-1"
+                        aria-hidden="true"></i></a>
+            </div>
+
+            @if (count($indicadoresSecundarios))
+                <div class="row g-0 editorial-data-grid">
+                    @foreach ($indicadoresSecundarios as $indicador)
+                        <article class="col-sm-6 col-lg-3 editorial-data-card">
+                            <a href="{{ $indicador['link'] }}">
+                                <p class="editorial-data-card__title">{{ $indicador['titulo'] }}</p>
+                                <p class="editorial-data-card__value">{{ $indicador['valor'] }}</p>
+                                <p class="editorial-data-card__year">{{ $indicador['anio'] }}</p>
+                                <div class="sparkline-chart" data-series="{{ json_encode($indicador['sparkline']) }}"
+                                    aria-hidden="true"></div>
+                            </a>
+                        </article>
+                    @endforeach
+                </div>
+            @else
+                <div class="featured-empty-state text-center mx-auto">
+                    <i class="fas fa-chart-line fa-2x custom-text-primary mb-3" aria-hidden="true"></i>
+                    <h3 class="h5 fw-bold">Próximamente habrá indicadores destacados</h3>
+                    <p class="text-muted mb-3">Consulta el banco para explorar la información disponible.</p>
+                    <a href="{{ route('banco-indicadores.index') }}" class="btn btn-custom-primary btn-sm">Ir al Banco de
+                        Indicadores</a>
+                </div>
+            @endif
+        </div>
+    </section>
+
+    <section class="editorial-guides-section">
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-5">
+                    <span class="section-eyebrow">EXPLORA EL TERRITORIO</span>
+                    <h2>De la cifra al contexto local.</h2>
+                    <p>Consulta perfiles municipales y regionales para comparar realidades, identificar tendencias y
+                        profundizar en cada territorio.</p>
+                </div>
+                <div class="col-lg-7">
+                    <div class="row g-3">
+                        <div class="col-md-6"><a href="{{ route('ficha-municipal.index') }}"
+                                class="editorial-guide-link"><i class="fas fa-city"
+                                    aria-hidden="true"></i><span><strong>Perfiles municipales</strong>Conoce cada
+                                    municipio</span><i class="fas fa-arrow-right" aria-hidden="true"></i></a></div>
+                        <div class="col-md-6"><a href="{{ route('regiones.estatal.perfil') }}"
+                                class="editorial-guide-link"><i class="fas fa-draw-polygon"
+                                    aria-hidden="true"></i><span><strong>Perfiles regionales</strong>Observa el
+                                    territorio</span><i class="fas fa-arrow-right" aria-hidden="true"></i></a></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="territory-section">
+        <div class="container">
+            <div class="editorial-section-heading">
+                <div>
+                    <span class="section-eyebrow">COBERTURA TERRITORIAL</span>
+                    <h2>Una misma realidad, cuatro escalas.</h2>
+                </div>
+                <p>Encuentra información desde el estado hasta sus regiones.</p>
+            </div>
+            <div class="row g-0 territory-grid">
+                <div class="col-sm-6 col-lg-3">
+                    <a href="{{ route('regiones.estatal.perfil') }}" class="territory-card">
+                        <span class="territory-card__number">01</span>
+                        <strong>Estado</strong>
+                        <span>Panorama general de Puebla</span>
+                        <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <a href="{{ route('ficha-municipal.index') }}" class="territory-card">
+                        <span class="territory-card__number">02</span>
+                        <strong>Municipios</strong>
+                        <span>Consulta cada uno de los 217 </span>
+                        <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <a href="#explora" class="territory-card">
+                        <span class="territory-card__number">03</span>
+                        <strong>Microrregiones</strong>
+                        <span>Encuéntralas en el buscador</span>
+                        <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <div class="col-sm-6 col-lg-3">
+                    <a href="#explora" class="territory-card">
+                        <span class="territory-card__number">04</span>
+                        <strong>Macrorregiones</strong>
+                        <span>Explora su información</span>
+                        <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="analysis-section">
+        <div class="container">
+            <div class="row g-5 align-items-start">
+                <div class="col-lg-4">
+                    <span class="section-eyebrow">HERRAMIENTAS DE ANALISIS</span>
+                    <h2>Convierte datos en perspectiva.</h2>
+                    <p>El portal reúne recursos para observar tendencias y relacionar la información con el territorio.</p>
+                </div>
                 <div class="col-lg-8">
-                    <div class="card border-0 rounded-sm shadow-lg p-4" style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
-                        <h5 class="fw-bold mb-2 text-white">
-                            <i class="fas fa-search me-2"></i>Explora Puebla en Datos
-                        </h5>
-                        <p class="text-white-50 small mb-3">
-                            Busca municipios, indicadores estadísticos o regiones del estado.
-                        </p>
-                        <div class="omnisearch-container mx-auto w-100">
-                            <select id="omnisearch-input" placeholder="Ej: Puebla, Población total, Sierra Norte..."></select>
-                        </div>
-
-                        {{-- Quick access links --}}
-                        <div class="d-flex justify-content-center gap-3 mt-3 flex-wrap">
-                            <a href="{{ route('ficha-municipal.index') }}" class="omnisearch-quicklink">
-                                <i class="fas fa-map-marker-alt me-1"></i>Municipios
-                            </a>
-                            <a href="{{ route('banco-indicadores.index') }}" class="omnisearch-quicklink">
-                                <i class="fas fa-chart-line me-1"></i>Banco de Indicadores
-                            </a>
-                            <a href="{{ route('datos-abiertos.index') }}" class="omnisearch-quicklink">
-                                <i class="fas fa-download me-1"></i>Datos Abiertos
-                            </a>
-                        </div>
+                    <div class="analysis-list">
+                        <a href="{{ route('banco-indicadores.index') }}"><span>01</span><strong>Mapas temáticos</strong><small>Visualiza indicadores sobre el territorio.</small><i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+                        <a href="{{ route('banco-indicadores.index') }}"><span>02</span><strong>Series históricas</strong><small>Identifica cambios a través del tiempo.</small><i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+                        <a href="{{ route('ficha-municipal.index') }}"><span>03</span><strong>Comparación territorial</strong><small>Consulta perfiles y contextos municipales.</small><i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+                        <a href="{{ route('datos-abiertos.index') }}"><span>04</span><strong>Exportación de datos</strong><small>Reutiliza información para tus análisis.</small><i class="fas fa-arrow-right" aria-hidden="true"></i></a>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-    {{-- Sección de Funcionalidades --}}
-    <section class="py-5 bg-light">
-        <div class="container">
-            <div class="text-center mb-5">
-                <h2 class="fw-bold">Descubre el Poder de los Datos</h2>
-                <p class="lead text-muted">Visualiza, compara y utiliza la información a tu favor.</p>
-            </div>
-            <div class="row text-center g-4">
-                {{-- Columna 1: Visualiza --}}
-                <div class="col-md-4">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body p-4">
-                            <i class="fas fa-chart-pie fa-3x custom-text-primary mb-3"></i>
-                            <h3 class="card-title h5 fw-bold">Visualiza</h3>
-                            <p class="card-text text-muted">
-                                Explora decenas de indicadores a través de gráficos interactivos y mapas temáticos para
-                                entender la realidad de cada municipio.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                {{-- Columna 2: Compara --}}
-                <div class="col-md-4">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body p-4">
-                            <i class="fas fa-layer-group fa-3x custom-text-primary mb-3"></i>
-                            <h3 class="card-title h5 fw-bold">Compara</h3>
-                            <p class="card-text text-muted">
-                                Analiza tendencias y compara datos entre diferentes municipios o regiones para obtener una
-                                perspectiva única y contextualizada.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                {{-- Columna 3: Exporta --}}
-                <div class="col-md-4">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body p-4">
-                            <i class="fas fa-download fa-3x custom-text-primary mb-3"></i>
-                            <h3 class="card-title h5 fw-bold">Exporta</h3>
-                            <p class="card-text text-muted">
-                                Descarga la información que necesitas en formatos abiertos (CSV) para tus propios análisis,
-                                reportes o investigaciones.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    {{-- Sección de Datos Destacados --}}
-    {{-- Sección Carrusel de Indicadores Destacados --}}
-    <section class="py-5">
-        <div class="container">
-            <div class="text-center mb-5">
-                <h2 class="fw-bold">Puebla en Cifras</h2>
-                <p class="lead text-muted">Un vistazo rápido a los datos más relevantes del estado.</p>
-            </div>
 
-            {{-- Contenedor principal del carrusel --}}
-            <div class="main-carousel">
-                @foreach ($indicadoresDestacados as $indicador)
-                    {{-- Cada "slide" del carrusel --}}
-                    <div class="carousel-cell">
-                        <div class="card text-center shadow-sm h-100">
-                            <div class="card-body">
-                                <h6 class="card-subtitle mb-2 text-muted">{{ $indicador['titulo'] }}
-                                    ({{ $indicador['anio'] }})
-                                </h6>
-                                <p class="card-title display-5 fw-bold">{{ $indicador['valor'] }}</p>
-
-                                {{-- Contenedor para el mini-gráfico --}}
-                                <div class="sparkline-chart" data-series="{{ json_encode($indicador['sparkline']) }}" aria-hidden="true">
-                                </div>
-                            </div>
-                            <div class="card-footer bg-transparent border-0 pb-3">
-                                <a href="{{ $indicador['link'] }}" class="btn btn-sm btn-outline-primary">
-                                    Explorar indicador
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
+    <section class="open-data-section">
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-8">
+                    <span>DATOS ABIERTOS</span>
+                    <h2>La información pública también se puede reutilizar.</h2>
+                    <p>Consulta y descarga los datos disponibles para investigación, análisis y proyectos propios.</p>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <a href="{{ route('datos-abiertos.index') }}">Ir a datos abiertos <i class="fas fa-arrow-right ms-1" aria-hidden="true"></i></a>
+                </div>
             </div>
         </div>
     </section>
@@ -144,7 +217,11 @@
         const omniInput = document.getElementById('omnisearch-input');
 
         if (omniInput) {
-            new TomSelect(omniInput, {
+            const loadSearchResults = (query) => fetch(
+                `{{ route('api.omnisearch') }}?q=${encodeURIComponent(query)}`
+            ).then((response) => response.json());
+
+            const tomSelect = new TomSelect(omniInput, {
                 valueField: 'id',
                 labelField: 'text',
                 searchField: 'text',
@@ -154,11 +231,11 @@
                 render: {
                     option: function(data, escape) {
                         const typeColors = {
-                            'Municipio':     '#861e34',
-                            'Indicador':     '#0c312d',
-                            'Microrregión':  '#c5a059',
-                            'Macrorregión':  '#2c5f2d',
-                            'Estado':        '#5f1b2d',
+                            'Municipio': '#861e34',
+                            'Indicador': '#0c312d',
+                            'Microrregión': '#c5a059',
+                            'Macrorregión': '#2c5f2d',
+                            'Estado': '#5f1b2d',
                         };
                         const color = typeColors[data.type] || '#666';
                         return `<div class="d-flex align-items-center gap-2 py-1 px-1">
@@ -181,9 +258,8 @@
                 load: function(query, callback) {
                     if (query.length < 2) return callback();
 
-                    fetch(`{{ route('api.omnisearch') }}?q=${encodeURIComponent(query)}`)
-                        .then(response => response.json())
-                        .then(json => callback(json))
+                    loadSearchResults(query)
+                        .then((results) => callback(results))
                         .catch(() => callback());
                 },
                 onChange: function(value) {
@@ -194,21 +270,66 @@
                     }
                 }
             });
-        }
 
-        // Carrusel de indicadores
-        const carouselElem = document.querySelector('.main-carousel');
-        if (carouselElem) {
-            const flkty = new Flickity(carouselElem, {
-                cellAlign: 'left',
-                contain: true,
-                pageDots: false, // Opcional: quita los puntos de navegación
-                wrapAround: true, // Opcional: hace el carrusel infinito
-                autoPlay: false,
+            const suggestionContainer = document.querySelector('.hero-search-suggestions');
+            const searchSuggestions = [
+                'Puebla', 'Población total', 'Sierra Norte', 'Tehuacán',
+                'Viviendas', 'Angelópolis', 'Educación', 'Salud',
+            ];
+            let suggestionStart = 0;
+
+            const renderSuggestions = () => {
+                const visibleSuggestions = Array.from({
+                        length: 3
+                    }, (_, index) =>
+                    searchSuggestions[(suggestionStart + index) % searchSuggestions.length]
+                );
+
+                suggestionContainer.classList.add('is-leaving');
+
+                window.setTimeout(() => {
+                    suggestionContainer.replaceChildren(...visibleSuggestions.map((suggestion) => {
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.className = 'hero-search-chip';
+                        button.dataset.searchTerm = suggestion;
+                        button.textContent = suggestion;
+                        return button;
+                    }));
+                    suggestionContainer.classList.remove('is-leaving');
+                }, 180);
+            };
+
+            suggestionContainer.addEventListener('click', (event) => {
+                const button = event.target.closest('[data-search-term]');
+                if (button) {
+                    const searchTerm = button.dataset.searchTerm;
+                    tomSelect.setTextboxValue(searchTerm);
+                    tomSelect.clearOptions();
+                    tomSelect.loading++;
+                    tomSelect.wrapper.classList.add(tomSelect.settings.loadingClass);
+                    tomSelect.focus();
+
+                    loadSearchResults(searchTerm)
+                        .then((results) => tomSelect.addOptions(results))
+                        .catch(() => {})
+                        .finally(() => {
+                            tomSelect.loading--;
+                            tomSelect.wrapper.classList.remove(tomSelect.settings.loadingClass);
+                            tomSelect.refreshOptions(true);
+                        });
+                }
             });
+
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                window.setInterval(() => {
+                    suggestionStart = (suggestionStart + 3) % searchSuggestions.length;
+                    renderSuggestions();
+                }, 5000);
+            }
         }
 
-        // --- 2. INICIALIZAR LOS MINI-GRÁFICOS (SPARKLINES) ---
+        // Inicializar los mini-gráficos de los indicadores.
         const sparklineCharts = document.querySelectorAll('.sparkline-chart');
         sparklineCharts.forEach(chartEl => {
             const seriesData = JSON.parse(chartEl.dataset.series);

@@ -123,6 +123,58 @@ class RegionProfilePyramidTest extends TestCase
         $response->assertDontSee('"type":"bar-horizontal"', false);
     }
 
+    public function test_municipal_profile_and_pdf_omit_scatter_configurations(): void
+    {
+        $macro = new Macrorregion();
+        $macro->nombre = 'Región perfil';
+        $macro->slug = 'region-perfil';
+        $macro->save();
+        $micro = new Microrregion();
+        $micro->nombre = 'Micro perfil';
+        $micro->slug = 'micro-perfil';
+        $micro->macrorregion_id = $macro->id;
+        $micro->save();
+        $municipio = Municipio::create([
+            'nombre' => 'Municipio perfil',
+            'slug' => 'municipio-perfil',
+            'microrregion_id' => $micro->id,
+        ]);
+        $dimension = Dimension::create(['nombre' => 'Dimensión perfil', 'nombre_tecnico' => 'perfil']);
+        $tematica = Tematica::create(['nombre' => 'Temática perfil', 'nombre_tecnico' => 'perfil', 'dimension_id' => $dimension->id]);
+        $indicador = Indicador::create(['nombre_amigable' => 'Indicador perfil', 'tematica_id' => $tematica->id]);
+
+        $scatter = ConfiguracionFicha::create([
+            'indicador_id' => $indicador->id,
+            'seccion' => 'perfil',
+            'orden' => 1,
+            'tipo_visualizacion' => 'scatter',
+            'titulo_reporte' => 'Dispersión no pública',
+            'activo' => true,
+        ]);
+        $visible = ConfiguracionFicha::create([
+            'indicador_id' => $indicador->id,
+            'seccion' => 'perfil',
+            'orden' => 2,
+            'tipo_visualizacion' => 'kpi',
+            'titulo_reporte' => 'Indicador público',
+            'activo' => true,
+        ]);
+
+        $this->get(route('ficha-municipal.perfil', $municipio))
+            ->assertOk()
+            ->assertViewHas('perfil', fn ($perfil) => collect($perfil)->flatten(1)
+                ->pluck('config.id')
+                ->all() === [$visible->id]);
+
+        $this->get(route('ficha-municipal.perfil.pdf', [$municipio, 'preview' => true]))
+            ->assertOk()
+            ->assertViewHas('perfil', fn ($perfil) => collect($perfil)->flatten(1)
+                ->pluck('config.id')
+                ->all() === [$visible->id]);
+
+        $this->assertDatabaseHas('configuracion_fichas', ['id' => $scatter->id, 'activo' => true]);
+    }
+
     public function test_regional_profile_omits_average_indicators(): void
     {
         $macro = new Macrorregion();

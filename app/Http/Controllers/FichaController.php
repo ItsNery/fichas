@@ -197,7 +197,7 @@ class FichaController extends Controller
         $municipio->load('microrregion.macrorregion');
 
         $configuraciones = ConfiguracionFicha::with(['indicador.variables', 'indicador.tematica.dimension', 'variables'])
-            ->where('activo', true)
+            ->visibleEnPerfilPublico()
             ->orderBy('orden')
             ->orderBy('id')
             ->get();
@@ -509,7 +509,7 @@ class FichaController extends Controller
         $hero = $this->getHeroStats($municipio);
 
         $configuraciones = ConfiguracionFicha::with(['indicador.variables', 'indicador.tematica.dimension', 'variables'])
-            ->where('activo', true)
+            ->visibleEnPerfilPublico()
             ->orderBy('orden')
             ->orderBy('id')
             ->get();
@@ -576,7 +576,7 @@ class FichaController extends Controller
     private function buildResumenV3Structure(Municipio $municipio): array
     {
         $configuraciones = ConfiguracionFicha::with(['indicador.variables', 'indicador.tematica.dimension', 'variables'])
-            ->where('activo', true)
+            ->visibleEnPerfilPublico()
             ->orderBy('orden')
             ->orderBy('id')
             ->get();
@@ -816,7 +816,9 @@ class FichaController extends Controller
      */
     public function getGraficoDatosApi(Municipio $municipio, $configId, $anio)
     {
-        $config = ConfiguracionFicha::with(['indicador.variables', 'variables'])->find($configId);
+        $config = ConfiguracionFicha::with(['indicador.variables', 'variables'])
+            ->visibleEnPerfilPublico()
+            ->find($configId);
         if (!$config) {
             return response()->json(['success' => false, 'error' => 'Configuración no encontrada'], 404);
         }

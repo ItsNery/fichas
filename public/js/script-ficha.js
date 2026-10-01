@@ -10,6 +10,7 @@ let geojsonLayerRegional = null;
 let pueblaGeoJSON = null;
 let microGeoJSON = null;
 let macroGeoJSON = null;
+const geoJSONPromises = {};
 
 function limpiarCapasMapa() {
     if (geojsonLayerMunicipal && mapMunicipal) {
@@ -204,8 +205,13 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 
     const mapContainer = document.getElementById("map-container");
+    const mapContainerRegions = document.getElementById("map-container-regions");
     const mapLegend = document.getElementById("map-legend");
     const mapLegendRegions = document.getElementById("map-legend-regions");
+    const mapFullscreenBtn = document.getElementById("map-fullscreen-btn");
+    const mapFullscreenBtnRegions = document.getElementById(
+        "map-fullscreen-btn-regions",
+    );
 
     const metadataContainer = document.getElementById("metadata-container");
     const descriptionElement = document.getElementById("indicator-description");
@@ -879,10 +885,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     "btn-primary",
                 );
                 if (mapMunicipal) mapMunicipal.invalidateSize();
-                if (appState.municipioIds.length === 1 && appState.municipioIds[0] !== "estatal") {
-                    const optionData = municipioSelector.options[appState.municipioIds[0]];
-                    if (optionData?.cvegeo) displaySingleMunicipalityMap(optionData.cvegeo);
-                }
+                renderCurrentSelectionMap();
             } else {
                 mapContainer.style.display = "none";
                 mapVisiblePreference = false;
@@ -907,11 +910,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     "btn-primary",
                 );
                 if (mapRegional) mapRegional.invalidateSize();
-                if (appState.nivelDeAgregacion === "microrregion" && appState.microrregionId) {
-                    displaySingleFeatureMap(microGeoJSON, appState.microrregionId, "id_micro");
-                } else if (appState.nivelDeAgregacion === "macrorregion" && appState.macrorregionId) {
-                    displaySingleFeatureMap(macroGeoJSON, appState.macrorregionId, "id_macro");
-                }
+                renderCurrentSelectionMap();
             } else {
                 container.style.display = "none";
                 mapVisiblePreference = false;
@@ -923,6 +922,47 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
+
+    function toggleMapFullscreen(container, map) {
+        if (!container || !map) return;
+
+        if (document.fullscreenElement === container) {
+            document.exitFullscreen();
+            return;
+        }
+
+        if (!document.fullscreenEnabled) {
+            showMapStatus(
+                container === mapContainer ? "municipal" : "regional",
+                "La pantalla completa no está disponible en este navegador.",
+                true,
+            );
+            return;
+        }
+
+        container.requestFullscreen().catch((error) => {
+            console.error("No se pudo abrir el mapa a pantalla completa.", error);
+        });
+    }
+
+    if (mapFullscreenBtn) {
+        mapFullscreenBtn.addEventListener("click", () => {
+            toggleMapFullscreen(mapContainer, mapMunicipal);
+        });
+    }
+
+    if (mapFullscreenBtnRegions) {
+        mapFullscreenBtnRegions.addEventListener("click", () => {
+            toggleMapFullscreen(mapContainerRegions, mapRegional);
+        });
+    }
+
+    document.addEventListener("fullscreenchange", () => {
+        window.setTimeout(() => {
+            if (mapMunicipal) mapMunicipal.invalidateSize();
+            if (mapRegional) mapRegional.invalidateSize();
+        }, 0);
+    });
 
     if (compareStateSwitch) {
         compareStateSwitch.addEventListener("change", () => {
@@ -1057,37 +1097,55 @@ document.addEventListener("DOMContentLoaded", function () {
 
         return "#264653"; // <= 20% (el valor más bajo)
     }
-    async function loadAllGeoJSON() {
-        // Si ya los cargamos, no lo hacemos de nuevo.
-        if (pueblaGeoJSON && microGeoJSON && macroGeoJSON) return;
+    const GEOJSON_SOURCES = {
+        municipal: `${window.APP_URL}/geojson/municipios_puebla_slim.geojson`,
+        microrregion: `${window.APP_URL}/geojson/Microrregiones2026.geojson`,
+        macrorregion: `${window.APP_URL}/geojson/macrorregiones_2025_slim.geojson`,
+    };
 
-        try {
-            const [responseMun, responseMicro, responseMacro] =
-                await Promise.all([
-                    fetch(
-                        `${window.APP_URL}/geojson/municipios_puebla_slim.geojson`,
-                    ),
-                    fetch(
-                        `${window.APP_URL}/geojson/Microrregiones2026.geojson`,
-                    ),
-                    fetch(
-                        `${window.APP_URL}/geojson/macrorregiones_2025_slim.geojson`,
-                    ),
-                ]);
+    function getLoadedGeoJSON(level) {
+        return {
+            municipal: pueblaGeoJSON,
+            microrregion: microGeoJSON,
+            macrorregion: macroGeoJSON,
+        }[level];
+    }
 
-            pueblaGeoJSON = await responseMun.json();
-            microGeoJSON = await responseMicro.json();
-            macroGeoJSON = await responseMacro.json();
-            // console.log("Todos los archivos GeoJSON han sido cargados.");
-        } catch (error) {
-            console.error(
-                "Error crítico: No se pudo cargar el archivo GeoJSON.",
-                error,
-            );
-            if (mapContainer)
-                mapContainer.innerHTML =
-                    "<p class='text-danger'>No se pudo cargar la cartografía del mapa.</p>";
+    function storeGeoJSON(level, data) {
+        if (level === "municipal") pueblaGeoJSON = data;
+        if (level === "microrregion") microGeoJSON = data;
+        if (level === "macrorregion") macroGeoJSON = data;
+    }
+
+    function loadGeoJSON(level) {
+        const loaded = getLoadedGeoJSON(level);
+        if (loaded) return Promise.resolve(loaded);
+
+        if (!geoJSONPromises[level]) {
+            geoJSONPromises[level] = fetch(GEOJSON_SOURCES[level])
+                .then((response) => {
+                    if (!response.ok) throw new Error(`No se pudo cargar ${level}.`);
+                    return response.json();
+                })
+                .then((data) => {
+                    storeGeoJSON(level, data);
+                    return data;
+                })
+                .catch((error) => {
+                    delete geoJSONPromises[level];
+                    throw error;
+                });
         }
+
+        return geoJSONPromises[level];
+    }
+
+    function showMapStatus(target, message, isError = false) {
+        const legend = target === "regional" ? mapLegendRegions : mapLegend;
+        if (!legend) return;
+
+        legend.innerHTML = `<span class="${isError ? "text-danger" : "text-muted"}">${message}</span>`;
+        legend.style.display = "block";
     }
 
     function initMapMunicipal() {
@@ -1117,15 +1175,76 @@ document.addEventListener("DOMContentLoaded", function () {
                 '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         }).addTo(mapRegional);
     }
-    /**
-     * Inicializa el objeto del mapa, carga el GeoJSON una sola vez
-     * y prepara los selectores de la interfaz del mapa.
-     */
-    async function initMap() {
-        // Primero cargamos los datos
-        await loadAllGeoJSON();
-        // Luego inicializamos SÓLO el mapa municipal (el único visible al inicio)
-        initMapMunicipal();
+    async function renderCurrentSelectionMap() {
+        const level = appState.nivelDeAgregacion;
+        const isSingleMunicipality =
+            level === "municipio" &&
+            appState.municipioIds.length === 1 &&
+            appState.municipioIds[0] !== "estatal";
+
+        try {
+            if (isSingleMunicipality) {
+                initMapMunicipal();
+                showMapStatus("municipal", "Cargando cartografía...");
+                const municipioId = appState.municipioIds[0];
+                const optionData = municipioSelector.options[municipioId];
+                await loadGeoJSON("municipal");
+                if (
+                    appState.nivelDeAgregacion === "municipio" &&
+                    appState.municipioIds[0] === municipioId &&
+                    optionData?.cvegeo
+                ) {
+                    displaySingleMunicipalityMap(optionData.cvegeo);
+                }
+            } else if (level === "microrregion" && appState.microrregionId) {
+                initMapRegional();
+                showMapStatus("regional", "Cargando cartografía...");
+                const regionId = appState.microrregionId;
+                const data = await loadGeoJSON("microrregion");
+                if (
+                    appState.nivelDeAgregacion === "microrregion" &&
+                    appState.microrregionId === regionId
+                ) {
+                    displaySingleFeatureMap(data, regionId, "id_micro");
+                    mapLegendRegions.innerHTML = "";
+                }
+            } else if (level === "macrorregion" && appState.macrorregionId) {
+                initMapRegional();
+                showMapStatus("regional", "Cargando cartografía...");
+                const regionId = appState.macrorregionId;
+                const data = await loadGeoJSON("macrorregion");
+                if (
+                    appState.nivelDeAgregacion === "macrorregion" &&
+                    appState.macrorregionId === regionId
+                ) {
+                    displaySingleFeatureMap(data, regionId, "id_macro");
+                    mapLegendRegions.innerHTML = "";
+                }
+            }
+        } catch (error) {
+            console.error("No se pudo cargar la cartografía del mapa.", error);
+            showMapStatus(
+                level === "municipio" ? "municipal" : "regional",
+                "No se pudo cargar la cartografía.",
+                true,
+            );
+        }
+    }
+
+    async function renderChoroplethMap(mapData, target) {
+        try {
+            if (target === "regional") initMapRegional();
+            else initMapMunicipal();
+
+            showMapStatus(target, "Cargando cartografía...");
+            await loadGeoJSON("municipal");
+            const targetMap = target === "regional" ? mapRegional : mapMunicipal;
+            targetMap.setView([19.0414, -98.2063], 6);
+            displayChoroplethMap(mapData, target);
+        } catch (error) {
+            console.error("No se pudo cargar la cartografía del mapa.", error);
+            showMapStatus(target, "No se pudo cargar la cartografía.", true);
+        }
     }
 
     /**
@@ -2218,24 +2337,16 @@ document.addEventListener("DOMContentLoaded", function () {
                 const optionData = municipioSelector.options[municipioId];
                 const cvegeo = optionData ? optionData.cvegeo : null;
                 if (cvegeo) {
-                    displaySingleMunicipalityMap(cvegeo);
+                    renderCurrentSelectionMap();
                 }
             } else if (esUnaMicrorregion) {
                 mapContainerRegional.style.display = "block";
                 if (mapRegional) mapRegional.invalidateSize();
-                displaySingleFeatureMap(
-                    microGeoJSON,
-                    appState.microrregionId,
-                    "id_micro",
-                );
+                renderCurrentSelectionMap();
             } else if (esUnaMacrorregion) {
                 mapContainerRegional.style.display = "block";
                 if (mapRegional) mapRegional.invalidateSize();
-                displaySingleFeatureMap(
-                    macroGeoJSON,
-                    appState.macrorregionId,
-                    "id_macro",
-                );
+                renderCurrentSelectionMap();
             } else if (esCasoChoropleth) {
                 // Para el coropletas, solo mostramos el contenedor.
                 // El dibujo se hace en el .then()
@@ -2308,11 +2419,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     chartViewKey,
                 );
                 if (esCasoChoropleth && data.mapData) {
-                    const targetMap = esEstatal ? mapRegional : mapMunicipal;
-                    if (targetMap) {
-                        targetMap.setView([19.0414, -98.2063], 6);
-                    }
-                    displayChoroplethMap(data.mapData, esEstatal ? "regional" : "municipal");
+                    renderChoroplethMap(
+                        data.mapData,
+                        esEstatal ? "regional" : "municipal",
+                    );
                 }
                 desplazarASeccionGrafica(activeChartContainer);
                 const nuevaUrl = generarURLdeEstado();
@@ -2331,15 +2441,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // --- 6. CARGA INICIAL Y LISTENERS ---
-    let mapsInitializationPromise = null;
-
-    function ensureMapsInitialized() {
-        if (!mapsInitializationPromise) {
-            mapsInitializationPromise = initMap();
-        }
-        return mapsInitializationPromise;
-    }
-
     function activarNivelProgramaticamente(nivel) {
         const tabSelector = `#pills-tab-nivel .nav-link[data-nivel="${nivel}"]`;
         const tabToActivate = document.querySelector(tabSelector);
@@ -2477,12 +2578,9 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     /**
-     * Se ejecuta una sola vez al cargar la página. Inicializa los componentes
-     * pesados una vez y luego hidrata el estado desde la URL.
+     * Se ejecuta una sola vez al cargar la página e hidrata el estado desde la URL.
      */
-    async function CargaInicial() {
-        await ensureMapsInitialized();
-
+    function CargaInicial() {
         chartContainer.innerHTML = getEmptyStateHtml(true);
         chartContainerRegions.innerHTML = getEmptyStateHtml(false);
 
@@ -2501,7 +2599,23 @@ document.addEventListener("DOMContentLoaded", function () {
      * Listener para las pestañas principales (Municipio, Micro, Macro).
      * Se dispara cuando una nueva pestaña ha sido mostrada.
      */
-    nivelTabs.forEach((tab) => {
+    nivelTabs.forEach((tab, index) => {
+        tab.addEventListener("keydown", (event) => {
+            const lastIndex = nivelTabs.length - 1;
+            let nextIndex = null;
+
+            if (event.key === "ArrowRight") nextIndex = index === lastIndex ? 0 : index + 1;
+            if (event.key === "ArrowLeft") nextIndex = index === 0 ? lastIndex : index - 1;
+            if (event.key === "Home") nextIndex = 0;
+            if (event.key === "End") nextIndex = lastIndex;
+
+            if (nextIndex === null) return;
+
+            event.preventDefault();
+            nivelTabs[nextIndex].focus();
+            nivelTabs[nextIndex].click();
+        });
+
         tab.addEventListener("click", function (event) {
             const target = event.currentTarget;
             const nivel = target.dataset.nivel;
@@ -2515,9 +2629,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 .forEach((el) => {
                     el.classList.remove("active");
                     el.setAttribute("aria-selected", "false");
+                    el.setAttribute("tabindex", "-1");
                 });
             target.classList.add("active");
             target.setAttribute("aria-selected", "true");
+            target.setAttribute("tabindex", "0");
 
             // Mostrar el pane principal correspondiente manualmente
             const targetPaneId = target.getAttribute("data-bs-target");
@@ -2525,8 +2641,13 @@ document.addEventListener("DOMContentLoaded", function () {
             if (targetPane) {
                 document
                     .querySelectorAll("#pills-main-content .tab-pane")
-                    .forEach((p) => p.classList.remove("show", "active"));
+                    .forEach((p) => {
+                        p.classList.remove("show", "active");
+                        p.setAttribute("aria-hidden", "true");
+                    });
                 targetPane.classList.add("show", "active");
+                targetPane.setAttribute("aria-hidden", "false");
+                targetPane.setAttribute("aria-labelledby", target.id);
             }
             // console.log(`Cambiando a nivel: ${nivel}`);
 
@@ -2539,8 +2660,12 @@ document.addEventListener("DOMContentLoaded", function () {
             if (sidebarPane) {
                 document
                     .querySelectorAll("#pills-sidebar-content .tab-pane")
-                    .forEach((p) => p.classList.remove("show", "active"));
+                    .forEach((p) => {
+                        p.classList.remove("show", "active");
+                        p.setAttribute("aria-hidden", "true");
+                    });
                 sidebarPane.classList.add("show", "active");
+                sidebarPane.setAttribute("aria-hidden", "false");
             }
 
             // 1. Actualizamos el estado central

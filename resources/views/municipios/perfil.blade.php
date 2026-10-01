@@ -216,6 +216,11 @@
                         @foreach($items as $item)
                             @php
                                 $gridClass = $item['config']->clase_grid ?: 'col-12';
+                                $esBarraAgrupada = in_array($item['config']->tipo_visualizacion, ['barras', 'bar'], true)
+                                    && count($item['datos']['echarts']['series'] ?? []) > 1;
+                                if ($esBarraAgrupada) {
+                                    $gridClass = 'col-12';
+                                }
                                 $isKpi = $item['config']->tipo_visualizacion === 'kpi';
                             @endphp
 

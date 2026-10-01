@@ -587,21 +587,35 @@ function renderMainChart(itemData) {
             if (["bar", "line", "area"].includes(chartType)) {
                 const isNumericAxis = (echartsData.eje_x && echartsData.eje_x.type === "numeric")
                     || (echartsData.eje_y && echartsData.eje_y.type === "numeric");
+                const categorias = !isNumericAxis && echartsData.eje_x
+                    ? echartsData.eje_x.categorias || []
+                    : [];
+                const rotarEtiquetas = categorias.length > 5;
+                const anchoEtiqueta = categorias.length
+                    ? Math.max(70, Math.floor((chartDom.clientWidth - 100) / categorias.length) - 12)
+                    : undefined;
+
+                option.grid = {
+                    top: 40,
+                    bottom: rotarEtiquetas ? 82 : 68,
+                    left: 24,
+                    right: 24,
+                    containLabel: true,
+                };
                 option.xAxis = {
                     type: isNumericAxis ? "value" : "category",
-                    data:
-                        !isNumericAxis && echartsData.eje_x && echartsData.eje_x.categorias
-                            ? echartsData.eje_x.categorias
-                            : [],
+                    data: categorias,
                     minInterval: isNumericAxis ? 1 : undefined,
-                    boundaryGap: chartType === "line" ? false : undefined,
+                    // Las barras requieren media banda libre a cada extremo para no cortar las series ni sus etiquetas.
+                    boundaryGap: isNumericAxis ? undefined : chartType !== "line",
                     axisLabel: {
-                        rotate:
-                            echartsData.eje_x &&
-                            echartsData.eje_x.categorias &&
-                            echartsData.eje_x.categorias.length > 5
-                                ? 30
-                                : 0,
+                        interval: 0,
+                        rotate: rotarEtiquetas ? 30 : 0,
+                        width: anchoEtiqueta,
+                        overflow: "truncate",
+                        ellipsis: "...",
+                        hideOverlap: true,
+                        margin: 10,
                     },
                 };
                 option.yAxis = {

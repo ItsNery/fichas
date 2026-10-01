@@ -146,7 +146,9 @@ class RankingService
         $isPresupuesto = false;
 
         if (is_numeric($configKeyOrId)) {
-            $config = ConfiguracionFicha::with(['variables', 'indicador.variables'])->find($configKeyOrId);
+            $config = ConfiguracionFicha::with(['variables', 'indicador.variables'])
+                ->visibleEnPerfilPublico()
+                ->find($configKeyOrId);
             if ($config) {
                 $variable = $config->variables->first() ?? $config->indicador->variables->first();
             }
@@ -185,7 +187,7 @@ class RankingService
         $hero2 = app(FichaProfilerService::class)->getHeroStats($municipio2);
 
         $configuraciones = ConfiguracionFicha::with(['indicador.variables', 'indicador.tematica.dimension', 'variables'])
-            ->where('activo', true)
+            ->visibleEnPerfilPublico()
             ->orderBy('seccion')
             ->orderBy('orden')
             ->get();

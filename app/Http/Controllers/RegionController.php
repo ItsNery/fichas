@@ -103,7 +103,7 @@ class RegionController extends Controller
         $esEstatal = $tipoRegion === 'Estatal';
         // 1. Obtener configuraciones activas (igual que en perfil municipal)
         $configuraciones = ConfiguracionFicha::with(['indicador.tematica.dimension', 'variables', 'indicador.variables'])
-            ->where('activo', true)
+            ->visibleEnPerfilPublico()
             ->orderBy('orden')
             ->orderBy('id')
             ->get();

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -42,6 +43,13 @@ class ConfiguracionFicha extends Model
         'activo' => 'boolean',
         'mostrar_comparativa' => 'boolean',
     ];
+
+    public function scopeVisibleEnPerfilPublico(Builder $query): Builder
+    {
+        return $query
+            ->where('activo', true)
+            ->where('tipo_visualizacion', '!=', 'scatter');
+    }
 
     public function indicador()
     {

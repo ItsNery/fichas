@@ -81,12 +81,12 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (element) {
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(element) {
                 bootstrap.Tooltip.getOrCreateInstance(element);
             });
 
-            document.querySelectorAll('[data-bs-toggle="popover"]').forEach(function (element) {
+            document.querySelectorAll('[data-bs-toggle="popover"]').forEach(function(element) {
                 bootstrap.Popover.getOrCreateInstance(element);
             });
         });
@@ -159,7 +159,7 @@
     <main id="main-content">
         @include('layouts.header')
 
-        <div class="container pt-3">
+        <div class="container">
             @include('partials.alerts')
         </div>
 
