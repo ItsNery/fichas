@@ -30,6 +30,10 @@ $currentUrl = url()->current();
 @endsection
 
 @section('content')
+<div class="print-header">
+    <img src="{{ asset('img/Logos-SPFA_.png') }}" alt="Gobierno de Puebla">
+    <img src="{{ asset('img/logo-sei.png') }}" alt="Sistema Estatal de Información">
+</div>
 <div class="container-fluid my-4" data-api-url="{{ route('api.data') }}" data-csrf-token="{{ csrf_token() }}"
     data-export-url="{{ route('banco-indicadores.exportar') }}">
     <div class="px-2 px-md-4">

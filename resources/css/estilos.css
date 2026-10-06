@@ -2451,7 +2451,21 @@ footer {
     }
 }
 
+.print-header {
+    display: none;
+}
+
 @media print {
+    @page {
+        margin: 12mm;
+    }
+
+    html,
+    body {
+        height: auto !important;
+        overflow: visible !important;
+    }
+
     .catalogo-col,
     .filter-bar,
     .level-switcher,
@@ -2467,8 +2481,31 @@ footer {
     .hamburger-menu,
     #view-guidance-regions,
     #view-summary-regions,
-    #consult-feedback-regions {
+    #consult-feedback-regions,
+    .loader-section,
+    #scrollTopBtn,
+    header.site-header {
         display: none !important;
+    }
+
+    .print-header {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        margin: 0 0 8mm;
+        padding-bottom: 4mm;
+        border-bottom: 2px solid var(--color1);
+    }
+
+    .print-header img {
+        display: block;
+        max-height: 14mm;
+        max-width: 65%;
+        object-fit: contain;
+    }
+
+    .print-header img:last-child {
+        max-width: 25%;
     }
 
     .content-col {
@@ -2476,6 +2513,11 @@ footer {
         max-width: 100% !important;
         flex: 0 0 100% !important;
         padding: 0 !important;
+    }
+
+    /* Los contenedores flex no se fragmentan de forma fiable entre páginas en Chrome. */
+    .container-fluid > .px-2 > .row {
+        display: block !important;
     }
 
     body {
@@ -2498,14 +2540,43 @@ footer {
     }
 
     .metadata-block {
-        page-break-inside: avoid;
+        break-inside: auto;
+        page-break-inside: auto;
         border-top: 2px solid #246257 !important;
+        padding: 0.75rem !important;
+    }
+
+    /* Mantiene cada campo legible sin obligar a que todos los metadatos quepan en una hoja. */
+    .metadata-block .mb-3,
+    .metadata-block .card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .metadata-block .mb-3 {
+        margin-bottom: 0.75rem !important;
+    }
+
+    .metadata-block .card {
+        padding: 0.75rem !important;
+    }
+
+    .metadata-block > .row {
+        display: block !important;
+    }
+
+    .metadata-block > .row > [class*="col-"] {
+        width: 100% !important;
+        max-width: none !important;
+        flex: none !important;
     }
 
     .viz-wrapper {
         width: 100% !important;
         max-width: 100% !important;
         overflow: hidden !important;
+        animation: none !important;
+        transform: none !important;
     }
 
     .floating-map-overlay {
@@ -2538,35 +2609,14 @@ footer {
             " | Banco de Indicadores - PIMREP";
         display: block;
         text-align: center;
-        font-size: 10px;
+        font-size: 9px;
         color: #777;
-        margin-top: 40px;
-        padding-top: 10px;
+        margin-top: 12px;
+        padding-top: 6px;
         border-top: 1px solid #ddd;
         page-break-inside: avoid;
     }
 
-    header.site-header {
-        display: block !important;
-        position: static !important;
-        width: 100% !important;
-        background: transparent !important;
-        border-bottom: 2px solid var(--color1) !important;
-        margin-bottom: 20px !important;
-        padding-bottom: 10px !important;
-    }
-
-    .logos-wrapper {
-        display: flex !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        width: 100% !important;
-    }
-
-    .logos-group img {
-        max-height: 55px !important;
-        width: auto !important;
-    }
 }
 
 /* Estilos directorio */

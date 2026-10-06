@@ -164,7 +164,12 @@ class IndicadorQueryService
             $esPiramidePoblacional &&
             (($nivel === 'municipio' && count($validated['municipio_ids'] ?? []) === 1) || in_array($nivel, ['microrregion', 'macrorregion', 'estatal']))
         ) {
-            $chartData = $this->handlePiramideChart($indicador, $selection);
+            $chartData = $this->handlePiramideChart(
+                $indicador,
+                $selection,
+                null,
+                $validated['anios'] ?? [],
+            );
         } elseif ($nivel === 'municipio' && count($selection['ids']) > 1) {
             $chartData = $this->handleComparativeView($validated, $indicador, $selection);
         } else {
@@ -253,7 +258,12 @@ class IndicadorQueryService
         return ['ids' => $municipioIds, 'titulo' => $titulo, 'nombres_municipios' => $nombresMunicipios];
     }
 
-    public function handlePiramideChart(Indicador $indicador, array $selection, array $variableIds = null): array
+    public function handlePiramideChart(
+        Indicador $indicador,
+        array $selection,
+        array $variableIds = null,
+        array $selectedYears = [],
+    ): array
     {
         $this->usarVariablesPublicas($indicador);
         $municipioIds    = $selection['ids'];
@@ -305,17 +315,12 @@ class IndicadorQueryService
 
         $idsToQuery = $variableIds ?: $indicador->variables->pluck('id')->toArray();
 
-        $queryAnio = DatoHistorico::whereIn('variable_id', $idsToQuery);
-        if (!in_array('estatal', $municipioIds)) {
-            $queryAnio->whereIn('municipio_id', $municipioIds);
-        }
-        $anioConsulta = $queryAnio->max('anio');
-
         $availableYearsQuery = DatoHistorico::whereIn('variable_id', $idsToQuery);
         if (!in_array('estatal', $municipioIds)) {
             $availableYearsQuery->whereIn('municipio_id', $municipioIds);
         }
         $availableYears = $availableYearsQuery->distinct()->orderBy('anio', 'desc')->pluck('anio');
+        $anioConsulta = $selectedYears[0] ?? $availableYears->first();
 
         if (!$anioConsulta) {
             return [
@@ -350,7 +355,7 @@ class IndicadorQueryService
                 $genericYearsQuery->whereIn('municipio_id', $municipioIds);
             }
             $genericYears = $genericYearsQuery->distinct()->orderBy('anio', 'desc')->pluck('anio');
-            $genericYear = $genericYears->first();
+            $genericYear = $selectedYears[0] ?? $genericYears->first();
             $genericDataQuery = DatoHistorico::whereIn('variable_id', $genericVariables->pluck('id'))
                 ->where('anio', $genericYear);
             if (!in_array('estatal', $municipioIds)) {
@@ -757,7 +762,7 @@ class IndicadorQueryService
             if (preg_match('/(\d{1,3})\s*(?:a|al|_|-)\s*(\d{1,3})/', $texto, $match)) {
                 $inicio = (int) $match[1];
                 $fin = (int) $match[2];
-            } elseif (preg_match('/(\d{1,3})\s*(?:_|-)?\s*(?:mm|mas)/', $texto, $match)) {
+            } elseif (preg_match('/(\d{1,3})(?:\s*[_-]?\s*(?:anos?|years?)(?:\s*[_-]?\s*y)?)?\s*[_-]?\s*(?:mm|mas)/', $texto, $match)) {
                 $inicio = (int) $match[1];
             } elseif (str_contains($texto, 'no especific')) {
                 $inicio = -1;

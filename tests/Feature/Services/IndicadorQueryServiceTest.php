@@ -150,6 +150,77 @@ class IndicadorQueryServiceTest extends TestCase
         $this->assertSame(2020, $result['anio']);
     }
 
+    public function test_population_pyramid_uses_the_requested_year(): void
+    {
+        $indicador = $this->makeIndicador('Población por grupos de edad según sexo');
+        $hombres = Variable::create([
+            'indicador_id' => $indicador->id,
+            'nombre_amigable' => 'Población de hombres de 85 a 89 años',
+            'nombre_tecnico' => 'poblacion_por_grupos_de_edad_segun_sexo_poblacion_de_hombres_de_85_a_89_anos',
+            'unidad_medida' => 'Habitantes',
+        ]);
+        $mujeres = Variable::create([
+            'indicador_id' => $indicador->id,
+            'nombre_amigable' => 'Población de mujeres de 85 a 89 años',
+            'nombre_tecnico' => 'poblacion_por_grupos_de_edad_segun_sexo_poblacion_de_mujeres_de_85_a_89_anos',
+            'unidad_medida' => 'Habitantes',
+        ]);
+        $municipio = $this->makeMunicipio();
+
+        DatoHistorico::create(['municipio_id' => $municipio->id, 'variable_id' => $hombres->id, 'anio' => 2020, 'valor' => 10]);
+        DatoHistorico::create(['municipio_id' => $municipio->id, 'variable_id' => $mujeres->id, 'anio' => 2020, 'valor' => 15]);
+        DatoHistorico::create(['municipio_id' => $municipio->id, 'variable_id' => $hombres->id, 'anio' => 2025, 'valor' => 30]);
+        DatoHistorico::create(['municipio_id' => $municipio->id, 'variable_id' => $mujeres->id, 'anio' => 2025, 'valor' => 45]);
+
+        $result = $this->service->getChartData([
+            'indicador_id' => $indicador->id,
+            'nivel_de_agregacion' => 'municipio',
+            'municipio_ids' => [$municipio->id],
+            'anios' => [2025],
+        ]);
+
+        $index = array_search('85 a 89 años', $result['eje_x']['categorias'], true);
+
+        $this->assertSame(2025, $result['anio']);
+        $this->assertSame([2025], $result['selected_years']);
+        $this->assertSame(-30.0, $result['series'][0]['data'][$index]);
+        $this->assertSame(45.0, $result['series'][1]['data'][$index]);
+    }
+
+    public function test_population_pyramid_includes_100_years_and_over(): void
+    {
+        $indicador = $this->makeIndicador('Población por grupos de edad según sexo');
+        $variables = collect([
+            ['nombre_amigable' => 'Población de hombres de 85 a 89 años', 'nombre_tecnico' => 'poblacion_hombres_de_85_a_89_anos', 'valor' => 10],
+            ['nombre_amigable' => 'Población de mujeres de 85 a 89 años', 'nombre_tecnico' => 'poblacion_mujeres_de_85_a_89_anos', 'valor' => 15],
+            ['nombre_amigable' => 'Población de hombres de 100 años y más', 'nombre_tecnico' => 'poblacion_hombres_de_100_anos_y_mas', 'valor' => 20],
+            ['nombre_amigable' => 'Población de mujeres de 100 años y más', 'nombre_tecnico' => 'poblacion_mujeres_de_100_anos_y_mas', 'valor' => 25],
+        ])->map(function (array $data) use ($indicador) {
+            return Variable::create([
+                'indicador_id' => $indicador->id,
+                'nombre_amigable' => $data['nombre_amigable'],
+                'nombre_tecnico' => $data['nombre_tecnico'],
+                'unidad_medida' => 'Habitantes',
+            ]);
+        });
+        $municipio = $this->makeMunicipio();
+
+        foreach ($variables as $index => $variable) {
+            DatoHistorico::create(['municipio_id' => $municipio->id, 'variable_id' => $variable->id, 'anio' => 2025, 'valor' => [10, 15, 20, 25][$index]]);
+        }
+
+        $result = $this->service->handlePiramideChart($indicador, [
+            'ids' => [$municipio->id],
+            'titulo' => $municipio->nombre,
+        ], $variables->pluck('id')->all(), [2025]);
+
+        $index = array_search('100 años y más', $result['eje_x']['categorias'], true);
+
+        $this->assertNotFalse($index);
+        $this->assertSame(-20.0, $result['series'][0]['data'][$index]);
+        $this->assertSame(25.0, $result['series'][1]['data'][$index]);
+    }
+
     public function test_aggregated_percentage_view_averages_municipal_values(): void
     {
         $dummy = $this->makeIndicador('Población por grupos de edad según sexo');
