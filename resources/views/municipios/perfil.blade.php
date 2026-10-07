@@ -35,6 +35,11 @@
                            target="_blank" data-pdf-link>
                             <i class="fa-solid fa-file-pdf me-1"></i> PDF
                         </a>
+                        <a href="{{ route('ficha-municipal.panorama.pdf', $municipio->slug) }}"
+                           class="btn btn-outline-light btn-sm fw-bold px-3 py-1 rounded-pill"
+                           target="_blank">
+                            <i class="fa-solid fa-chart-pie me-1"></i> Panorama
+                        </a>
                     </div>
                     <h1 class="hero-ficha__titulo mb-2">{{ $municipio->nombre }}</h1>
                     <p class="hero-ficha__subtitulo mb-5 opacity-75">

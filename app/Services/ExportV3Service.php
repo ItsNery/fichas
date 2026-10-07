@@ -47,4 +47,27 @@ class ExportV3Service
     {
         return $this->captureHtml($html, $fileName, true);
     }
+
+    public function exportPanoramaPDF(string $html, string $fileName = 'panorama-municipal.pdf')
+    {
+        $pdf = Browsershot::html($html)
+            ->paperSize(432, 279, 'mm')
+            ->landscape()
+            ->margins(0, 0, 0, 0)
+            ->timeout(600)
+            ->showBackground()
+            ->protocolTimeout(600)
+            ->setOption('viewport', [
+                'width' => 1920,
+                'height' => 1240,
+                'deviceScaleFactor' => 1,
+            ])
+            ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox', '--font-render-hinting=none'])
+            ->waitForFunction('window.__pdfReady', null, 110000)
+            ->pdf();
+
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf;
+        }, $fileName, ['Content-Type' => 'application/pdf']);
+    }
 }

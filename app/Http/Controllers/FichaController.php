@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\DatoHistorico;
+use App\Models\DatoIndicadorComplejo;
 use App\Models\Dimension;
 use App\Models\Indicador;
 use App\Models\Macrorregion;
@@ -536,6 +537,102 @@ class FichaController extends Controller
             'similaresPoblacion' => app(RankingService::class)->getSimilaresPorPoblacion($municipio, $hero['poblacionTotal']),
             'similaresRegion' => app(RankingService::class)->getSimilaresPorRegion($municipio),
         ]));
+    }
+
+    public function panoramaMunicipal(Municipio $municipio)
+    {
+        return view('municipios.panorama_pdf', $this->panoramaData($municipio));
+    }
+
+    public function exportarPanoramaPDF(Municipio $municipio)
+    {
+        $data = $this->panoramaData($municipio);
+        $html = view('municipios.panorama_pdf', $data)->render();
+
+        return app(ExportV3Service::class)->exportPanoramaPDF(
+            $html,
+            'panorama-'.str($municipio->nombre)->slug().'.pdf'
+        );
+    }
+
+    private function panoramaData(Municipio $municipio): array
+    {
+        $municipio->load('microrregion.macrorregion');
+        $dimensiones = Dimension::with(['tematicas' => function ($query) {
+            $query->where('visible_en_ficha', true)->orderBy('orden')->orderBy('nombre');
+        }, 'tematicas.indicadores' => function ($query) {
+            $query->where('visible_en_ficha', true)->orderBy('orden')->orderBy('nombre_amigable');
+        }, 'tematicas.indicadores.variables' => function ($query) {
+            $query->where('visible_en_ficha', true)->orderBy('orden')->orderBy('nombre_amigable');
+        }])
+            ->where('visible_en_ficha', true)
+            ->orderBy('orden')
+            ->orderBy('nombre')
+            ->get();
+
+        $variableIds = $dimensiones->pluck('tematicas')->flatten()
+            ->pluck('indicadores')->flatten()->pluck('variables')->flatten()->pluck('id');
+        $datosHistoricos = DatoHistorico::with('variable')
+            ->where('municipio_id', $municipio->id)
+            ->whereIn('variable_id', $variableIds)
+            ->get()
+            ->groupBy('variable_id');
+        $perfil = [];
+
+        foreach ($dimensiones as $dimension) {
+            foreach ($dimension->tematicas as $tematica) {
+                foreach ($tematica->indicadores as $indicador) {
+                    $variables = $indicador->variables;
+                    $datos = null;
+
+                    if ($indicador->es_complejo) {
+                        $registro = DatoIndicadorComplejo::where('municipio_id', $municipio->id)
+                            ->where('indicador_id', $indicador->id)->latest('anio')->first();
+                        $datos = $registro ? ['anio' => $registro->anio, 'complejo' => $registro->datos] : null;
+                    } elseif ($variables->isNotEmpty()) {
+                        $aniosComunes = $variables->map(function ($variable) use ($datosHistoricos) {
+                            return $datosHistoricos->get($variable->id, collect())->pluck('anio')->all();
+                        })->reduce(fn ($carry, $anios) => $carry === null ? $anios : array_values(array_intersect($carry, $anios)));
+                        $anio = $aniosComunes ? max($aniosComunes) : null;
+
+                        if ($anio) {
+                            $valores = $variables->map(function ($variable) use ($datosHistoricos, $anio) {
+                                $dato = $datosHistoricos->get($variable->id, collect())->firstWhere('anio', $anio);
+                                return [
+                                    'nombre' => $variable->nombre_amigable,
+                                    'valor' => $dato?->valor,
+                                    'display' => $dato?->valor_display ?? 'N/D',
+                                    'unidad' => $variable->unidad_medida,
+                                ];
+                            });
+                            $datos = [
+                                'anio' => $anio,
+                                'type' => $indicador->tipo_grafico_default,
+                                'categorias' => $valores->pluck('nombre')->all(),
+                                'series' => [[
+                                    'name' => $indicador->nombre_amigable,
+                                    'data' => $valores->pluck('valor')->map(fn ($valor) => $valor === null ? 0 : (float) $valor)->all(),
+                                ]],
+                                'valores' => $valores->all(),
+                            ];
+                        }
+                    }
+
+                    $perfil[$dimension->nombre][$tematica->nombre][] = [
+                        'indicador' => $indicador,
+                        'datos' => $datos,
+                    ];
+                }
+            }
+        }
+
+        return [
+            'municipio' => $municipio,
+            'hero' => $this->getHeroStats($municipio),
+            'perfil' => $perfil,
+            'geojsonUrl' => asset('geojson/municipios_puebla_slim.geojson'),
+            'cintillo' => base64_encode(file_get_contents(public_path('img/Cintillo SEI-07.png'))),
+        ];
     }
 
     /**

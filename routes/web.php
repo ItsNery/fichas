@@ -56,6 +56,8 @@ Route::prefix('ficha/municipio')->name('ficha-municipal.')->group(function () {
     Route::get('/{municipio:slug}/perfil', [FichaController::class, 'perfilMunicipal'])->name('perfil');
     Route::get('/{municipio:slug}/v3/pdf', [FichaController::class, 'exportarResumenV3PDF'])->name('v3.pdf');
     Route::get('/{municipio:slug}/perfil/pdf', [FichaController::class, 'exportarPerfilPDF'])->name('perfil.pdf');
+    Route::get('/{municipio:slug}/panorama', [FichaController::class, 'panoramaMunicipal'])->name('panorama');
+    Route::get('/{municipio:slug}/panorama/pdf', [FichaController::class, 'exportarPanoramaPDF'])->name('panorama.pdf');
     Route::get('/{municipio:slug}/pdf', [FichaController::class, 'exportarResumenPDF'])->name('pdf');
 });
 
