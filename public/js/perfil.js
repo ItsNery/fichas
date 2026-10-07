@@ -934,7 +934,12 @@ document.addEventListener("click", function (e) {
     }
 
     // 2. Realizar petición AJAX para obtener datos del año seleccionado
-    fetch(`/ficha/municipio/api/grafico-datos/${muniSlug}/${configId}/${year}`)
+    const graficoDatosUrl = window.FichaConfig.graficoDatosUrlTemplate
+        .replace("__MUNICIPIO__", encodeURIComponent(muniSlug))
+        .replace("__CONFIG__", encodeURIComponent(configId))
+        .replace("__ANIO__", encodeURIComponent(year));
+
+    fetch(graficoDatosUrl)
         .then((response) => {
             if (!response.ok)
                 throw new Error("Error en la respuesta del servidor");

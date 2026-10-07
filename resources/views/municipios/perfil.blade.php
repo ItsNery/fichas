@@ -678,6 +678,11 @@
             'slug1' => $municipio->slug,
             'slug2' => '__SLUG__',
         ]);
+        $graficoDatosUrlTemplate = route('ficha-municipal.api.grafico.data', [
+            'municipio' => '__MUNICIPIO__',
+            'config' => '__CONFIG__',
+            'anio' => '__ANIO__',
+        ]);
     @endphp
     <script>
         window.FichaConfig = {
@@ -688,6 +693,7 @@
             similitudUrl: @json($similitudUrl),
             perfilUrlTemplate: @json($perfilUrlTemplate),
             compararUrlTemplate: @json($compararUrlTemplate),
+            graficoDatosUrlTemplate: @json($graficoDatosUrlTemplate),
             perfilData: @json($perfil)
         };
     </script>
