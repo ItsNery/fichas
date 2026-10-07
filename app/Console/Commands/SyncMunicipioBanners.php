@@ -11,7 +11,7 @@ class SyncMunicipioBanners extends Command
 {
     protected $signature = 'municipios:sync-banners
         {--dry-run : Validar sin escribir en BD}';
-    protected $description = 'Precarga imágenes de banner para cada municipio desde Wikipedia con fallback regional';
+    protected $description = 'Precarga imágenes de banner para cada municipio desde Wikipedia';
 
     public function handle(BannerImageService $service): int
     {
@@ -19,7 +19,7 @@ class SyncMunicipioBanners extends Command
             ->orderBy('nombre')
             ->get(['id', 'nombre', 'microrregion_id', 'banner_image_url', 'banner_attribution']);
 
-        $stats = ['wikipedia' => 0, 'representative' => 0, 'picsum' => 0, 'skipped' => 0];
+        $stats = ['wikipedia' => 0, 'fallback' => 0, 'skipped' => 0];
 
         foreach ($municipios as $municipio) {
             if ($municipio->banner_image_url) {
@@ -48,13 +48,12 @@ class SyncMunicipioBanners extends Command
             ['Fuente', 'Cantidad'],
             [
                 ['Wikipedia', $stats['wikipedia']],
-                ['Regional representativa', $stats['representative']],
-                ['Picsum (fallback)', $stats['picsum']],
+                ['Fondo local (fallback)', $stats['fallback']],
                 ['Ya tenía banner', $stats['skipped']],
             ]
         );
 
-        $total = $stats['wikipedia'] + $stats['representative'] + $stats['picsum'] + $stats['skipped'];
+        $total = $stats['wikipedia'] + $stats['fallback'] + $stats['skipped'];
         $this->info("{$total} municipios procesados.");
 
         return self::SUCCESS;

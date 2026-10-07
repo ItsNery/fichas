@@ -14,72 +14,6 @@ class BannerImageService
     private const WIKI_API = 'https://es.wikipedia.org/api/rest_v1/page/summary';
     private const COMMONS_API = 'https://commons.wikimedia.org/w/api.php';
 
-    private const MACRORREGION_FALLBACKS = [
-        'Sierra Norte' => [
-            'url' => 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80',
-            'attribution' => [
-                'author' => 'eberhard grossgasteiger',
-                'license' => 'Unsplash',
-                'source_url' => 'https://unsplash.com/photos/JCl8Vc9c1Tg',
-            ],
-            'note' => 'Imagen representativa de paisaje montañoso',
-        ],
-        'Sierra Nororiental' => [
-            'url' => 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1920&q=80',
-            'attribution' => [
-                'author' => 'Luca Bravo',
-                'license' => 'Unsplash',
-                'source_url' => 'https://unsplash.com/photos/zBdhuQqkPq0',
-            ],
-            'note' => 'Imagen representativa de paisaje montañoso',
-        ],
-        'Valle de Serdán' => [
-            'url' => 'https://images.unsplash.com/photo-1504198453319-5ce911bafcde?w=1920&q=80',
-            'attribution' => [
-                'author' => 'Luca Bravo',
-                'license' => 'Unsplash',
-                'source_url' => 'https://unsplash.com/photos/Tk7hNezEaHA',
-            ],
-            'note' => 'Imagen representativa de valle',
-        ],
-        'Angelópolis' => [
-            'url' => 'https://images.unsplash.com/photo-1599940824399-b11787f2a01e?w=1920&q=80',
-            'attribution' => [
-                'author' => 'Gabriela Sánchez',
-                'license' => 'Unsplash',
-                'source_url' => 'https://unsplash.com/photos/MmP6zVJ7HnE',
-            ],
-            'note' => 'Imagen representativa de zona urbana',
-        ],
-        'Valle de Atlixco y Matamoros' => [
-            'url' => 'https://images.unsplash.com/photo-1590608897129-79c46d0e4f3e?w=1920&q=80',
-            'attribution' => [
-                'author' => 'Javier Miranda',
-                'license' => 'Unsplash',
-                'source_url' => 'https://unsplash.com/photos/S9tS2Mokuf8',
-            ],
-            'note' => 'Imagen representativa de valle agrícola',
-        ],
-        'Mixteca' => [
-            'url' => 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1920&q=80',
-            'attribution' => [
-                'author' => 'Jukan Tateisi',
-                'license' => 'Unsplash',
-                'source_url' => 'https://unsplash.com/photos/bJhT_8nbUA0',
-            ],
-            'note' => 'Imagen representativa de paisaje semiárido',
-        ],
-        'Tehuacán y Sierra Negra' => [
-            'url' => 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1920&q=80',
-            'attribution' => [
-                'author' => 'Jukan Tateisi',
-                'license' => 'Unsplash',
-                'source_url' => 'https://unsplash.com/photos/bJhT_8nbUA0',
-            ],
-            'note' => 'Imagen representativa de paisaje semiárido',
-        ],
-    ];
-
     public function resolve(Municipio $municipio): array
     {
         $wiki = $this->getWikipediaImage($municipio->nombre);
@@ -87,12 +21,11 @@ class BannerImageService
             return $wiki;
         }
 
-        $fallback = $this->getRegionalFallback($municipio);
-        if ($fallback) {
-            return $fallback;
-        }
-
-        return $this->getPicsumFallback($municipio);
+        return [
+            'source' => 'fallback',
+            'url' => null,
+            'attribution' => null,
+        ];
     }
 
     public function getWikipediaImage(string $nombre): ?array
@@ -232,33 +165,4 @@ class BannerImageService
         return $text ?: null;
     }
 
-    public function getRegionalFallback(Municipio $municipio): ?array
-    {
-        try {
-            $macro = $municipio->microrregion?->macrorregion?->nombre;
-            if ($macro && isset(self::MACRORREGION_FALLBACKS[$macro])) {
-                $data = self::MACRORREGION_FALLBACKS[$macro];
-
-                return [
-                    'source' => 'representative',
-                    'url' => $data['url'],
-                    'attribution' => $data['attribution'],
-                    'note' => $data['note'],
-                ];
-            }
-        } catch (\Exception $e) {
-            Log::warning("BannerImage: Error al obtener macrorregión para {$municipio->nombre}: " . $e->getMessage());
-        }
-
-        return null;
-    }
-
-    public function getPicsumFallback(Municipio $municipio): array
-    {
-        return [
-            'source' => 'picsum',
-            'url' => 'https://picsum.photos/seed/' . $municipio->id . '/1920/650',
-            'attribution' => null,
-        ];
-    }
 }
