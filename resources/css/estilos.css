@@ -2451,6 +2451,18 @@ footer {
     }
 }
 
+.municipio-required-hint {
+    color: var(--color1);
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-top: 0.4rem;
+}
+
+#municipio-selector-container .ts-wrapper.is-required .ts-control {
+    border-color: var(--color1) !important;
+    box-shadow: 0 0 0 0.2rem rgba(95, 27, 45, 0.15) !important;
+}
+
 .print-header {
     display: none;
 }
@@ -2495,6 +2507,8 @@ footer {
         margin: 0 0 8mm;
         padding-bottom: 4mm;
         border-bottom: 2px solid var(--color1);
+        break-after: avoid-page;
+        page-break-after: avoid;
     }
 
     .print-header img {
@@ -2515,9 +2529,24 @@ footer {
         padding: 0 !important;
     }
 
+    .container-fluid.my-4 {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+
+    .container-fluid > .px-2 {
+        padding: 0 !important;
+    }
+
     /* Los contenedores flex no se fragmentan de forma fiable entre páginas en Chrome. */
     .container-fluid > .px-2 > .row {
         display: block !important;
+        margin: 0 !important;
+    }
+
+    #pills-main-content > .tab-pane:not(.active),
+    #chart-fullscreen-modal {
+        display: none !important;
     }
 
     body {
@@ -2577,6 +2606,12 @@ footer {
         overflow: hidden !important;
         animation: none !important;
         transform: none !important;
+    }
+
+    #chart-container,
+    #chart-container-regions {
+        height: 380px !important;
+        min-height: 380px !important;
     }
 
     .floating-map-overlay {

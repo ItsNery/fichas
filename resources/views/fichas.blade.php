@@ -22,6 +22,25 @@ $currentUrl = url()->current();
 @section('twitter-description', $pageDescription)
 @section('css')
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+<style>
+    @media print {
+        header.site-header {
+            display: none !important;
+        }
+
+        #main-content > .container-fluid,
+        #main-content > .container-fluid > .px-2,
+        #main-content > .container-fluid > .px-2 > .row,
+        #main-content .content-col,
+        #pills-main-content,
+        #pills-main-content > .tab-pane.active {
+            break-before: auto !important;
+            break-after: auto !important;
+            page-break-before: auto !important;
+            page-break-after: auto !important;
+        }
+    }
+</style>
 @endsection
 @section('jss')
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
@@ -30,10 +49,6 @@ $currentUrl = url()->current();
 @endsection
 
 @section('content')
-<div class="print-header">
-    <img src="{{ asset('img/Logos-SPFA_.png') }}" alt="Gobierno de Puebla">
-    <img src="{{ asset('img/logo-sei.png') }}" alt="Sistema Estatal de Información">
-</div>
 <div class="container-fluid my-4" data-api-url="{{ route('api.data') }}" data-csrf-token="{{ csrf_token() }}"
     data-export-url="{{ route('banco-indicadores.exportar') }}">
     <div class="px-2 px-md-4">
@@ -140,6 +155,10 @@ $currentUrl = url()->current();
 
             {{-- Columna Central/Derecha: Contenido y Visualización --}}
             <div class="col-md-9 content-col">
+                <div class="print-header">
+                    <img src="{{ asset('img/Logos-SPFA_.png') }}" alt="Gobierno de Puebla">
+                    <img src="{{ asset('img/logo-sei.png') }}" alt="Sistema Estatal de Información">
+                </div>
                 <div class="tab-content" id="pills-main-content">
 
                     {{-- Vista Municipal --}}
@@ -180,7 +199,7 @@ $currentUrl = url()->current();
                                             <div id="municipio-selector-container">
                                                 <div class="input-group input-group-sm">
                                                     <span class="input-group-text bg-white border-end-0"><i class="fas fa-map-marker-alt text-muted"></i></span>
-                                                    <select id="municipio-selector" multiple class="form-control-sm border-start-0">
+                                             <select id="municipio-selector" multiple class="form-control-sm border-start-0">
                                                         @foreach ($municipios as $municipio)
                                                         <option value="{{ $municipio->id }}" data-cvegeo="{{ $municipio->cvegeo }}"
                                                             data-slug="{{ $municipio->slug }}"
@@ -188,9 +207,12 @@ $currentUrl = url()->current();
                                                             {{ $municipio->nombre }}
                                                         </option>
                                                         @endforeach
-                                                    </select>
-                                                </div>
-                                            </div>
+                                             </select>
+                                         </div>
+                                         <p id="municipio-required-hint" class="municipio-required-hint mb-0" hidden>
+                                             Selecciona al menos un municipio para consultar este indicador.
+                                         </p>
+                                     </div>
                                         </div>
                                         <div class="col-md-4">
                                             <div id="year-selector-container" style="display: none;">
@@ -211,13 +233,13 @@ $currentUrl = url()->current();
                                 </div>
 
                                 {{-- Contenedor de Gráfica --}}
-                                <div id="consult-feedback" class="small text-muted mb-2 text-corra-regular">
+                                <div id="consult-feedback" class="small text-muted mb-2 text-corra-regular" hidden>
                                     Elige un indicador y al menos un municipio para habilitar la consulta.
                                 </div>
                                 <div id="view-summary" class="alert alert-light border rounded-4 py-2 px-3 small mb-3">
                                     Consulta actual: Aún no has seleccionado un indicador.
                                 </div>
-                                <div id="view-guidance" class="alert alert-info border-0 rounded-4 py-2 px-3 small mb-3">
+                                <div id="view-guidance" class="alert alert-info border-0 rounded-4 py-2 px-3 small mb-3" hidden>
                                      Puedes seleccionar hasta 2 municipios. El nivel estatal está disponible para indicadores absolutos.
                                 </div>
                                 <div class="viz-wrapper position-relative">
@@ -353,13 +375,13 @@ $currentUrl = url()->current();
 
                                 {{-- Contenedor de Gráfica (Regiones) --}}
                                 <div class="viz-wrapper position-relative">
-                                    <div id="consult-feedback-regions" class="small text-muted mb-2">
+                                    <div id="consult-feedback-regions" class="small text-muted mb-2" hidden>
                                         Elige un indicador y una región para habilitar la consulta.
                                     </div>
                                     <div id="view-summary-regions" class="alert alert-light border rounded-sm py-2 px-3 small mb-3 text-corra-regular">
                                         Consulta actual: Aún no has seleccionado un indicador regional.
                                     </div>
-                                    <div id="view-guidance-regions" class="alert alert-info border-0 rounded-sm py-2 px-3 small mb-3 text-corra-regular">
+                                    <div id="view-guidance-regions" class="alert alert-info border-0 rounded-sm py-2 px-3 small mb-3 text-corra-regular" hidden>
                                          La consulta regional utiliza municipios completos; algunas intersecciones oficiales no se muestran porque la información no puede desagregarse por porciones territoriales. <a href="{{ config('regionalizacion.url') }}" target="_blank" rel="noopener noreferrer">Consulta la regionalización oficial vigente</a>.
                                     </div>
                                     <div id="chart-container-regions" style="min-height: 500px; width: 100%;">

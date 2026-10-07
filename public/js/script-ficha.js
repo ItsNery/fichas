@@ -225,6 +225,9 @@ document.addEventListener("DOMContentLoaded", function () {
     );
     const yearSelector = document.getElementById("year-selector");
     const chartNoteContainer = document.getElementById("chart-note-container");
+    const municipioRequiredHint = document.getElementById(
+        "municipio-required-hint",
+    );
     // Selectores de años en regiones
     const metadataContainerRegions = document.getElementById(
         "metadata-container-regions",
@@ -440,6 +443,18 @@ document.addEventListener("DOMContentLoaded", function () {
             : "Estás consultando una macrorregión. El mapa se activa cuando la consulta regional aplica.";
     }
 
+    function mostrarToastGuia(mensaje) {
+        Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "info",
+            title: mensaje,
+            showConfirmButton: false,
+            timer: 5000,
+            timerProgressBar: true,
+        });
+    }
+
     function actualizarFeedbackConsulta() {
         const isMunicipal = appState.nivelDeAgregacion === "municipio";
         const target = isMunicipal ? consultFeedback : consultFeedbackRegions;
@@ -479,6 +494,20 @@ document.addEventListener("DOMContentLoaded", function () {
             "text-muted",
             message !== "La consulta está lista para ejecutarse.",
         );
+    }
+
+    function actualizarAyudaMunicipioRequerido(enfocar = false) {
+        const requiereMunicipio =
+            appState.nivelDeAgregacion === "municipio" &&
+            appState.indicatorId &&
+            appState.municipioIds.length === 0;
+
+        municipioSelector.wrapper.classList.toggle("is-required", requiereMunicipio);
+        municipioRequiredHint.hidden = !requiereMunicipio;
+
+        if (requiereMunicipio && enfocar) {
+            requestAnimationFrame(() => municipioSelector.focus());
+        }
     }
 
     if (accordionMunicipal && accordionRegionsContainer) {
@@ -2792,6 +2821,11 @@ document.addEventListener("DOMContentLoaded", function () {
             actualizarGuiaVista(
                 `Cambiaste a ${nivel}. Se reiniciaron los filtros para evitar mezclar consultas de distintos niveles.`,
             );
+            if (nivel === "municipio") {
+                mostrarToastGuia(
+                    "Puedes seleccionar hasta 2 municipios. El nivel estatal está disponible para indicadores absolutos.",
+                );
+            }
             actualizarResumenConsulta();
             actualizarFeedbackConsulta();
 
@@ -2826,6 +2860,7 @@ document.addEventListener("DOMContentLoaded", function () {
             // Actualizamos el estado
             appState.indicatorId = target.dataset.indicadorId;
             checkIfCanConsult();
+            actualizarAyudaMunicipioRequerido(true);
             appState.selectedYears = [];
 
             // 1. Vaciamos el <select> original del HTML
@@ -2914,6 +2949,7 @@ document.addEventListener("DOMContentLoaded", function () {
         activeConsultarBtn.disabled = !canConsult;
         actualizarResumenConsulta();
         actualizarFeedbackConsulta();
+        actualizarAyudaMunicipioRequerido();
     }
 
     fullscreenModal.addEventListener("shown.bs.modal", () => {
