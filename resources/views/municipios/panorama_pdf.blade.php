@@ -86,13 +86,18 @@
             --color-border:var(--brand-neutral-400);
             --color-surface-muted:var(--brand-neutral-100);
             --color-surface:var(--brand-white);
+            --dimension-accent:var(--brand-burgundy-700);
         }
         @page { size:432mm 279mm; margin:0; }
         * { box-sizing:border-box; }
         body { margin:0; background:var(--color-surface-muted); color:var(--color-text); font-family:Corra,Arial,sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
         .sheet { width:432mm; height:279mm; margin:0 auto 5mm; padding:11mm 15mm 8mm; background:var(--color-surface); position:relative; overflow:hidden; break-after:page; page-break-after:always; }
         .sheet:last-of-type { break-after:auto; page-break-after:auto; }
-        .sheet::before { content:""; position:absolute; top:11mm; left:0; width:3mm; height:48mm; background:var(--color-secondary); }
+        .sheet::before { content:""; position:absolute; top:11mm; left:0; width:3mm; height:48mm; background:var(--dimension-accent); }
+        .dimension--demografica-y-social { --dimension-accent:var(--brand-green-700); }
+        .dimension--economico { --dimension-accent:var(--brand-burgundy-700); }
+        .dimension--geografica-y-medio-ambiente { --dimension-accent:var(--brand-gold-500); }
+        .dimension--gobierno-seguridad-e-imparticion-de-justicia { --dimension-accent:var(--brand-green-900); }
         .identity { height:48mm; margin:0 0 5mm; padding:1mm 0 1.5mm; display:grid; grid-template-columns:58mm minmax(0,1fr) 126mm; align-items:center; gap:9mm; border-top:.6mm solid var(--color-accent); border-bottom:1.2mm solid var(--color-primary); }
         .identity-copy { min-width:0; text-align:center; }
         .municipality { margin:0; font:700 27pt/.95 Gilroy,Arial,sans-serif; color:var(--color-primary); }
@@ -107,33 +112,33 @@
         .municipality-map { width:100%; height:40mm; }
         .municipality-map img { display:block; width:100%; height:100%; object-fit:contain; }
         .identity > img { display:block; width:126mm; max-height:18mm; object-fit:contain; object-position:right center; }
-        .section-head { min-height:8mm; display:flex; align-items:center; gap:4mm; margin:0 0 4mm; padding:1mm 3mm; background:var(--color-secondary); border-left:2mm solid var(--color-accent); }
+        .section-head { min-height:8mm; display:flex; align-items:center; gap:4mm; margin:0 0 4mm; padding:1mm 3mm; background:var(--dimension-accent); border-left:2mm solid var(--color-accent); }
         .section-head h2 { font:700 17pt/1 Gilroy,Arial,sans-serif; margin:0; color:var(--brand-white); }
         .section-head span { margin-left:auto; color:var(--brand-white); font-size:9pt; font-weight:700; letter-spacing:.02em; }
         .cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(3,61mm); grid-auto-flow:dense; gap:4mm 6mm; }
-        .card { position:relative; border:.3mm solid var(--color-surface-muted); border-top:1mm solid var(--color-primary); padding:3mm 3mm 2mm; min-width:0; overflow:hidden; display:flex; flex-direction:column; break-inside:avoid; background:var(--color-surface); }
+        .card { position:relative; border:.3mm solid var(--color-surface-muted); border-top:1mm solid var(--dimension-accent); padding:3mm 3mm 2mm; min-width:0; overflow:hidden; display:flex; flex-direction:column; break-inside:avoid; background:var(--color-surface); }
         .card--span-2 { grid-column:span 2; }
         .card--span-3 { grid-column:1 / -1; }
         .card--rows-2 { grid-row:span 2; }
-        .card--pyramid { border-top-color:var(--brand-green-700) !important; background:linear-gradient(180deg,var(--brand-white) 0,var(--brand-neutral-100) 100%); padding-left:5mm; padding-right:5mm; }
+        .card--pyramid { border-top-color:var(--dimension-accent) !important; background:linear-gradient(180deg,var(--brand-white) 0,var(--brand-neutral-100) 100%); padding-left:5mm; padding-right:5mm; }
         .card--pyramid .visual { min-height:88mm; }
         .card--pyramid .source { font-size:8pt; }
-        .card:nth-child(3n + 1) { border-top-color:var(--color-primary); }
-        .card:nth-child(3n + 2) { border-top-color:var(--color-primary); }
-        .card:nth-child(3n) { border-top-color:var(--color-primary); }
+        .card:nth-child(3n + 1) { border-top-color:var(--dimension-accent); }
+        .card:nth-child(3n + 2) { border-top-color:var(--dimension-accent); }
+        .card:nth-child(3n) { border-top-color:var(--dimension-accent); }
         .card-header { display:flex; justify-content:space-between; align-items:flex-start; gap:3mm; min-height:14mm; }
         .card h3 { margin:0; max-width:150mm; color:var(--color-text); font:700 13pt/1.12 Gilroy,Arial,sans-serif; }
         .year { flex:none; min-width:15mm; padding:1mm 2.5mm; background:var(--color-primary); color:var(--brand-white); font:700 10pt Corra,Arial,sans-serif; text-align:center; }
         .topic { margin:0 0 1mm; color:var(--brand-green-700); font-size:8pt; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
         .visual { flex:1; width:100%; min-height:0; }
-        .visual--kpi { display:flex; align-items:center; gap:6mm; padding:3mm 5mm; background:var(--color-surface-muted); border-left:1.2mm solid var(--color-accent); }
+        .visual--kpi { display:flex; align-items:center; gap:6mm; padding:3mm 5mm; background:var(--color-surface-muted); border-left:1.2mm solid var(--dimension-accent); }
         .kpi-number { color:var(--color-primary); font:700 28pt/1 Gilroy,Arial,sans-serif; letter-spacing:-.03em; }
         .kpi-copy { max-width:105mm; color:var(--color-text); font-size:10pt; line-height:1.15; }
         .kpi-unit { display:block; margin-top:1mm; color:var(--brand-green-700); font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
         .visual--category { display:flex; align-items:center; justify-content:center; }
         .category-value { max-width:150mm; padding:4mm 9mm; background:var(--color-secondary); color:var(--brand-white); font:700 18pt Gilroy,Arial,sans-serif; text-align:center; border-bottom:1mm solid var(--color-accent); }
         .visual--percent { display:flex; align-items:center; justify-content:center; gap:7mm; }
-        .percent-ring { --value:0; width:35mm; height:35mm; border-radius:50%; display:grid; place-items:center; background:conic-gradient(var(--brand-green-700) calc(var(--value) * 1%),var(--color-surface-muted) 0); position:relative; }
+        .percent-ring { --value:0; width:33mm; height:33mm; border-radius:50%; display:grid; place-items:center; background:conic-gradient(var(--dimension-accent) calc(var(--value) * 1%),var(--color-surface-muted) 0); position:relative; }
         .percent-ring::before { content:""; position:absolute; inset:4mm; border-radius:50%; background:var(--color-surface); }
         .percent-ring b { position:relative; z-index:1; color:var(--color-primary); font:700 17pt Gilroy,Arial,sans-serif; }
         .percent-label { width:75mm; color:var(--color-text); font-size:11pt; line-height:1.2; }
@@ -152,9 +157,9 @@
 </head>
 <body>
 @foreach($pages as $page)
-    <section class="sheet">
+    <section class="sheet dimension--{{ \Illuminate\Support\Str::slug($page['dimension']) }}">
         <header class="identity">
-            <div class="map"><div class="municipality-map"><img src="{{ route('ficha-municipal.panorama.map', $municipio) }}" alt="Ubicación de {{ $municipio->nombre }} en Puebla"></div><span class="map-label">Ubicación en Puebla</span></div>
+            <div class="map"><div class="municipality-map"><img src="{{ $mapImageDataUri ?? route('ficha-municipal.panorama.map', $municipio) }}" alt="Ubicación de {{ $municipio->nombre }} en Puebla"></div><span class="map-label">Ubicación en Puebla</span></div>
             <div class="identity-copy">
                 <h1 class="municipality">{{ $municipio->nombre }}</h1>
                 <p class="regionalization"><span class="regionalization-label">Regionalización:</span> {{ $municipio->microrregion?->macrorregion?->nombre ?? 'Puebla' }} · {{ $municipio->microrregion?->nombre ?? 'Sin región' }}</p>
@@ -212,6 +217,23 @@
         return new Intl.NumberFormat('es-MX', {maximumFractionDigits:2}).format(value);
     }
 
+    function wrapAxisLabel(value, maxLength) {
+        const lines = [];
+        let line = '';
+
+        String(value ?? '').split(/\s+/).forEach(word => {
+            if (!line || (line + ' ' + word).length <= maxLength) {
+                line += (line ? ' ' : '') + word;
+            } else {
+                lines.push(line);
+                line = word;
+            }
+        });
+
+        if (line) lines.push(line);
+        return lines.join('\n');
+    }
+
     function renderIndicator(item) {
         const el = document.getElementById('chart-' + item.indicador.id);
         if (!el || !item.datos) return;
@@ -225,7 +247,12 @@
             return;
         }
         const numeric = values.filter(value => value.valor !== null && Number.isFinite(Number(value.valor)));
-        if (!numeric.length) return;
+        if (!numeric.length) {
+            const reasons = [...new Set(values.map(value => value.display || 'Sin dato'))];
+            el.classList.add('visual--category');
+            el.innerHTML = '<div class="category-value">' + reasons.map(escapeHtml).join(' · ') + '</div>';
+            return;
+        }
         if (numeric.length === 1) {
             const value = numeric[0];
             const amount = Number(value.valor);
@@ -245,8 +272,21 @@
         const categories = numeric.map(value => value.nombre);
         const numbers = numeric.map(value => Number(value.valor));
         const chart = echarts.init(el, null, {renderer:'svg'});
-        const base = {animation:false,color:colors,tooltip:{show:false},textStyle:{fontFamily:'Corra, Arial'},
+        const dimensionAccent = getComputedStyle(el.closest('.sheet')).getPropertyValue('--dimension-accent').trim() || colors[0];
+        const chartColors = [dimensionAccent, ...colors.filter(color => color.toLowerCase() !== dimensionAccent.toLowerCase())];
+        const base = {animation:false,color:chartColors,tooltip:{show:false},textStyle:{fontFamily:'Corra, Arial'},
             grid:{left:6,right:16,top:12,bottom:6,containLabel:true}};
+        const isWideChart = el.closest('.card')?.classList.contains('card--span-2')
+            || el.closest('.card')?.classList.contains('card--span-3');
+        const wrapCategoryLabels = categories.length <= 5;
+        const categoryAxisLabel = {
+            fontSize:9,
+            lineHeight:11,
+            interval:0,
+            width:wrapCategoryLabels && isWideChart ? 310 : 185,
+            overflow:wrapCategoryLabels ? 'break' : 'truncate',
+            formatter:wrapCategoryLabels ? value => wrapAxisLabel(value, isWideChart ? 42 : 26) : undefined
+        };
 
         if (type.includes('piramide')) {
             const groups = new Map();
@@ -296,18 +336,18 @@
         } else if (type.includes('lineal') || type.includes('linea')) {
             chart.setOption({...base,grid:{left:8,right:24,top:8,bottom:5,containLabel:true},
                 xAxis:{type:'value',axisLabel:{fontSize:8},splitLine:{lineStyle:{color:'#eaeaea'}}},
-                yAxis:{type:'category',data:categories,axisLabel:{fontSize:9,width:185,overflow:'truncate'}},
-                series:[{type:'scatter',symbolSize:13,data:numbers.map((value,index) => [value,index]),itemStyle:{color:'#256259'},
+                yAxis:{type:'category',data:categories,axisLabel:categoryAxisLabel},
+                series:[{type:'scatter',symbolSize:13,data:numbers.map((value,index) => [value,index]),itemStyle:{color:dimensionAccent},
                     label:{show:true,position:'right',fontSize:9,color:'#262626',formatter:params => numberLabel(params.value[0])}}]});
         } else {
             const vertical = numeric.length <= 5 && Math.max(...categories.map(value => value.length)) < 28;
             chart.setOption(vertical ? {...base,grid:{left:8,right:8,top:12,bottom:5,containLabel:true},
                 xAxis:{type:'category',data:categories,axisLabel:{fontSize:9,width:100,overflow:'break'}},
                 yAxis:{type:'value',axisLabel:{fontSize:8}},
-                series:[{type:'bar',data:numbers,barMaxWidth:30,label:{show:true,position:'top',fontSize:9,formatter:params => numberLabel(params.value)}}]}
+                series:[{type:'bar',data:numbers,barMaxWidth:30,itemStyle:{color:dimensionAccent},label:{show:true,position:'top',fontSize:9,formatter:params => numberLabel(params.value)}}]}
                 : {...base,xAxis:{type:'value',axisLabel:{fontSize:8}},
-                    yAxis:{type:'category',data:categories,axisLabel:{fontSize:9,width:185,overflow:'truncate'}},
-                    series:[{type:'bar',data:numbers,barMaxWidth:18,label:{show:true,position:'right',fontSize:9,formatter:params => numberLabel(params.value)}}]});
+                    yAxis:{type:'category',data:categories,axisLabel:categoryAxisLabel},
+                    series:[{type:'bar',data:numbers,barMaxWidth:18,itemStyle:{color:dimensionAccent},label:{show:true,position:'right',fontSize:9,formatter:params => numberLabel(params.value)}}]});
         }
     }
 

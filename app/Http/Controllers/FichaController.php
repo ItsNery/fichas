@@ -560,9 +560,12 @@ class FichaController extends Controller
         ]);
     }
 
-    public function exportarPanoramaPDF(Municipio $municipio)
+    public function exportarPanoramaPDF(Municipio $municipio, MunicipalityMapImageService $mapImageService)
     {
         $data = $this->panoramaData($municipio);
+        $data['mapImageDataUri'] = 'data:image/png;base64,'.base64_encode(
+            $mapImageService->render((string) $municipio->cvegeo)
+        );
         $html = view('municipios.panorama_pdf', $data)->render();
 
         return app(ExportV3Service::class)->exportPanoramaPDF(
@@ -588,7 +591,7 @@ class FichaController extends Controller
 
         $variableIds = $dimensiones->pluck('tematicas')->flatten()
             ->pluck('indicadores')->flatten()->pluck('variables')->flatten()->pluck('id');
-        $datosHistoricos = DatoHistorico::with('variable')
+        $datosHistoricos = DatoHistorico::with(['variable', 'motivoSinDato'])
             ->where('municipio_id', $municipio->id)
             ->whereIn('variable_id', $variableIds)
             ->get()

@@ -44,6 +44,10 @@ class DatoHistorico extends Model
      */
     public function getValorDisplayAttribute()
     {
+        if ($this->valor === null) {
+            return $this->motivoSinDato?->nombre ?? 'N/D';
+        }
+
         $mapa = $this->variable->mapeo_valores;
 
         // Convertimos el valor a un entero para que coincida con las llaves del JSON ("1", "2", etc.)
