@@ -152,6 +152,22 @@
                             </tr>
                         @endforeach
                     </tbody>
+                    @elseif($lote->tipo === 'datos_geograficos')
+                    <thead><tr><th>Fila</th><th>Geografía</th><th>Variable</th><th>Año</th><th class="text-end">Valor</th><th class="text-center">Acción</th></tr></thead>
+                    <tbody>
+                        @foreach($filas as $fila)
+                            <tr>
+                                <td>{{ $fila->fila_origen }}</td>
+                                <td>{{ $fila->unidadGeografica?->nombre }} <small class="text-muted">({{ $fila->unidadGeografica?->nivel }})</small></td>
+                                <td>{{ $fila->variable?->nombre_amigable }}</td>
+                                <td>{{ $fila->anio }}</td>
+                                <td class="text-end fw-bold">{{ $fila->motivoSinDato?->codigo ?? number_format((float) $fila->valor, 4) }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-{{ $fila->accion === 'insertar' ? 'success' : 'warning' }}">{{ ucfirst($fila->accion) }}</span>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
                     @else
                     <thead><tr><th>Fila</th><th>Municipio</th><th>Variable</th><th>Año</th><th class="text-end">Valor</th><th class="text-center">Acción</th></tr></thead>
                     <tbody>

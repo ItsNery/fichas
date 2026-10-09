@@ -3,6 +3,7 @@
 namespace Tests\Feature\Services;
 
 use App\Models\DatoHistorico;
+use App\Models\DatoGeograficoHistorico;
 use App\Models\DatoIndicadorComplejo;
 use App\Models\Dimension;
 use App\Models\Indicador;
@@ -14,7 +15,9 @@ use App\Models\Municipio;
 use App\Models\Tematica;
 use App\Models\User;
 use App\Models\Variable;
+use App\Models\UnidadGeografica;
 use App\Services\LoteDatosService;
+use Database\Seeders\UnidadesGeograficasSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -116,6 +119,52 @@ class LoteDatosServiceTest extends TestCase
         ]);
         $this->assertDatabaseCount('dato_historicos', 0);
         Storage::disk('local')->assertExists($result['lote']->archivo_path);
+    }
+
+    public function test_geographic_excel_is_published_only_after_approval(): void
+    {
+        Storage::fake('local');
+        $this->seed(UnidadesGeograficasSeeder::class);
+        $puebla = UnidadGeografica::where('slug', 'puebla')->firstOrFail();
+        $spreadsheet = new Spreadsheet();
+        $spreadsheet->getActiveSheet()->fromArray([
+            ['nivel_geografico', 'clave_geografica', 'variable_tecnico', 'anio', 'valor', 'motivo_sin_dato'],
+            ['entidad', '21', $this->variable->nombre_tecnico, 2025, 73.25, null],
+        ]);
+        $path = tempnam(sys_get_temp_dir(), 'lote-geo') . '.xlsx';
+        (new Xlsx($spreadsheet))->save($path);
+        $file = new UploadedFile(
+            $path,
+            'datos-estatales.xlsx',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            null,
+            true
+        );
+
+        $result = app(LoteDatosService::class)->crearBorradorGeografico($file, $this->capturista);
+
+        $this->assertArrayHasKey('lote', $result);
+        $lote = $result['lote'];
+        $this->assertSame('datos_geograficos', $lote->tipo);
+        $this->assertDatabaseHas('lote_dato_geografico_historicos', [
+            'lote_datos_id' => $lote->id,
+            'unidad_geografica_id' => $puebla->id,
+            'variable_id' => $this->variable->id,
+            'anio' => 2025,
+            'valor' => 73.25,
+        ]);
+        $this->assertSame(0, DatoGeograficoHistorico::count());
+
+        app(LoteDatosService::class)->enviarRevision($lote, $this->capturista);
+        app(LoteDatosService::class)->aprobar($lote, $this->revisor);
+
+        $this->assertDatabaseHas('dato_geografico_historicos', [
+            'unidad_geografica_id' => $puebla->id,
+            'variable_id' => $this->variable->id,
+            'anio' => 2025,
+            'valor' => 73.25,
+            'lote_datos_id' => $lote->id,
+        ]);
     }
 
     public function test_approval_inserts_and_links_canonical_data(): void

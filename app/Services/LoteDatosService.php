@@ -3,14 +3,17 @@
 namespace App\Services;
 
 use App\Models\CatMotivoSinDato;
+use App\Models\DatoGeograficoHistorico;
 use App\Models\DatoHistorico;
 use App\Models\DatoIndicadorComplejo;
 use App\Models\Indicador;
 use App\Models\LoteDatoIndicadorComplejo;
 use App\Models\LoteDatoHistorico;
+use App\Models\LoteDatoGeograficoHistorico;
 use App\Models\LoteDatos;
 use App\Models\Municipio;
 use App\Models\User;
+use App\Models\UnidadGeografica;
 use App\Models\Variable;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -192,6 +195,177 @@ class LoteDatosService
                 })->values();
 
                 $rows->chunk(1000)->each(fn($chunk) => LoteDatoHistorico::insert($chunk->all()));
+
+                return $lote;
+            });
+        } catch (\Throwable $e) {
+            Storage::disk('local')->delete($path);
+            throw $e;
+        }
+
+        return ['lote' => $lote];
+    }
+
+    public function crearBorradorGeografico(UploadedFile $file, User $usuario): array
+    {
+        $filePath = $file->getPathname();
+        if (!$filePath || !is_file($filePath)) {
+            return ['errors' => [['fila' => 1, 'error' => 'No se encontró el archivo temporal cargado.']]];
+        }
+
+        $storedName = Str::uuid() . '.' . ($file->getClientOriginalExtension() ?: 'tmp');
+        $path = Storage::disk('local')->putFileAs('lotes_datos', $filePath, $storedName);
+        if (!$path) {
+            return ['errors' => [['fila' => 1, 'error' => 'No se pudo almacenar el archivo cargado.']]];
+        }
+
+        $storedFilePath = Storage::disk('local')->path($path);
+        try {
+            $sheet = Excel::toCollection(null, $storedFilePath)->first();
+        } catch (\Throwable $e) {
+            Storage::disk('local')->delete($path);
+            throw $e;
+        }
+
+        if (!$sheet || $sheet->isEmpty()) {
+            Storage::disk('local')->delete($path);
+            return ['errors' => [['fila' => 1, 'error' => 'El archivo no contiene registros.']]];
+        }
+
+        $headings = array_map(
+            fn ($heading) => mb_strtolower(trim((string) $heading), 'UTF-8'),
+            $sheet->shift()->toArray()
+        );
+        $required = ['nivel_geografico', 'clave_geografica', 'anio', 'valor'];
+        foreach ($required as $heading) {
+            if (!in_array($heading, $headings, true)) {
+                Storage::disk('local')->delete($path);
+                return ['errors' => [['fila' => 1, 'error' => "La columna '{$heading}' es requerida."]]];
+            }
+        }
+        if (!array_intersect(['variable_tecnico', 'variable_id'], $headings)) {
+            Storage::disk('local')->delete($path);
+            return ['errors' => [['fila' => 1, 'error' => 'Se requiere variable_tecnico o variable_id.']]];
+        }
+
+        $unidades = UnidadGeografica::where('activo', true)->get()->mapWithKeys(
+            fn ($unidad) => ["{$unidad->nivel}:{$unidad->clave_inegi}" => $unidad->id]
+        );
+        $variablesTecnico = Variable::pluck('id', 'nombre_tecnico');
+        $variablesIds = Variable::pluck('id')->flip();
+        $motivos = CatMotivoSinDato::pluck('id', 'codigo')->mapWithKeys(
+            fn ($id, $codigo) => [strtoupper($codigo) => $id]
+        );
+        $errors = [];
+        $normalized = [];
+
+        foreach ($sheet as $index => $row) {
+            $values = array_pad($row->toArray(), count($headings), null);
+            $rowData = array_combine($headings, array_slice($values, 0, count($headings)));
+            $sourceRow = $index + 2;
+            if (collect($rowData)->filter(fn ($value) => $value !== null && $value !== '')->isEmpty()) {
+                continue;
+            }
+
+            $nivel = mb_strtolower(trim((string) ($rowData['nivel_geografico'] ?? '')), 'UTF-8');
+            $clave = trim((string) ($rowData['clave_geografica'] ?? ''));
+            if (in_array($nivel, [UnidadGeografica::NIVEL_PAIS, UnidadGeografica::NIVEL_ENTIDAD], true)) {
+                $clave = str_pad($clave, 2, '0', STR_PAD_LEFT);
+            }
+            $unidadId = $unidades["{$nivel}:{$clave}"] ?? null;
+
+            $variableId = null;
+            if (!empty($rowData['variable_tecnico'])) {
+                $variableId = $variablesTecnico[trim((string) $rowData['variable_tecnico'])] ?? null;
+            }
+            if (!$variableId && !empty($rowData['variable_id']) && $variablesIds->has((int) $rowData['variable_id'])) {
+                $variableId = (int) $rowData['variable_id'];
+            }
+
+            $anio = filter_var($rowData['anio'] ?? null, FILTER_VALIDATE_INT);
+            $valorCelda = $rowData['valor'] ?? null;
+            $motivoCodigo = strtoupper(trim((string) ($rowData['motivo_sin_dato'] ?? $valorCelda)));
+            $valor = is_numeric($valorCelda) ? (float) $valorCelda : null;
+            $motivoId = $valor === null && $motivoCodigo !== '' ? ($motivos[$motivoCodigo] ?? null) : null;
+
+            if (!$unidadId) {
+                $errors[] = ['fila' => $sourceRow, 'error' => 'Nivel o clave geográfica no válida.'];
+            }
+            if (!$variableId) {
+                $errors[] = ['fila' => $sourceRow, 'error' => 'Variable no válida o no identificada.'];
+            }
+            if (!$anio || $anio < 1900 || $anio > 2100) {
+                $errors[] = ['fila' => $sourceRow, 'error' => 'El año debe ser un entero de cuatro dígitos.'];
+            }
+            if ($valor === null && $motivoCodigo !== '' && !$motivoId) {
+                $errors[] = ['fila' => $sourceRow, 'error' => "El valor o motivo '{$motivoCodigo}' no es válido."];
+            }
+
+            if ($unidadId && $variableId && $anio && ($valor !== null || $motivoCodigo === '' || $motivoId)) {
+                $key = "{$unidadId}:{$variableId}:{$anio}";
+                if (isset($normalized[$key])) {
+                    $errors[] = ['fila' => $sourceRow, 'error' => 'La combinación geografía, variable y año está duplicada.'];
+                    continue;
+                }
+                $normalized[$key] = [
+                    'fila_origen' => $sourceRow,
+                    'unidad_geografica_id' => $unidadId,
+                    'variable_id' => $variableId,
+                    'anio' => $anio,
+                    'valor' => $valor,
+                    'motivo_sin_dato_id' => $motivoId,
+                ];
+            }
+        }
+
+        if ($errors) {
+            Storage::disk('local')->delete($path);
+            return ['errors' => $errors];
+        }
+        if (!$normalized) {
+            Storage::disk('local')->delete($path);
+            return ['errors' => [['fila' => 1, 'error' => 'El archivo no contiene filas válidas.']]];
+        }
+
+        $unidadIds = collect($normalized)->pluck('unidad_geografica_id')->unique();
+        $variableIds = collect($normalized)->pluck('variable_id')->unique();
+        $anios = collect($normalized)->pluck('anio')->unique();
+        $existing = DatoGeograficoHistorico::whereIn('unidad_geografica_id', $unidadIds)
+            ->whereIn('variable_id', $variableIds)
+            ->whereIn('anio', $anios)
+            ->get()
+            ->mapWithKeys(fn ($dato) => ["{$dato->unidad_geografica_id}:{$dato->variable_id}:{$dato->anio}" => $dato]);
+        $hash = hash_file('sha256', $storedFilePath);
+
+        try {
+            $lote = DB::transaction(function () use ($usuario, $file, $path, $hash, $normalized, $existing) {
+                $insertar = collect($normalized)->keys()->filter(fn ($key) => !$existing->has($key))->count();
+                $lote = LoteDatos::create([
+                    'tipo' => 'datos_geograficos',
+                    'estado' => LoteDatos::BORRADOR,
+                    'archivo_original' => $file->getClientOriginalName(),
+                    'archivo_path' => $path,
+                    'archivo_hash' => $hash,
+                    'usuario_carga_id' => $usuario->id,
+                    'total_filas' => count($normalized),
+                    'filas_insertar' => $insertar,
+                    'filas_actualizar' => count($normalized) - $insertar,
+                ]);
+
+                $now = now();
+                $rows = collect($normalized)->map(function ($row, $key) use ($lote, $existing, $now) {
+                    $original = $existing->get($key);
+                    return $row + [
+                        'lote_datos_id' => $lote->id,
+                        'accion' => $original ? 'actualizar' : 'insertar',
+                        'valor_original' => $original?->valor,
+                        'motivo_sin_dato_original_id' => $original?->motivo_sin_dato_id,
+                        'dato_geografico_historico_updated_at' => $original?->updated_at,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                })->values();
+                $rows->chunk(1000)->each(fn ($chunk) => LoteDatoGeograficoHistorico::insert($chunk->all()));
 
                 return $lote;
             });
@@ -403,6 +577,7 @@ class LoteDatosService
             match ($locked->tipo) {
                 'datos_historicos', 'dato_historico_manual' => $this->aprobarHistoricos($locked, $now),
                 'datos_complejos' => $this->aprobarComplejos($locked, $now),
+                'datos_geograficos' => $this->aprobarGeograficos($locked, $now),
                 default => throw ValidationException::withMessages(['lote' => 'El tipo de lote no es compatible.']),
             };
 
@@ -497,6 +672,31 @@ class LoteDatosService
         });
     }
 
+    private function aprobarGeograficos(LoteDatos $lote, $now): void
+    {
+        $filas = $lote->filasGeograficas()->get();
+        $this->assertGeographicConflicts($filas);
+
+        $filas->chunk(1000)->each(function ($chunk) use ($lote, $now) {
+            $rows = $chunk->map(fn ($fila) => [
+                'unidad_geografica_id' => $fila->unidad_geografica_id,
+                'variable_id' => $fila->variable_id,
+                'anio' => $fila->anio,
+                'valor' => $fila->valor,
+                'motivo_sin_dato_id' => $fila->motivo_sin_dato_id,
+                'lote_datos_id' => $lote->id,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ])->all();
+
+            DatoGeograficoHistorico::upsert(
+                $rows,
+                ['unidad_geografica_id', 'variable_id', 'anio'],
+                ['valor', 'motivo_sin_dato_id', 'lote_datos_id', 'updated_at']
+            );
+        });
+    }
+
     private function assertHistoricalConflicts($filas): void
     {
         foreach ($filas as $fila) {
@@ -534,6 +734,28 @@ class LoteDatosService
                 || $actual->datos != $fila->datos_originales
                 || $actual->updated_at?->format('Y-m-d H:i:s') !== $fila->dato_complejo_updated_at?->format('Y-m-d H:i:s'))) {
                 throw ValidationException::withMessages(['lote' => "Conflicto en la fila {$fila->fila_origen}: el dato complejo cambió después de crear el lote."]);
+            }
+        }
+    }
+
+    private function assertGeographicConflicts($filas): void
+    {
+        foreach ($filas as $fila) {
+            $actual = DatoGeograficoHistorico::where('unidad_geografica_id', $fila->unidad_geografica_id)
+                ->where('variable_id', $fila->variable_id)
+                ->where('anio', $fila->anio)
+                ->first();
+
+            if ($fila->accion === 'insertar' && $actual) {
+                throw ValidationException::withMessages(['lote' => "Conflicto en la fila {$fila->fila_origen}: el dato geográfico ya existe."]);
+            }
+            $hasSnapshot = $fila->dato_geografico_historico_updated_at !== null;
+            if ($fila->accion === 'actualizar' && (!$actual || ($hasSnapshot && (
+                (float) $actual->valor !== (float) $fila->valor_original
+                || $actual->motivo_sin_dato_id !== $fila->motivo_sin_dato_original_id
+                || $actual->updated_at?->format('Y-m-d H:i:s') !== $fila->dato_geografico_historico_updated_at?->format('Y-m-d H:i:s')
+            )))) {
+                throw ValidationException::withMessages(['lote' => "Conflicto en la fila {$fila->fila_origen}: el dato geográfico cambió después de crear el lote."]);
             }
         }
     }

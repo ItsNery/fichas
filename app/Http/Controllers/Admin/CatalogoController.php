@@ -383,9 +383,11 @@ class CatalogoController extends Controller
                             ->values()
                             ->all(),
                     ],
-                    'tasa_crecimiento' => [
+                    'tasa_crecimiento', 'tasa_crecimiento_inegi_2025' => [
                         'variable_id'   => (int) ($varData['formula_variable_id'] ?? 0),
-                        'multiplicador' => (float) ($varData['formula_multiplicador'] ?? 100),
+                        'multiplicador' => $data['formula_tipo'] === 'tasa_crecimiento_inegi_2025'
+                            ? 100.0
+                            : (float) ($varData['formula_multiplicador'] ?? 100),
                     ],
                     default => [
                         'numerador_variable_id'   => (int) ($varData['formula_numerador_id'] ?? 0),

@@ -40,6 +40,7 @@
                     ['id' => 'indicadores', 'label' => 'Indicadores'],
                     ['id' => 'variables', 'label' => 'Variables'],
                     ['id' => 'datoshistoricos', 'label' => 'Históricos'],
+                    ['id' => 'datosgeograficos', 'label' => 'Estatales'],
                     ['id' => 'datoscomplejos', 'label' => 'Complejos'],
                     ['id' => 'instrumentos', 'label' => 'Cat. Inst.'],
                     ['id' => 'asignaciones', 'label' => 'Asignaciones'],
@@ -208,7 +209,21 @@
                         </form>
                     </div>
 
-                    {{-- 7. Instrumentos --}}
+                    <div class="tab-pane fade" id="datosgeograficos" role="tabpanel">
+                        <x-import-form
+                            action="{{ route('admin.import.datos_geograficos') }}"
+                            template="{{ route('admin.import.plantilla', ['tipo' => 'datos-geograficos']) }}"
+                            btnText="Validar y enviar a revisión">
+                            <x-slot name="instructions">
+                                <code>nivel_geografico</code>, <code>clave_geografica</code>,
+                                <code>variable_tecnico</code>, <code>anio</code>, <code>valor</code>,
+                                <code>motivo_sin_dato</code>.<br>
+                                Para Puebla usa nivel <code>entidad</code> y clave <code>21</code>.
+                            </x-slot>
+                        </x-import-form>
+                    </div>
+
+                    {{-- 8. Instrumentos --}}
                     <div class="tab-pane fade" id="instrumentos" role="tabpanel">
                         <x-import-form
                             action="{{ route('admin.import.instrumentos') }}"
@@ -218,7 +233,7 @@
                         </x-import-form>
                     </div>
 
-                    {{-- 8. Asignaciones --}}
+                    {{-- 9. Asignaciones --}}
                     <div class="tab-pane fade" id="asignaciones" role="tabpanel">
                         <x-import-form
                             action="{{ route('admin.import.instrumentos_asignacion') }}"

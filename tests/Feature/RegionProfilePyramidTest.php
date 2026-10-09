@@ -18,6 +18,81 @@ class RegionProfilePyramidTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_municipal_panorama_map_is_rendered_as_png(): void
+    {
+        $macro = new Macrorregion();
+        $macro->nombre = 'Región mapa';
+        $macro->slug = 'region-mapa';
+        $macro->save();
+        $micro = new Microrregion();
+        $micro->nombre = 'Micro mapa';
+        $micro->slug = 'micro-mapa';
+        $micro->macrorregion_id = $macro->id;
+        $micro->save();
+        $municipio = Municipio::create([
+            'nombre' => 'Acajete',
+            'slug' => 'acajete',
+            'cvegeo' => '21001',
+            'microrregion_id' => $micro->id,
+        ]);
+
+        $response = $this->get(route('ficha-municipal.panorama.map', $municipio));
+
+        $response->assertOk()->assertHeader('Content-Type', 'image/png');
+        $this->assertStringStartsWith("\x89PNG\r\n\x1a\n", $response->getContent());
+    }
+
+    public function test_municipal_panorama_reserves_two_rows_for_population_pyramid(): void
+    {
+        $macro = new Macrorregion();
+        $macro->nombre = 'Región panorama';
+        $macro->slug = 'region-panorama';
+        $macro->save();
+        $micro = new Microrregion();
+        $micro->nombre = 'Micro panorama';
+        $micro->slug = 'micro-panorama';
+        $micro->macrorregion_id = $macro->id;
+        $micro->save();
+        $municipio = Municipio::create([
+            'nombre' => 'Municipio panorama',
+            'slug' => 'municipio-panorama',
+            'microrregion_id' => $micro->id,
+        ]);
+        $dimension = Dimension::create(['nombre' => 'Demográfica', 'nombre_tecnico' => 'demografica']);
+        $tematica = Tematica::create([
+            'nombre' => 'Población',
+            'nombre_tecnico' => 'poblacion',
+            'dimension_id' => $dimension->id,
+        ]);
+        $indicador = Indicador::create([
+            'nombre_amigable' => 'Población por grupos de edad según sexo',
+            'tematica_id' => $tematica->id,
+            'tipo_grafico_default' => 'Pirámide',
+        ]);
+        $hombres = Variable::create([
+            'indicador_id' => $indicador->id,
+            'nombre_amigable' => 'Población de hombres de 0 a 4 años',
+            'nombre_tecnico' => 'panorama_hombres_0_4',
+            'unidad_medida' => 'Habitantes',
+        ]);
+        $mujeres = Variable::create([
+            'indicador_id' => $indicador->id,
+            'nombre_amigable' => 'Población de mujeres de 0 a 4 años',
+            'nombre_tecnico' => 'panorama_mujeres_0_4',
+            'unidad_medida' => 'Habitantes',
+        ]);
+        DatoHistorico::create(['municipio_id' => $municipio->id, 'variable_id' => $hombres->id, 'anio' => 2025, 'valor' => 100]);
+        DatoHistorico::create(['municipio_id' => $municipio->id, 'variable_id' => $mujeres->id, 'anio' => 2025, 'valor' => 110]);
+
+        $response = $this->get(route('ficha-municipal.panorama', $municipio));
+
+        $response->assertOk()
+            ->assertSee('card--rows-2 card--pyramid', false)
+            ->assertSee("axisLabel:{show:true,interval:0,fontSize:10", false)
+            ->assertSee('min:-axisMax,max:axisMax,interval', false)
+            ->assertSee("barMaxWidth:14,barCategoryGap:'20%'", false);
+    }
+
     public function test_regional_profile_preserves_population_pyramid_format(): void
     {
         $macro = new Macrorregion();

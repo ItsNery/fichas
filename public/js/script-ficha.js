@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
         nivelDeAgregacion: "municipio",
         indicatorId: null,
         indicatorEsComplejo: false,
+        indicatorDisponibleEstatal: false,
         municipioIds: [],
         microrregionId: null,
         macrorregionId: null,
@@ -428,7 +429,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (isMunicipal) {
             target.innerText =
-                "Puedes seleccionar hasta 2 municipios. El nivel estatal está disponible para indicadores absolutos.";
+                "Puedes seleccionar hasta 2 municipios. El nivel estatal usa datos oficiales cuando existen y suma municipal sólo para indicadores absolutos.";
             return;
         }
 
@@ -478,9 +479,9 @@ document.addEventListener("DOMContentLoaded", function () {
             message = "Falta elegir una macrorregión.";
         } else if (
             appState.nivelDeAgregacion === "estatal" &&
-            appState.indicatorTipoDato?.toLowerCase() !== "absoluto"
+            !appState.indicatorDisponibleEstatal
         ) {
-            message = "El nivel estatal solo está disponible para indicadores absolutos.";
+            message = "Este indicador no tiene datos estatales disponibles.";
         } else {
             message = "La consulta está lista para ejecutarse.";
         }
@@ -723,8 +724,9 @@ document.addEventListener("DOMContentLoaded", function () {
     /**
      * Actualiza el tipo de dato activo para las herramientas de la gráfica.
      */
-    function actualizarTipoDatoActivo(tipoDato) {
+    function actualizarTipoDatoActivo(tipoDato, disponibleEstatal = false) {
         appState.indicatorTipoDato = tipoDato;
+        appState.indicatorDisponibleEstatal = disponibleEstatal === true || disponibleEstatal === "true";
         appState.showAsPercentage = false;
 
         const estatalTab = document.querySelector(
@@ -732,13 +734,12 @@ document.addEventListener("DOMContentLoaded", function () {
         );
         if (!estatalTab) return;
 
-        const permiteAgregacionEstatal =
-            tipoDato.toLowerCase() === "absoluto";
+        const permiteAgregacionEstatal = appState.indicatorDisponibleEstatal;
         estatalTab.disabled = !permiteAgregacionEstatal;
         estatalTab.setAttribute("aria-disabled", String(!permiteAgregacionEstatal));
         estatalTab.title = permiteAgregacionEstatal
             ? "Consultar el total estatal"
-            : "El nivel estatal solo está disponible para indicadores absolutos";
+            : "Este indicador no tiene datos estatales disponibles";
     }
 
     /**
@@ -1011,7 +1012,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     /**
      * Filtra la lista de indicadores para la vista regional.
-     * @param {boolean} showAll Si es true, muestra todos los indicadores. Si es false, muestra solo los de tipo 'Absoluto'.
+     * @param {boolean} showAll Si es true, muestra todos los indicadores.
      */
     function filtrarAcordeonRegional(showAll = false) {
         const links = document.querySelectorAll(
@@ -1020,10 +1021,13 @@ document.addEventListener("DOMContentLoaded", function () {
         links.forEach((link) => {
             // Seleccionamos el <li> padre para ocultarlo completamente
             const li = link.closest("li");
+            const esAbsoluto = link.dataset.tipoDato?.toLowerCase() === "absoluto";
+            const tieneDatoEstatal = link.dataset.disponibleEstatal === "true";
+            const estaEnNivelEstatal = appState.nivelDeAgregacion === "estatal";
             if (
                 showAll ||
-                (link.dataset.tipoDato &&
-                    link.dataset.tipoDato.toLowerCase() === "absoluto")
+                esAbsoluto ||
+                (estaEnNivelEstatal && tieneDatoEstatal)
             ) {
                 li.style.display = "block";
             } else {
@@ -2488,7 +2492,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
         linkActivo.classList.add("fw-bold", "text-primary");
         expandirAcordeonHacia(linkActivo);
-         actualizarTipoDatoActivo(linkActivo.dataset.tipoDato || "Absoluto");
+        actualizarTipoDatoActivo(
+            linkActivo.dataset.tipoDato || "Absoluto",
+            linkActivo.dataset.disponibleEstatal,
+        );
     }
 
     function restaurarEstadoDesdeURL() {
@@ -2855,7 +2862,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const tipoDatoNuevo = target.dataset.tipoDato || "Absoluto";
             appState.indicatorEsComplejo = target.dataset.esComplejo === "true";
-             actualizarTipoDatoActivo(tipoDatoNuevo);
+            actualizarTipoDatoActivo(
+                tipoDatoNuevo,
+                target.dataset.disponibleEstatal,
+            );
 
             // Actualizamos el estado
             appState.indicatorId = target.dataset.indicadorId;
@@ -2939,7 +2949,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 canConsult = true;
             } else if (
                 appState.nivelDeAgregacion === "estatal" &&
-                appState.indicatorTipoDato?.toLowerCase() === "absoluto"
+                appState.indicatorDisponibleEstatal
             ) {
                 canConsult = true;
             }

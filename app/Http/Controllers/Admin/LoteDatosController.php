@@ -33,9 +33,14 @@ class LoteDatosController extends Controller
     public function show(LoteDatos $lote)
     {
         $lote->load(['usuarioCarga', 'usuarioRevision']);
-        $filas = $lote->tipo === 'datos_complejos'
-            ? $lote->filasComplejas()->with(['municipio', 'indicador'])->orderBy('fila_origen')->paginate(50)
-            : $lote->filas()->with(['municipio', 'variable.indicador', 'motivoSinDato'])->orderBy('fila_origen')->paginate(50);
+        $filas = match ($lote->tipo) {
+            'datos_complejos' => $lote->filasComplejas()
+                ->with(['municipio', 'indicador'])->orderBy('fila_origen')->paginate(50),
+            'datos_geograficos' => $lote->filasGeograficas()
+                ->with(['unidadGeografica', 'variable.indicador', 'motivoSinDato'])->orderBy('fila_origen')->paginate(50),
+            default => $lote->filas()
+                ->with(['municipio', 'variable.indicador', 'motivoSinDato'])->orderBy('fila_origen')->paginate(50),
+        };
 
         return view('admin.lotes_datos.show', compact('lote', 'filas'));
     }

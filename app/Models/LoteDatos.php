@@ -76,4 +76,14 @@ class LoteDatos extends Model
     {
         return $this->hasMany(LoteDatoIndicadorComplejo::class, 'lote_datos_id');
     }
+
+    public function filasGeograficas()
+    {
+        return $this->hasMany(LoteDatoGeograficoHistorico::class, 'lote_datos_id');
+    }
+
+    public function datosGeograficosHistoricos()
+    {
+        return $this->hasMany(DatoGeograficoHistorico::class, 'lote_datos_id');
+    }
 }

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\DatoHistorico;
+use App\Models\DatoGeograficoHistorico;
 use App\Models\DatoIndicadorComplejo;
 use App\Models\Dimension;
 use App\Models\Indicador;
@@ -10,6 +11,7 @@ use App\Models\Macrorregion;
 use App\Models\Microrregion;
 use App\Models\Municipio;
 use App\Models\Variable;
+use App\Models\UnidadGeografica;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
@@ -25,6 +27,17 @@ class IndicadorQueryService
         }
         $this->usarVariablesPublicas($indicador);
         $nivel     = $validated['nivel_de_agregacion'];
+
+        if ($nivel === 'estatal') {
+            $datosOficiales = $this->getOfficialStateChartData($indicador, $validated['anios'] ?? []);
+            if ($datosOficiales) {
+                return $datosOficiales;
+            }
+            if (mb_strtolower(trim((string) $indicador->tipo_dato), 'UTF-8') !== 'absoluto') {
+                abort(422, 'Este indicador no tiene datos oficiales estatales completos disponibles.');
+            }
+        }
+
         $selection = $this->prepareGeographicSelection($nivel, $validated);
         $esPiramidePoblacional = $this->esPiramide($indicador);
 
@@ -177,6 +190,117 @@ class IndicadorQueryService
         }
 
         return $chartData;
+    }
+
+    public function getStateAvailableIndicatorIds()
+    {
+        $unidadId = UnidadGeografica::where('nivel', UnidadGeografica::NIVEL_ENTIDAD)
+            ->where('clave_inegi', UnidadGeografica::CLAVE_PUEBLA)
+            ->where('activo', true)
+            ->value('id');
+        if (!$unidadId) {
+            return collect();
+        }
+
+        $variableIndicators = Variable::where('visible_en_ficha', true)->pluck('indicador_id', 'id');
+        $expectedCounts = $variableIndicators->groupBy(fn ($indicadorId) => $indicadorId)->map->count();
+        $rows = DatoGeograficoHistorico::where('unidad_geografica_id', $unidadId)
+            ->whereNotNull('valor')
+            ->whereIn('variable_id', $variableIndicators->keys())
+            ->get(['variable_id', 'anio']);
+
+        return $rows->groupBy(function ($row) use ($variableIndicators) {
+            return $variableIndicators[$row->variable_id] . ':' . $row->anio;
+        })->filter(function ($yearRows, $key) use ($expectedCounts) {
+            $indicadorId = (int) ((string) str($key)->before(':'));
+            return $yearRows->pluck('variable_id')->unique()->count() >= ($expectedCounts[$indicadorId] ?? PHP_INT_MAX);
+        })->keys()->map(fn ($key) => (int) ((string) str($key)->before(':')))->unique()->values();
+    }
+
+    private function getOfficialStateChartData(Indicador $indicador, array $selectedYears): ?array
+    {
+        $unidadId = UnidadGeografica::where('nivel', UnidadGeografica::NIVEL_ENTIDAD)
+            ->where('clave_inegi', UnidadGeografica::CLAVE_PUEBLA)
+            ->where('activo', true)
+            ->value('id');
+        $variables = $indicador->variables->sortBy(['orden', 'nombre_amigable'])->values();
+        if (!$unidadId || $variables->isEmpty()) {
+            return null;
+        }
+
+        $datos = DatoGeograficoHistorico::where('unidad_geografica_id', $unidadId)
+            ->whereIn('variable_id', $variables->pluck('id'))
+            ->whereNotNull('valor')
+            ->orderBy('anio')
+            ->get();
+        $availableYears = $datos->groupBy('anio')
+            ->filter(fn ($rows) => $rows->pluck('variable_id')->unique()->count() === $variables->count())
+            ->keys()
+            ->map(fn ($year) => (int) $year)
+            ->sortDesc()
+            ->values();
+        if ($availableYears->isEmpty()) {
+            return null;
+        }
+
+        $selectedYears = collect($selectedYears)->map(fn ($year) => (int) $year)
+            ->intersect($availableYears)->unique()->values()->all();
+        $tipoGrafico = 'line';
+        $chartTitleYear = 'Histórico';
+        if (!$selectedYears && mb_strtolower(trim((string) $indicador->tipo_grafico_default), 'UTF-8') === 'barras') {
+            $selectedYears = [(int) $availableYears->first()];
+            $tipoGrafico = 'bar';
+            $chartTitleYear = 'Año: ' . $selectedYears[0];
+        } elseif (count($selectedYears) === 1) {
+            $chartTitleYear = 'Año: ' . $selectedYears[0];
+        } elseif (count($selectedYears) > 1) {
+            $chartTitleYear = 'Tendencia Años Seleccionados';
+        } else {
+            $selectedYears = $availableYears->all();
+        }
+
+        $seriesCompletas = $variables->map(function ($variable) use ($datos) {
+            return [
+                'name' => $variable->nombre_amigable,
+                'data' => $datos->where('variable_id', $variable->id)
+                    ->map(fn ($dato) => [(int) $dato->anio, (float) $dato->valor])
+                    ->values(),
+            ];
+        });
+
+        if ($tipoGrafico === 'bar') {
+            $anio = $selectedYears[0];
+            $series = [[
+                'name' => 'Valor',
+                'data' => $seriesCompletas->map(fn ($serie) => collect($serie['data'])->firstWhere(0, $anio)[1] ?? 0)->all(),
+            ]];
+            $ejeX = ['categorias' => $variables->pluck('nombre_amigable')->all()];
+        } else {
+            $selected = array_map('strval', $selectedYears);
+            $series = $seriesCompletas->map(fn ($serie) => [
+                'name' => $serie['name'],
+                'data' => collect($serie['data'])
+                    ->filter(fn ($point) => in_array((string) $point[0], $selected, true))
+                    ->values()
+                    ->all(),
+            ])->all();
+            $ejeX = ['type' => 'numeric', 'titulo' => 'Año'];
+        }
+
+        return [
+            'titulo' => $indicador->nombre_amigable . ' - Estado de Puebla (' . $chartTitleYear . ')',
+            'descripcion' => $indicador->descripcion,
+            'fuente' => $indicador->fuente,
+            'metodo_calculo' => $indicador->metodo_calculo,
+            'tipo_grafico' => $tipoGrafico,
+            'series' => $series,
+            'eje_x' => $ejeX,
+            'eje_y' => ['titulo' => $variables->first()->unidad_medida ?? 'Valor'],
+            'available_years' => $availableYears,
+            'selected_years' => $selectedYears,
+            'nota_explicativa' => 'Dato oficial cargado directamente para el Estado de Puebla.',
+            'origen_dato' => 'oficial_estatal',
+        ];
     }
 
     public function getIndicatorYears(Indicador $indicador)

@@ -57,6 +57,7 @@ Route::prefix('ficha/municipio')->name('ficha-municipal.')->group(function () {
     Route::get('/{municipio:slug}/v3/pdf', [FichaController::class, 'exportarResumenV3PDF'])->name('v3.pdf');
     Route::get('/{municipio:slug}/perfil/pdf', [FichaController::class, 'exportarPerfilPDF'])->name('perfil.pdf');
     Route::get('/{municipio:slug}/panorama', [FichaController::class, 'panoramaMunicipal'])->name('panorama');
+    Route::get('/{municipio:slug}/panorama/map.png', [FichaController::class, 'panoramaMap'])->name('panorama.map');
     Route::get('/{municipio:slug}/panorama/pdf', [FichaController::class, 'exportarPanoramaPDF'])->name('panorama.pdf');
     Route::get('/{municipio:slug}/pdf', [FichaController::class, 'exportarResumenPDF'])->name('pdf');
 });
@@ -184,6 +185,7 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
         Route::post('/datos/validar', [ImportController::class, 'validateDatos'])->name('datos.validate');
         Route::post('/datos/ejecutar', [ImportController::class, 'importDatos'])->name('datos.perform');
         Route::post('/datos-complejos', [ImportController::class, 'importDatosComplejos'])->name('datos_complejos');
+        Route::post('/datos-geograficos', [ImportController::class, 'importDatosGeograficos'])->name('datos_geograficos');
         Route::post('/instrumentos', [ImportController::class, 'importInstrumentos'])->name('instrumentos');
         Route::post('/instrumentos-asignacion', [ImportController::class, 'importInstrumentosAsignacion'])->name('instrumentos_asignacion');
     });

@@ -322,6 +322,84 @@
                     });
                 }
 
+                const formulaHelp = {
+                    division: {
+                        title: 'División',
+                        summary: 'Divide el numerador entre el denominador y aplica el multiplicador.',
+                        detail: 'Calcula (numerador / denominador) × multiplicador para los registros que coinciden en municipio y año.'
+                    },
+                    tasa_crecimiento: {
+                        title: 'Tasa de crecimiento',
+                        summary: 'Compara cada valor con el periodo anterior disponible.',
+                        detail: 'Calcula ((valor actual - valor anterior) / valor anterior) × multiplicador para cada municipio.'
+                    },
+                    tasa_crecimiento_inegi_2025: {
+                        title: 'Tasa de crecimiento INEGI 2025',
+                        summary: 'Calcula la tasa media anual entre los dos periodos disponibles.',
+                        detail: 'Aplica [(Px / P0)^(1 / t) - 1] × 100, donde t es la diferencia entre los años. El multiplicador es fijo.'
+                    },
+                    sumatoria: {
+                        title: 'Sumatoria de variables',
+                        summary: 'Suma las variables seleccionadas por municipio y año.',
+                        detail: 'Agrupa y suma los valores disponibles de las variables seleccionadas que coinciden en municipio y año.'
+                    }
+                };
+
+                function setFormulaSectionState(section, isVisible) {
+                    if (!section) return;
+
+                    section.hidden = !isVisible;
+                    section.style.display = isVisible ? '' : 'none';
+                    section.classList.toggle('d-none', !isVisible);
+                    section.querySelectorAll('input, select, textarea').forEach(control => {
+                        control.disabled = !isVisible;
+                        if (control.tomselect) {
+                            isVisible ? control.tomselect.enable() : control.tomselect.disable();
+                        }
+                    });
+                }
+
+                function updateFormulaFields(card) {
+                    const check = card.querySelector('.es-construida-check');
+                    const formulaSection = card.querySelector('.formula-section');
+                    const select = card.querySelector('.formula-tipo-select');
+                    const isConstructed = Boolean(check?.checked);
+
+                    if (!formulaSection || !select) return;
+
+                    formulaSection.hidden = !isConstructed;
+                    formulaSection.style.display = isConstructed ? 'block' : 'none';
+                    formulaSection.classList.toggle('d-none', !isConstructed);
+                    select.disabled = !isConstructed;
+
+                    const type = select.value || 'division';
+                    const isGrowthRate = ['tasa_crecimiento', 'tasa_crecimiento_inegi_2025'].includes(type);
+                    const isInegi = type === 'tasa_crecimiento_inegi_2025';
+
+                    setFormulaSectionState(card.querySelector('.formula-division-fields'),
+                        isConstructed && type === 'division');
+                    setFormulaSectionState(card.querySelector('.formula-tasa-fields'),
+                        isConstructed && isGrowthRate);
+                    setFormulaSectionState(card.querySelector('.formula-sumatoria-fields'),
+                        isConstructed && type === 'sumatoria');
+
+                    const multiplier = card.querySelector('.formula-tasa-multiplicador');
+                    if (multiplier) {
+                        multiplier.readOnly = isInegi;
+                        if (isInegi) multiplier.value = 100;
+                    }
+
+                    const inegiHelp = card.querySelector('.formula-inegi-help');
+                    if (inegiHelp) {
+                        inegiHelp.hidden = !isInegi;
+                        inegiHelp.style.display = isInegi ? '' : 'none';
+                        inegiHelp.classList.toggle('d-none', !isInegi);
+                    }
+
+                    const description = card.querySelector('.formula-type-description');
+                    if (description) description.textContent = formulaHelp[type]?.summary || '';
+                }
+
                 // --- AÑADIR VARIABLE ---
                 document.getElementById('addVariableBtn').addEventListener('click', function() {
                     const tmpl = document.getElementById('variableRowTemplate').innerHTML;
@@ -332,8 +410,9 @@
                     wrapper.innerHTML = html;
                     const card = wrapper.firstElementChild;
                     container.appendChild(card);
-                    attachVarEvents(card);
                     initTomSelectsOnCard(card);
+                    updateFormulaFields(card);
+                    updateValueMapping(card);
                     varIndex++;
                     actualizarSelectGeneracion();
                 });
@@ -358,8 +437,7 @@
                     const check = e.target.closest('.es-construida-check');
                     if (check) {
                         const card = check.closest('.variable-card');
-                        const formulaSection = card.querySelector('.formula-section');
-                        formulaSection.style.display = check.checked ? 'block' : 'none';
+                        updateFormulaFields(card);
                         actualizarSelectGeneracion();
                     }
                 });
@@ -369,13 +447,29 @@
                     const sel = e.target.closest('.formula-tipo-select');
                     if (sel) {
                         const card = sel.closest('.variable-card');
-                        card.querySelector('.formula-division-fields').style.display = sel.value ===
-                            'tasa_crecimiento' ? 'none' : '';
-                        card.querySelector('.formula-tasa-fields').style.display = sel.value ===
-                            'tasa_crecimiento' ? '' : 'none';
-                        card.querySelector('.formula-sumatoria-fields').style.display = sel.value ===
-                            'sumatoria' ? '' : 'none';
+                        updateFormulaFields(card);
                     }
+                });
+
+                // --- AYUDA DEL TIPO DE FÓRMULA ---
+                container.addEventListener('click', function(e) {
+                    const button = e.target.closest('.formula-type-help-btn');
+                    if (!button) return;
+
+                    const card = button.closest('.variable-card');
+                    const type = card.querySelector('.formula-tipo-select')?.value || 'division';
+                    const help = formulaHelp[type];
+
+                    Swal.fire({
+                        icon: 'info',
+                        title: help.title,
+                        text: help.detail,
+                        confirmButtonText: 'Entendido',
+                        buttonsStyling: false,
+                        customClass: {
+                            confirmButton: 'btn btn-custom-primary px-4'
+                        }
+                    });
                 });
 
                 // --- TOGGLE MAPEO VALORES (ocultar si numérica) ---
@@ -410,24 +504,7 @@
                     if (input) input.dataset.autoGen = 'false';
                 }, true);
 
-                function attachVarEvents(card) {
-                    const check = card.querySelector('.es-construida-check');
-                    const sel = card.querySelector('.formula-tipo-select');
-                    if (check) {
-                        const fs = card.querySelector('.formula-section');
-                        fs.style.display = check.checked ? 'block' : 'none';
-                    }
-                    if (sel) {
-                        const cardEl = sel.closest('.variable-card');
-                        cardEl.querySelector('.formula-division-fields').style.display = ['tasa_crecimiento',
-                            'sumatoria'
-                        ].includes(sel.value) ? 'none' : '';
-                        cardEl.querySelector('.formula-tasa-fields').style.display = sel.value === 'tasa_crecimiento' ?
-                            '' : 'none';
-                        cardEl.querySelector('.formula-sumatoria-fields').style.display = sel.value === 'sumatoria' ?
-                            '' : 'none';
-                    }
-                    // Toggle mapeo_valores on load
+                function updateValueMapping(card) {
                     const tipoValor = card.querySelector('.tipo-valor-select');
                     const mapeoWrapper = card.querySelector('.mapeo-valores-wrapper');
                     if (tipoValor && mapeoWrapper) {
@@ -437,8 +514,9 @@
 
                 // Attach events to existing rows
                 document.querySelectorAll('.variable-card').forEach(card => {
-                    attachVarEvents(card);
                     initTomSelectsOnCard(card);
+                    updateFormulaFields(card);
+                    updateValueMapping(card);
                 });
 
                 // --- ACTUALIZAR SELECT DE GENERACIÓN ---
@@ -492,8 +570,9 @@
                                 'Valor actual' : 'Valor denominador';
                             let html = '';
                             previewData.forEach(r => {
+                                const periodo = r.anio_anterior ? `${r.anio_anterior} - ${r.anio}` : (r.anio || '—');
                                 html +=
-                                    `<tr><td>${r.municipio||'—'}</td><td>${r.anio||'—'}</td><td>${r.valor_numerador??r.valor_anterior??'—'}</td><td>${r.valor_denominador??r.valor_actual??'—'}</td><td class="fw-bold text-info">${r.valor??'—'}</td></tr>`;
+                                    `<tr><td>${r.municipio||'—'}</td><td>${periodo}</td><td>${r.valor_numerador??r.valor_anterior??'—'}</td><td>${r.valor_denominador??r.valor_actual??'—'}</td><td class="fw-bold text-info">${r.valor??'—'}</td></tr>`;
                             });
                             document.getElementById('modalPreviewBody').innerHTML = html ||
                                 '<tr><td colspan="5" class="text-center text-muted">Sin datos</td></tr>';

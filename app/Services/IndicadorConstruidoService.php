@@ -13,10 +13,12 @@ class IndicadorConstruidoService
     {
         $config = $variable->formula_config;
 
-        if ($variable->formula_tipo === 'tasa_crecimiento') {
+        if (in_array($variable->formula_tipo, ['tasa_crecimiento', 'tasa_crecimiento_inegi_2025'], true)) {
             $variableId = $config['variable_id'];
-            $mult = (float) ($config['multiplicador'] ?? 100);
-            return $this->calcularTasaCrecimiento($variableId, $mult);
+            $esFormulaInegi = $variable->formula_tipo === 'tasa_crecimiento_inegi_2025';
+            $mult = $esFormulaInegi ? 100.0 : (float) ($config['multiplicador'] ?? 100);
+
+            return $this->calcularTasaCrecimiento($variableId, $mult, $esFormulaInegi);
         }
 
         if ($variable->formula_tipo === 'sumatoria') {
@@ -104,33 +106,60 @@ class IndicadorConstruidoService
         return json_decode(json_encode($rows), true);
     }
 
-    private function calcularTasaCrecimiento(int $variableId, float $mult): array
+    private function calcularTasaCrecimiento(int $variableId, float $mult, bool $anualizada = false): array
     {
         $rows = DB::table('dato_historicos as dh_actual')
             ->join('dato_historicos as dh_anterior', function ($j) {
                 $j->on('dh_actual.municipio_id', '=', 'dh_anterior.municipio_id')
-                  ->on(DB::raw('dh_actual.anio'), '=', DB::raw('dh_anterior.anio + 1'));
+                  ->on('dh_actual.variable_id', '=', 'dh_anterior.variable_id')
+                  ->on('dh_anterior.anio', '<', 'dh_actual.anio');
+            })
+            ->leftJoin('dato_historicos as dh_intermedio', function ($j) {
+                $j->on('dh_actual.municipio_id', '=', 'dh_intermedio.municipio_id')
+                  ->on('dh_actual.variable_id', '=', 'dh_intermedio.variable_id')
+                  ->on('dh_intermedio.anio', '<', 'dh_actual.anio')
+                  ->on('dh_intermedio.anio', '>', 'dh_anterior.anio');
             })
             ->join('municipios', 'dh_actual.municipio_id', '=', 'municipios.id')
             ->where('dh_actual.variable_id', $variableId)
-            ->where('dh_anterior.variable_id', $variableId)
+            ->whereNull('dh_intermedio.id')
             ->whereNotNull('dh_actual.valor')
             ->whereNotNull('dh_anterior.valor')
-            ->where('dh_anterior.valor', '!=', 0)
+            ->when(
+                $anualizada,
+                fn($query) => $query
+                    ->where('dh_actual.valor', '>=', 0)
+                    ->where('dh_anterior.valor', '>', 0),
+                fn($query) => $query->where('dh_anterior.valor', '!=', 0),
+            )
             ->select(
                 'dh_actual.municipio_id',
                 'municipios.nombre as municipio',
                 'dh_actual.anio',
+                'dh_anterior.anio as anio_anterior',
+                DB::raw('(dh_actual.anio - dh_anterior.anio) as periodo_anios'),
                 'dh_anterior.valor as valor_anterior',
                 'dh_actual.valor as valor_actual',
-                DB::raw("ROUND((dh_actual.valor - dh_anterior.valor) / dh_anterior.valor * {$mult}, 4) as valor")
+                DB::raw("ROUND((dh_actual.valor - dh_anterior.valor) * 1.0 / dh_anterior.valor * {$mult}, 4) as valor")
             )
             ->orderBy('municipios.nombre')
             ->orderBy('dh_actual.anio')
             ->get()
             ->toArray();
 
-        return json_decode(json_encode($rows), true);
+        $data = json_decode(json_encode($rows), true);
+
+        if (!$anualizada) {
+            return $data;
+        }
+
+        return array_map(function (array $row) use ($mult) {
+            $periodo = (int) $row['periodo_anios'];
+            $razon = (float) $row['valor_actual'] / (float) $row['valor_anterior'];
+            $row['valor'] = round((pow($razon, 1 / $periodo) - 1) * $mult, 4);
+
+            return $row;
+        }, $data);
     }
 
     private function calcularSumatoria(array $variableIds): array

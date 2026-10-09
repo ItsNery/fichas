@@ -3,6 +3,7 @@
 namespace Tests\Feature\Services;
 
 use App\Models\DatoHistorico;
+use App\Models\DatoGeograficoHistorico;
 use App\Models\Dimension;
 use App\Models\Indicador;
 use App\Models\Macrorregion;
@@ -10,7 +11,9 @@ use App\Models\Microrregion;
 use App\Models\Municipio;
 use App\Models\Tematica;
 use App\Models\Variable;
+use App\Models\UnidadGeografica;
 use App\Services\IndicadorQueryService;
+use Database\Seeders\UnidadesGeograficasSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -276,6 +279,71 @@ class IndicadorQueryServiceTest extends TestCase
 
         $this->assertSame(40.0, $result['series'][0]['data'][0][1]);
         $this->assertStringContainsString('Estado de Puebla', $result['titulo']);
+    }
+
+    public function test_official_state_value_has_priority_over_municipal_aggregation(): void
+    {
+        $this->seed(UnidadesGeograficasSeeder::class);
+        $ind = $this->makeIndicador('Porcentaje oficial', [
+            'tipo_dato' => 'porcentaje',
+            'tipo_grafico_default' => 'barras',
+        ]);
+        $var = Variable::create([
+            'indicador_id' => $ind->id,
+            'nombre_amigable' => 'Porcentaje',
+            'nombre_tecnico' => 'porcentaje_oficial',
+            'unidad_medida' => '%',
+        ]);
+        $municipioA = $this->makeMunicipio('A');
+        $municipioB = $this->makeMunicipio('B');
+        DatoHistorico::create(['municipio_id' => $municipioA->id, 'variable_id' => $var->id, 'anio' => 2025, 'valor' => 10]);
+        DatoHistorico::create(['municipio_id' => $municipioB->id, 'variable_id' => $var->id, 'anio' => 2025, 'valor' => 30]);
+        DatoGeograficoHistorico::create([
+            'unidad_geografica_id' => UnidadGeografica::where('slug', 'puebla')->value('id'),
+            'variable_id' => $var->id,
+            'anio' => 2025,
+            'valor' => 24.5,
+        ]);
+
+        $result = $this->service->getChartData([
+            'indicador_id' => $ind->id,
+            'nivel_de_agregacion' => 'estatal',
+            'anios' => [2025],
+        ]);
+
+        $this->assertSame('oficial_estatal', $result['origen_dato']);
+        $this->assertSame(24.5, $result['series'][0]['data'][0][1]);
+        $this->assertEquals([2025], $result['available_years']->all());
+        $this->assertTrue($this->service->getStateAvailableIndicatorIds()->contains($ind->id));
+    }
+
+    public function test_state_year_is_available_only_when_all_visible_variables_have_official_values(): void
+    {
+        $this->seed(UnidadesGeograficasSeeder::class);
+        $ind = $this->makeIndicador('Índice compuesto', ['tipo_dato' => 'indice']);
+        $variableA = Variable::create([
+            'indicador_id' => $ind->id,
+            'nombre_amigable' => 'Componente A',
+            'nombre_tecnico' => 'componente_a',
+        ]);
+        Variable::create([
+            'indicador_id' => $ind->id,
+            'nombre_amigable' => 'Componente B',
+            'nombre_tecnico' => 'componente_b',
+        ]);
+        DatoGeograficoHistorico::create([
+            'unidad_geografica_id' => UnidadGeografica::where('slug', 'puebla')->value('id'),
+            'variable_id' => $variableA->id,
+            'anio' => 2025,
+            'valor' => 1,
+        ]);
+
+        $this->assertFalse($this->service->getStateAvailableIndicatorIds()->contains($ind->id));
+
+        $this->postJson(route('api.data'), [
+            'indicador_id' => $ind->id,
+            'nivel_de_agregacion' => 'estatal',
+        ])->assertStatus(422);
     }
 
     public function test_state_level_rejects_non_absolute_indicators(): void

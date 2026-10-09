@@ -55,6 +55,11 @@ class Variable extends Model
         return $this->hasMany(DatoHistorico::class);
     }
 
+    public function datosGeograficosHistoricos()
+    {
+        return $this->hasMany(DatoGeograficoHistorico::class);
+    }
+
     public function configuracionesFicha()
     {
         return $this->belongsToMany(ConfiguracionFicha::class);

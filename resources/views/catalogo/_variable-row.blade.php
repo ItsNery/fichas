@@ -60,16 +60,28 @@
     </div>
     <div class="formula-section border rounded p-3 mt-2 bg-info bg-opacity-10" style="display:{{ ($var->es_construida ?? false) ? 'block' : 'none' }};">
         <div class="row g-2">
-            <div class="col-md-3">
-                <label class="form-label fw-bold text-secondary small">Tipo</label>
-                <select name="variables[{{ $index }}][formula_tipo]" class="form-select form-select-sm formula-tipo-select">
+            <div class="col-md-4">
+                <div class="d-flex align-items-center gap-1">
+                    <label class="form-label fw-bold text-secondary small mb-0"
+                        for="formula_tipo_{{ $index }}">Tipo de fórmula</label>
+                    <button type="button" class="btn btn-link btn-sm p-0 text-secondary formula-type-help-btn"
+                        aria-label="Ver explicación del tipo de fórmula">
+                        <i class="fa-regular fa-circle-question" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <select name="variables[{{ $index }}][formula_tipo]" id="formula_tipo_{{ $index }}"
+                    class="form-select form-select-sm formula-tipo-select"
+                    aria-describedby="formula_tipo_description_{{ $index }}">
                     <option value="division" {{ ($var->formula_tipo ?? '') == 'division' ? 'selected' : '' }}>División (N/D×mult)</option>
                     <option value="tasa_crecimiento" {{ ($var->formula_tipo ?? '') == 'tasa_crecimiento' ? 'selected' : '' }}>Tasa de crecimiento</option>
+                    <option value="tasa_crecimiento_inegi_2025" {{ ($var->formula_tipo ?? '') == 'tasa_crecimiento_inegi_2025' ? 'selected' : '' }}>Tasa de crecimiento INEGI 2025</option>
                     <option value="sumatoria" {{ ($var->formula_tipo ?? '') == 'sumatoria' ? 'selected' : '' }}>Sumatoria de variables</option>
                 </select>
+                <div class="form-text formula-type-description" id="formula_tipo_description_{{ $index }}"
+                    aria-live="polite"></div>
             </div>
         </div>
-        <div class="formula-division-fields row g-2 mt-1" style="display:{{ ($var->formula_tipo ?? 'division') == 'tasa_crecimiento' ? 'none' : '' }};">
+        <div class="formula-division-fields row g-2 mt-1" style="display:{{ in_array(($var->formula_tipo ?? 'division'), ['tasa_crecimiento', 'tasa_crecimiento_inegi_2025', 'sumatoria'], true) ? 'none' : '' }};">
             <div class="col-md-4">
                 <label class="form-label fw-bold text-secondary small">Variable numerador</label>
                 <select name="variables[{{ $index }}][formula_numerador_id]" class="form-select form-select-sm tom-select-variable">
@@ -101,7 +113,7 @@
                 <input type="number" name="variables[{{ $index }}][formula_multiplicador]" class="form-control form-control-sm" value="{{ $var->formula_config['multiplicador'] ?? 100 }}" step="any">
             </div>
         </div>
-        <div class="formula-tasa-fields row g-2 mt-1" style="display:{{ ($var->formula_tipo ?? '') == 'tasa_crecimiento' ? '' : 'none' }};">
+        <div class="formula-tasa-fields row g-2 mt-1" style="display:{{ in_array(($var->formula_tipo ?? ''), ['tasa_crecimiento', 'tasa_crecimiento_inegi_2025'], true) ? '' : 'none' }};">
             <div class="col-md-4">
                 <label class="form-label fw-bold text-secondary small">Variable (universo total)</label>
                 <select name="variables[{{ $index }}][formula_variable_id]" class="form-select form-select-sm tom-select-variable">
@@ -117,7 +129,10 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label fw-bold text-secondary small">Multiplicador</label>
-                <input type="number" name="variables[{{ $index }}][formula_multiplicador]" class="form-control form-control-sm" value="{{ $var->formula_config['multiplicador'] ?? 100 }}" step="any">
+                <input type="number" name="variables[{{ $index }}][formula_multiplicador]" class="form-control form-control-sm formula-tasa-multiplicador" value="{{ $var->formula_config['multiplicador'] ?? 100 }}" step="any" {{ ($var->formula_tipo ?? '') == 'tasa_crecimiento_inegi_2025' ? 'readonly' : '' }}>
+            </div>
+            <div class="col-12 formula-inegi-help" style="display:{{ ($var->formula_tipo ?? '') == 'tasa_crecimiento_inegi_2025' ? '' : 'none' }};">
+                <div class="form-text">Fórmula INEGI: [(Px / P0)^(1 / t) - 1] × 100, donde t es la diferencia entre los años disponibles.</div>
             </div>
         </div>
         <div class="formula-sumatoria-fields row g-2 mt-1" style="display:{{ ($var->formula_tipo ?? '') == 'sumatoria' ? '' : 'none' }};">

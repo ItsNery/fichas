@@ -118,8 +118,9 @@ $currentUrl = url()->current();
                                                             <li>
                                                                 <a href="#" class="indicador-link d-flex align-items-center py-1"
                                                                     data-indicador-id="{{ $indicador->id }}"
-                                                                    data-es-complejo="{{ $indicador->es_complejo ? 'true' : 'false' }}"
-                                                                    data-tipo-dato="{{ $indicador->tipo_dato }}">
+                                                                     data-es-complejo="{{ $indicador->es_complejo ? 'true' : 'false' }}"
+                                                                     data-tipo-dato="{{ $indicador->tipo_dato }}"
+                                                                     data-disponible-estatal="{{ $indicador->disponible_estatal ? 'true' : 'false' }}">
                                                                     <span class="indicator-name">{{ $indicador->nombre_amigable }}</span>
                                                                 </a>
                                                             </li>

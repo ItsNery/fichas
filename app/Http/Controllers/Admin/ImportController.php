@@ -29,7 +29,7 @@ class ImportController extends Controller
             'importDimensiones', 'importTematicas', 'importIndicadores', 'importVariables',
         ]);
         $this->middleware('permission:datos.importar')->only([
-            'validateDatos', 'validateDatos1', 'importDatos', 'importDatosComplejos',
+            'validateDatos', 'validateDatos1', 'importDatos', 'importDatosComplejos', 'importDatosGeograficos',
         ]);
         $this->middleware('permission:instrumentos.importar')->only([
             'importInstrumentos', 'importInstrumentosAsignacion',
@@ -228,6 +228,18 @@ class ImportController extends Controller
                     ['motivo_sin_dato', 'Motivo por el que no hay dato.', 'Texto, ej: "ND", "C", "ND"'],
                 ];
                 break;
+            case 'datos-geograficos':
+                $headings           = ['nivel_geografico', 'clave_geografica', 'variable_tecnico', 'anio', 'valor', 'motivo_sin_dato'];
+                $fileName           = 'plantilla_datos_geograficos.xlsx';
+                $diccionarioDeDatos = [
+                    ['nivel_geografico', 'Nivel de la unidad geográfica registrada.', 'Usar "entidad" para Puebla.'],
+                    ['clave_geografica', 'Clave INEGI de la unidad geográfica.', 'Usar 21 para Puebla.'],
+                    ['variable_tecnico', 'Nombre técnico único de la variable.', 'Obtener del catálogo de Variables.'],
+                    ['anio', 'Año del dato en formato de 4 dígitos.', 'Ej: 2023.'],
+                    ['valor', 'Valor oficial de la entidad. Si no hay dato, dejar en blanco.', 'Ej: 23.45.'],
+                    ['motivo_sin_dato', 'Código del motivo cuando no existe un valor.', 'Ej: ND o C.'],
+                ];
+                break;
             case 'catalogo-instrumentos':
                 $headings           = ['nombre'];
                 $fileName           = 'plantilla_catalogo_instrumentos.xlsx';
@@ -295,6 +307,22 @@ class ImportController extends Controller
 
         return redirect()->route('admin.lotes-datos.show', $lote)
             ->with('success', 'El lote de datos complejos fue validado y enviado a revisión.');
+    }
+
+    public function importDatosGeograficos(Request $request, LoteDatosService $service)
+    {
+        $request->validate(['archivo' => 'required|file|mimes:xlsx,xls,csv']);
+
+        $result = $service->crearBorradorGeografico($request->file('archivo'), auth()->user());
+        if (isset($result['errors'])) {
+            return back()->withErrors(['archivo' => collect($result['errors'])->pluck('error')->implode(' ')]);
+        }
+
+        $lote = $result['lote'];
+        $service->enviarRevision($lote, auth()->user());
+
+        return redirect()->route('admin.lotes-datos.show', $lote)
+            ->with('success', 'El lote de datos estatales fue validado y enviado a revisión.');
     }
 
     // public function descargarPlantilla($tipo)

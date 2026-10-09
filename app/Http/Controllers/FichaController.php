@@ -20,6 +20,7 @@ use App\Services\FichaNarratorService;
 use App\Services\FichaProfilerService;
 use App\Services\IndicadorQueryService;
 use App\Services\MapDataService;
+use App\Services\MunicipalityMapImageService;
 use App\Services\RankingService;
 use App\Services\FichaComposerService;
 
@@ -57,6 +58,16 @@ class FichaController extends Controller
                 $q->where('visible_en_ficha', true)->orderBy('orden')->orderBy('nombre_amigable');
             },
         ])->orderBy('orden')->orderBy('nombre')->get();
+
+        $indicadoresEstatales = app(IndicadorQueryService::class)->getStateAvailableIndicatorIds();
+        foreach ($dimensiones as $dimension) {
+            foreach ($dimension->tematicas as $tematica) {
+                foreach ($tematica->indicadores as $indicador) {
+                    $indicador->disponible_estatal = strtolower(trim((string) $indicador->tipo_dato)) === 'absoluto'
+                        || $indicadoresEstatales->contains($indicador->id);
+                }
+            }
+        }
 
         // Obtenemos los catálogos geográficos
         $municipios     = Municipio::orderBy('nombre', 'asc')->get();
@@ -108,9 +119,6 @@ class FichaController extends Controller
 
         $indicador = Indicador::find($validated['indicador_id']);
         $nivel = $validated['nivel_de_agregacion'];
-        if ($nivel === 'estatal' && strtolower(trim((string) $indicador->tipo_dato)) !== 'absoluto') {
-            abort(422, 'El nivel estatal solo está disponible para indicadores absolutos.');
-        }
         $selection = $queryService->prepareGeographicSelection($nivel, $validated);
 
         if ($nivel === 'estatal' || in_array('estatal', $selection['ids'] ?? [])) {
@@ -542,6 +550,14 @@ class FichaController extends Controller
     public function panoramaMunicipal(Municipio $municipio)
     {
         return view('municipios.panorama_pdf', $this->panoramaData($municipio));
+    }
+
+    public function panoramaMap(Municipio $municipio, MunicipalityMapImageService $mapImageService)
+    {
+        return response($mapImageService->render((string) $municipio->cvegeo), 200, [
+            'Content-Type' => 'image/png',
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
     }
 
     public function exportarPanoramaPDF(Municipio $municipio)
