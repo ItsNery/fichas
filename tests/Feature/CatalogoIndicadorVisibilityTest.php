@@ -68,6 +68,77 @@ class CatalogoIndicadorVisibilityTest extends TestCase
         $this->assertFalse($variable->fresh()->visible_en_ficha);
     }
 
+    public function test_variables_can_be_reordered_within_their_indicator(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('super_admin');
+
+        $dimension = Dimension::create(['nombre' => 'Dimension', 'nombre_tecnico' => 'dimension']);
+        $tematica = Tematica::create([
+            'dimension_id' => $dimension->id,
+            'nombre' => 'Tematica',
+            'nombre_tecnico' => 'tematica',
+        ]);
+        $indicador = Indicador::create([
+            'tematica_id' => $tematica->id,
+            'nombre_amigable' => 'Indicador',
+            'nombre_tecnico' => 'indicador',
+            'tipo_dato' => 'absoluto',
+        ]);
+        $variables = collect(['Primera', 'Segunda', 'Tercera'])->map(function (string $nombre, int $orden) use ($indicador) {
+            return Variable::create([
+                'indicador_id' => $indicador->id,
+                'nombre_amigable' => $nombre,
+                'nombre_tecnico' => str($nombre)->lower(),
+                'orden' => $orden + 1,
+            ]);
+        });
+
+        $this->actingAs($user)
+            ->patchJson(route('admin.catalogos.indicadores.variables.reorder', $indicador), [
+                'variable_ids' => [$variables[2]->id, $variables[0]->id, $variables[1]->id],
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertSame(1, $variables[2]->fresh()->orden);
+        $this->assertSame(2, $variables[0]->fresh()->orden);
+        $this->assertSame(3, $variables[1]->fresh()->orden);
+    }
+
+    public function test_indicators_can_be_reordered_within_their_theme(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('super_admin');
+
+        $dimension = Dimension::create(['nombre' => 'Dimension', 'nombre_tecnico' => 'dimension']);
+        $tematica = Tematica::create([
+            'dimension_id' => $dimension->id,
+            'nombre' => 'Tematica',
+            'nombre_tecnico' => 'tematica',
+        ]);
+        $indicadores = collect(['Primero', 'Segundo', 'Tercero'])->map(function (string $nombre, int $orden) use ($tematica) {
+            return Indicador::create([
+                'tematica_id' => $tematica->id,
+                'nombre_amigable' => $nombre,
+                'nombre_tecnico' => strtolower($nombre),
+                'tipo_dato' => 'absoluto',
+                'orden' => $orden + 1,
+            ]);
+        });
+
+        $this->actingAs($user)
+            ->patchJson(route('admin.catalogos.tematicas.indicadores.reorder', $tematica), [
+                'indicador_ids' => [$indicadores[1]->id, $indicadores[2]->id, $indicadores[0]->id],
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        $this->assertSame(1, $indicadores[1]->fresh()->orden);
+        $this->assertSame(2, $indicadores[2]->fresh()->orden);
+        $this->assertSame(3, $indicadores[0]->fresh()->orden);
+    }
+
     public function test_inegi_growth_formula_is_persisted_with_a_fixed_multiplier(): void
     {
         $user = User::factory()->create();

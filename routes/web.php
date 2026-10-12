@@ -159,6 +159,8 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
         Route::post('/indicadores', [CatalogoController::class, 'storeIndicador'])->name('indicadores.store');
         Route::put('/indicadores/{indicador}', [CatalogoController::class, 'updateIndicador'])->name('indicadores.update');
         Route::delete('/indicadores/{indicador}', [CatalogoController::class, 'destroyIndicador'])->name('indicadores.destroy');
+        Route::patch('/tematicas/{tematica}/indicadores/orden', [CatalogoController::class, 'reorderIndicadores'])->name('tematicas.indicadores.reorder');
+        Route::patch('/indicadores/{indicador}/variables/orden', [CatalogoController::class, 'reorderVariables'])->name('indicadores.variables.reorder');
 
         Route::get('/indicadores/crear', [CatalogoController::class, 'crearIndicador'])->name('indicadores.crear');
         Route::post('/indicadores/crear', [CatalogoController::class, 'guardarIndicador'])->name('indicadores.guardar');

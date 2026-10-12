@@ -3112,6 +3112,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     exportBtn.addEventListener("click", handleExport);
     exportBtnRegions.addEventListener("click", handleExport);
+    if (printBtn) printBtn.addEventListener("click", () => window.print());
+    if (printBtnRegions)
+        printBtnRegions.addEventListener("click", () => window.print());
 
     // --- 8. PREPARAR GRÁFICAS PARA IMPRESIÓN ---
     window.addEventListener("beforeprint", () => {

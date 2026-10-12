@@ -29,6 +29,16 @@
             @cannot('catalogos.crear') #catalog-admin .create-action { display: none !important; } @endcannot
             @cannot('catalogos.editar') #catalog-admin .edit, #catalog-admin .edit-btn { display: none !important; } @endcannot
             @cannot('catalogos.eliminar') #catalog-admin .delete-btn { display: none !important; } @endcannot
+            #catalog-admin .variable-row[draggable="true"] { cursor: grab; }
+            #catalog-admin .indicator-row[draggable="true"] { cursor: grab; }
+            #catalog-admin .variable-row.is-dragging { opacity: .45; }
+            #catalog-admin .indicator-row.is-dragging { opacity: .45; }
+            #catalog-admin .variable-row.is-drag-over { border-top: 2px solid #872341 !important; }
+            #catalog-admin .indicator-row.is-drag-over { border-top: 3px solid #872341 !important; }
+            #catalog-admin .variable-drag-handle { cursor: grab; }
+            #catalog-admin .indicator-drag-handle { cursor: grab; }
+            #catalog-admin .variable-order-badge { min-width: 4.5rem; }
+            #catalog-admin .indicator-order-badge { min-width: 4.5rem; }
         </style>
 
         {{-- BARRA DE ACCIONES SUPERIOR --}}
@@ -181,12 +191,20 @@
                             </div>
 
                             {{-- Cuerpo: Lista de Indicadores --}}
-                            <div class="p-0">
+                            <div class="p-0" data-indicator-sortable
+                                data-reorder-url="{{ route('admin.catalogos.tematicas.indicadores.reorder', $tematica) }}">
                                 @forelse ($tematica->indicadores as $indicador)
-                                <div class="indicator-row p-3">
+                                <div class="indicator-row p-3" data-indicator-id="{{ $indicador->id }}"
+                                    @can('catalogos.editar') draggable="true" @endcan>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div class="d-flex align-items-center flex-grow-1">
-                                            <span class="id-badge">#{{ $indicador->id }}</span>
+                                            @can('catalogos.editar')
+                                            <button type="button" class="btn btn-link text-muted p-0 me-2 indicator-drag-handle"
+                                                aria-label="Arrastrar {{ $indicador->nombre_amigable }}" title="Arrastrar para reordenar">
+                                                <i class="fa-solid fa-grip-vertical"></i>
+                                            </button>
+                                            @endcan
+                                            <span class="badge bg-light text-muted border me-2 indicator-order-badge" data-indicator-order>Orden {{ $loop->iteration }}</span>
                                             <div>
                                                 <span class="fw-medium text-dark">{{ $indicador->nombre_amigable }}</span>
                                                 @if($indicador->es_complejo)
@@ -217,9 +235,15 @@
 
                                     {{-- VARIABLES (Colapsable) --}}
                                     <div class="collapse mt-3" id="variables-for-indicador-{{ $indicador->id }}">
-                                        <div class="variables-container p-3 rounded-3">
+                                        <div class="variables-container p-3 rounded-3" data-variable-sortable
+                                            data-reorder-url="{{ route('admin.catalogos.indicadores.variables.reorder', $indicador) }}">
                                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                                <small class="text-uppercase fw-bold text-muted" style="font-size: 0.7rem; letter-spacing: 1px;">Variables Asociadas</small>
+                                                <div>
+                                                    <small class="text-uppercase fw-bold text-muted" style="font-size: 0.7rem; letter-spacing: 1px;">Variables asociadas</small>
+                                                    @can('catalogos.editar')
+                                                    <small class="d-block text-muted">Arrastra para cambiar el orden.</small>
+                                                    @endcan
+                                                </div>
                                                 <button class="btn btn-sm btn-outline-success py-0 create-action" style="font-size: 0.8rem;"
                                                     data-bs-toggle="modal" data-bs-target="#catalogModal"
                                                     data-tipo="Variable" data-template="variable"
@@ -230,9 +254,17 @@
                                             </div>
 
                                             @forelse ($indicador->variables as $variable)
-                                            <div class="d-flex justify-content-between align-items-center py-2 border-bottom border-light">
+                                            <div class="variable-row d-flex justify-content-between align-items-center py-2 border-bottom border-light"
+                                                data-variable-id="{{ $variable->id }}"
+                                                @can('catalogos.editar') draggable="true" @endcan>
                                                 <div class="small">
-                                                    <span class="text-muted me-2">#{{ $variable->id }}</span>
+                                                    @can('catalogos.editar')
+                                                    <button type="button" class="btn btn-link text-muted p-0 me-2 variable-drag-handle"
+                                                        aria-label="Arrastrar {{ $variable->nombre_amigable }}" title="Arrastrar para reordenar">
+                                                        <i class="fa-solid fa-grip-vertical"></i>
+                                                    </button>
+                                                    @endcan
+                                                    <span class="badge bg-light text-muted border me-2 variable-order-badge" data-variable-order>Orden {{ $loop->iteration }}</span>
                                                     <span class="fw-bold text-dark">{{ $variable->nombre_amigable }}</span>
                                                     <span class="text-muted fst-italic ms-1">({{ $variable->nombre_tecnico }})</span>
                                                     @if($variable->es_kpi) <i class="fa-solid fa-star text-warning ms-1" title="KPI"></i> @endif
@@ -765,6 +797,119 @@
                         }
                     });
                 }
+            });
+
+            // --- ORDENAR INDICADORES Y VARIABLES ---
+            function makeSortable(list, config) {
+                let draggedRow = null;
+                let originalOrder = [];
+                let dropped = false;
+
+                const rows = () => Array.from(list.querySelectorAll(config.rowSelector));
+
+                const updateOrderBadges = () => {
+                    rows().forEach((row, index) => {
+                        row.querySelector(config.orderSelector).textContent = `Orden ${index + 1}`;
+                    });
+                };
+
+                const restoreOrder = () => {
+                    originalOrder.forEach(id => {
+                        const row = list.querySelector(`[data-${config.itemName}-id="${id}"]`);
+                        if (row) list.appendChild(row);
+                    });
+                    updateOrderBadges();
+                };
+
+                const saveOrder = async () => {
+                    const itemIds = rows().map(row => Number(row.dataset[`${config.itemName}Id`]));
+                    list.setAttribute('aria-busy', 'true');
+
+                    try {
+                        const response = await fetch(list.dataset.reorderUrl, {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({ [config.requestKey]: itemIds })
+                        });
+
+                        if (!response.ok) {
+                            const data = await response.json();
+                            throw new Error(data.message || 'No se pudo guardar el orden.');
+                        }
+
+                        updateOrderBadges();
+                    } catch (error) {
+                        restoreOrder();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'No se guardó el orden',
+                            text: error.message,
+                            confirmButtonColor: '#5f1b2d'
+                        });
+                    } finally {
+                        list.removeAttribute('aria-busy');
+                    }
+                };
+
+                list.addEventListener('dragstart', event => {
+                    const row = event.target.closest(config.rowSelector);
+                    const draggableRow = event.target.closest('[draggable="true"]');
+                    if (!row || row.parentElement !== list || draggableRow !== row) return;
+
+                    draggedRow = row;
+                    originalOrder = rows().map(item => item.dataset[`${config.itemName}Id`]);
+                    dropped = false;
+                    row.classList.add('is-dragging');
+                    event.dataTransfer.effectAllowed = 'move';
+                });
+
+                list.addEventListener('dragover', event => {
+                    if (!draggedRow) return;
+                    event.preventDefault();
+
+                    const targetRow = event.target.closest(config.rowSelector);
+                    if (!targetRow || targetRow.parentElement !== list || targetRow === draggedRow) return;
+
+                    rows().forEach(row => row.classList.remove('is-drag-over'));
+                    targetRow.classList.add('is-drag-over');
+                    const insertAfter = event.clientY > targetRow.getBoundingClientRect().top + (targetRow.offsetHeight / 2);
+                    list.insertBefore(draggedRow, insertAfter ? targetRow.nextSibling : targetRow);
+                });
+
+                list.addEventListener('drop', event => {
+                    if (!draggedRow) return;
+                    event.preventDefault();
+                    dropped = true;
+                    saveOrder();
+                });
+
+                list.addEventListener('dragend', () => {
+                    if (!dropped) restoreOrder();
+                    rows().forEach(row => row.classList.remove('is-dragging', 'is-drag-over'));
+                    draggedRow = null;
+                });
+            }
+
+            document.querySelectorAll('[data-variable-sortable]').forEach(list => {
+                makeSortable(list, {
+                    itemName: 'variable',
+                    requestKey: 'variable_ids',
+                    rowSelector: '.variable-row',
+                    orderSelector: '[data-variable-order]'
+                });
+            });
+
+            document.querySelectorAll('[data-indicator-sortable]').forEach(list => {
+                makeSortable(list, {
+                    itemName: 'indicator',
+                    requestKey: 'indicador_ids',
+                    rowSelector: '.indicator-row',
+                    orderSelector: '[data-indicator-order]'
+                });
             });
 
             // --- BUSCADOR GLOBAL ---

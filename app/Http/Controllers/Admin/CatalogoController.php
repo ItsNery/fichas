@@ -16,6 +16,7 @@ use App\Models\Tematica;
 use App\Models\Variable;
 use App\Services\IndicadorConstruidoService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -32,7 +33,7 @@ class CatalogoController extends Controller
             'storeDimension', 'storeTematica', 'storeIndicador', 'storeVariable', 'guardarIndicador', 'generarConstruido',
         ]);
         $this->middleware('permission:catalogos.editar')->only([
-            'updateDimension', 'updateTematica', 'updateIndicador', 'updateVariable', 'actualizarIndicador', 'regenerarConstruido',
+            'updateDimension', 'updateTematica', 'updateIndicador', 'updateVariable', 'actualizarIndicador', 'reorderIndicadores', 'reorderVariables', 'regenerarConstruido',
         ]);
         $this->middleware('permission:catalogos.eliminar')->only([
             'destroyDimension', 'destroyTematica', 'destroyIndicador', 'destroyVariable',
@@ -538,6 +539,62 @@ class CatalogoController extends Controller
         $variable->update($data);
 
         return response()->json($variable);
+    }
+
+    public function reorderIndicadores(Request $request, Tematica $tematica)
+    {
+        $data = $request->validate([
+            'indicador_ids' => ['required', 'array'],
+            'indicador_ids.*' => ['required', 'integer', 'distinct'],
+        ]);
+
+        $indicadorIds = $data['indicador_ids'];
+        $tematicaIndicadorIds = $tematica->indicadores()
+            ->whereIn('id', $indicadorIds)
+            ->pluck('id')
+            ->all();
+
+        if (count($indicadorIds) !== $tematica->indicadores()->count() || count($indicadorIds) !== count($tematicaIndicadorIds)) {
+            return response()->json([
+                'message' => 'La lista debe contener todos los indicadores de la temática seleccionada.',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($indicadorIds): void {
+            foreach ($indicadorIds as $position => $indicadorId) {
+                Indicador::whereKey($indicadorId)->update(['orden' => $position + 1]);
+            }
+        });
+
+        return response()->json(['success' => true]);
+    }
+
+    public function reorderVariables(Request $request, Indicador $indicador)
+    {
+        $data = $request->validate([
+            'variable_ids' => ['required', 'array'],
+            'variable_ids.*' => ['required', 'integer', 'distinct'],
+        ]);
+
+        $variableIds = $data['variable_ids'];
+        $indicatorVariableIds = $indicador->variables()
+            ->whereIn('id', $variableIds)
+            ->pluck('id')
+            ->all();
+
+        if (count($variableIds) !== $indicador->variables()->count() || count($variableIds) !== count($indicatorVariableIds)) {
+            return response()->json([
+                'message' => 'La lista debe contener todas las variables del indicador seleccionado.',
+            ], 422);
+        }
+
+        DB::transaction(function () use ($variableIds): void {
+            foreach ($variableIds as $position => $variableId) {
+                Variable::whereKey($variableId)->update(['orden' => $position + 1]);
+            }
+        });
+
+        return response()->json(['success' => true]);
     }
 
     public function destroyVariable(Variable $variable)

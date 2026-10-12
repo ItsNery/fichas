@@ -4,28 +4,12 @@
 @endsection
 
 @section('content')
-<section class="banner-directorio">
-    <div class="container">
-        <h1 class="banner-directorio__titulo">Directorio de municipios</h1>
-        <p class="banner-directorio__descripcion">
-            Explora las fichas estadísticas de los 217 municipios del estado de Puebla.
-        </p>
-        <div class="container d-flex justify-content-center align-items-center">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item ">
-                        <a href="{{ url('/') }}" class="text-white">
-                            Inicio
-                        </a>
-                    </li>
-                    <li class="breadcrumb-item text-white active" aria-current="page">
-                        Directorio de municipios
-                    </li>
-                </ol>
-            </nav>
-        </div>
-    </div>
-</section>
+<div class="container">
+    <x-public-section-header
+        title="Directorio de municipios"
+        description="Explora las fichas estadísticas de los 217 municipios del estado de Puebla."
+        eyebrow="Explora el territorio" />
+</div>
 
 <section class="contenedor-directorio container">
     <form class="directorio-filtros" id="directorio-filtros" role="search" aria-label="Buscar y filtrar municipios">

@@ -29,13 +29,10 @@ data, gobierno abierto')
 
 @section('content')
 <div class="container my-5">
-    {{-- Encabezado --}}
-    <div class="text-center border-bottom pb-4 mb-5">
-        <h1 class="display-4 fw-bold">Datos Abiertos</h1>
-        <p class="lead text-muted">
-            Consulta y descarga los catálogos que estructuran la información del portal en formatos abiertos.
-        </p>
-    </div>
+    <x-public-section-header
+        title="Datos Abiertos"
+        description="Consulta y descarga los catálogos que estructuran la información del portal en formatos abiertos."
+        eyebrow="Acceso y transparencia" />
 
     {{-- Grid de Tarjetas de Descarga --}}
     <div class="row g-4 d-flex justify-content-center">
@@ -239,12 +236,11 @@ data, gobierno abierto')
 
 {{-- Indicadores de Coyuntura (SEI) --}}
 <div class="container my-5">
-    <div class="text-center border-bottom pb-4 mb-5">
-        <h1 class="display-4 fw-bold">Indicadores de Coyuntura</h1>
-        <p class="lead text-muted">
-            Descarga los datos públicos de los indicadores de coyuntura del Sistema Estatal de Información.
-        </p>
-    </div>
+    <x-public-section-heading
+        title="Indicadores de coyuntura"
+        description="Descarga los datos públicos de los indicadores de coyuntura del Sistema Estatal de Información."
+        eyebrow="Series públicas"
+        center />
 
     <div class="row g-4 justify-content-center">
         <div class="col-md-6 col-lg-4">
@@ -267,13 +263,11 @@ data, gobierno abierto')
 </div>
 
 <div class="container my-5">
-    {{-- Encabezado --}}
-    <div class="text-center border-bottom pb-4 mb-5">
-        <h1 class="display-4 fw-bold">Acceso a Datos Abiertos vía API</h1>
-        <p class="lead text-muted">
-            Utiliza nuestro endpoint público para realizar consultas personalizadas y obtener datos en formato JSON.
-        </p>
-    </div>
+    <x-public-section-heading
+        title="Acceso a datos abiertos vía API"
+        description="Utiliza nuestro endpoint público para realizar consultas personalizadas y obtener datos en formato JSON."
+        eyebrow="Integración"
+        center />
 
     {{-- Tarjeta de Información General --}}
     <div class="card shadow-sm mb-4">
