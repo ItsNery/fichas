@@ -36,7 +36,7 @@ class LoteDatosController extends Controller
         $filas = match ($lote->tipo) {
             'datos_complejos' => $lote->filasComplejas()
                 ->with(['municipio', 'indicador'])->orderBy('fila_origen')->paginate(50),
-            'datos_geograficos' => $lote->filasGeograficas()
+            'datos_geograficos', 'dato_geografico_manual' => $lote->filasGeograficas()
                 ->with(['unidadGeografica', 'variable.indicador', 'motivoSinDato'])->orderBy('fila_origen')->paginate(50),
             default => $lote->filas()
                 ->with(['municipio', 'variable.indicador', 'motivoSinDato'])->orderBy('fila_origen')->paginate(50),

@@ -60,7 +60,7 @@
     <div class="card-panel mb-4">
         <div class="card-header-simple d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h5 class="mb-0 text-vino fw-bold">
-                <i class="fa-solid {{ $lote->tipo === 'dato_historico_manual' ? 'fa-pen-to-square' : 'fa-file-excel' }} mx-2 text-dorado"></i>{{ $lote->archivo_original }}
+                <i class="fa-solid {{ in_array($lote->tipo, ['dato_historico_manual', 'dato_geografico_manual']) ? 'fa-pen-to-square' : 'fa-file-excel' }} mx-2 text-dorado"></i>{{ $lote->archivo_original }}
             </h5>
             <a href="{{ route('admin.lotes-datos.index') }}" class="btn btn-outline-secondary btn-sm mx-2">
                 <i class="fa-solid fa-arrow-left me-1"></i>Volver
@@ -152,7 +152,7 @@
                             </tr>
                         @endforeach
                     </tbody>
-                    @elseif($lote->tipo === 'datos_geograficos')
+                    @elseif(in_array($lote->tipo, ['datos_geograficos', 'dato_geografico_manual']))
                     <thead><tr><th>Fila</th><th>Geografía</th><th>Variable</th><th>Año</th><th class="text-end">Valor</th><th class="text-center">Acción</th></tr></thead>
                     <tbody>
                         @foreach($filas as $fila)
@@ -163,7 +163,7 @@
                                 <td>{{ $fila->anio }}</td>
                                 <td class="text-end fw-bold">{{ $fila->motivoSinDato?->codigo ?? number_format((float) $fila->valor, 4) }}</td>
                                 <td class="text-center">
-                                    <span class="badge bg-{{ $fila->accion === 'insertar' ? 'success' : 'warning' }}">{{ ucfirst($fila->accion) }}</span>
+                                    <span class="badge bg-{{ $fila->accion === 'insertar' ? 'success' : ($fila->accion === 'eliminar' ? 'danger' : 'warning') }}">{{ ucfirst($fila->accion) }}</span>
                                 </td>
                             </tr>
                         @endforeach

@@ -1,283 +1,135 @@
 <x-admin-layout>
-    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     @section('title', 'Gestión de Datos Históricos')
 
-    {{-- Componente de Encabezado --}}
-    <x-page-header
-        title="Gestión de Datos Históricos"
-        icon="fa-solid fa-database" />
+    @php($isTerritorial = $mode === 'territorial')
+    <x-page-header title="Gestión de Datos Históricos" icon="fa-solid fa-database" />
 
     <div class="container py-4">
-
         <div class="card-panel">
             <div class="card-body p-4">
+                <div class="d-flex flex-wrap gap-2 mb-4" role="group" aria-label="Tipo de datos">
+                    <a href="{{ route('admin.datos.index') }}" class="btn {{ $isTerritorial ? 'btn-outline-secondary' : 'btn-custom-primary' }}">
+                        <i class="fa-solid fa-building me-2"></i>Datos municipales
+                    </a>
+                    <a href="{{ route('admin.datos.index', ['mode' => 'territorial']) }}" class="btn {{ $isTerritorial ? 'btn-custom-primary' : 'btn-outline-secondary' }}">
+                        <i class="fa-solid fa-map-location-dot me-2"></i>Datos territoriales
+                    </a>
+                </div>
 
-                {{-- BARRA DE FILTROS --}}
                 <div class="bg-light rounded-3 p-3 mb-4 border">
-                    <form method="GET" action="{{ route('admin.datos.index') }}" class="row g-3 align-items-center">
-
-                        <div class="col-12 mb-2">
-                            <h6 class="text-uppercase text-muted small fw-bold ls-1 mb-0">
-                                <i class="fa-solid fa-filter me-1 text-dorado"></i> Filtros de Búsqueda
-                            </h6>
+                    <form method="GET" action="{{ route('admin.datos.index') }}" class="row g-3 align-items-end">
+                        <input type="hidden" name="mode" value="{{ $mode }}">
+                        <div class="col-12">
+                            <h6 class="text-uppercase text-muted small fw-bold mb-0"><i class="fa-solid fa-filter me-1 text-dorado"></i>Filtros de búsqueda</h6>
                         </div>
-
-                        {{-- Filtro Municipio (Con Tom Select) --}}
                         <div class="col-md-5">
-                            <div class="input-group shadow-sm">
-                                <span class="input-group-text bg-white border-end-0 text-muted">
-                                    <i class="fa-solid fa-map-location-dot"></i>
-                                </span>
-                                {{-- OJO: Quitamos la clase form-select de Bootstrap para que Tom Select tome control total sin conflictos CSS --}}
-                                <select id="select-municipio" name="municipio_id" placeholder="Buscar municipio..." autocomplete="off">
-                                    {{-- Esta opción vacía es CRUCIAL para el "Todos" --}}
-                                    <option value="">Todos los municipios</option>
-                                    @foreach ($municipios as $municipio)
-                                    <option value="{{ $municipio->id }}" {{ request('municipio_id') == $municipio->id ? 'selected' : '' }}>
-                                        {{ $municipio->nombre }}
+                            <label for="select-territorio" class="form-label small fw-bold text-secondary">{{ $isTerritorial ? 'Territorio' : 'Municipio' }}</label>
+                            <select id="select-territorio" class="form-select" name="{{ $isTerritorial ? 'unidad_geografica_id' : 'municipio_id' }}">
+                                <option value="">{{ $isTerritorial ? 'Todos los territorios' : 'Todos los municipios' }}</option>
+                                @foreach($isTerritorial ? $territorios : $municipios as $territorio)
+                                    <option value="{{ $territorio->id }}" @selected(request($isTerritorial ? 'unidad_geografica_id' : 'municipio_id') == $territorio->id)>
+                                        {{ $territorio->nombre }}@if($isTerritorial) ({{ ucfirst($territorio->nivel) }})@endif
                                     </option>
-                                    @endforeach
-                                </select>
-                            </div>
+                                @endforeach
+                            </select>
                         </div>
-
-                        {{-- Filtro Variable (Con Tom Select) --}}
                         <div class="col-md-5">
-                            <div class="input-group shadow-sm">
-                                <span class="input-group-text bg-white border-end-0 text-muted">
-                                    <i class="fa-solid fa-tags"></i>
-                                </span>
-                                <select id="select-variable" name="variable_id" placeholder="Buscar variable..." autocomplete="off">
-                                    <option value="">Todas las variables</option>
-                                    @foreach ($variables as $variable)
-                                    <option value="{{ $variable->id }}" {{ request('variable_id') == $variable->id ? 'selected' : '' }}>
-                                        {{ $variable->nombre_amigable }}
-                                    </option>
-                                    @endforeach
-                                </select>
-                            </div>
+                            <label for="select-variable" class="form-label small fw-bold text-secondary">Variable</label>
+                            <select id="select-variable" class="form-select" name="variable_id">
+                                <option value="">Todas las variables</option>
+                                @foreach ($variables as $variable)
+                                    <option value="{{ $variable->id }}" @selected(request('variable_id') == $variable->id)>{{ $variable->nombre_amigable }}</option>
+                                @endforeach
+                            </select>
                         </div>
-
-                        <div class="col-md-2">
-                            <button type="submit" class="btn btn-custom-primary w-100 shadow-sm" style="min-height: calc(1.5em + 1rem + 2px);">
-                                <i class="fa-solid fa-magnifying-glass me-2"></i>Filtrar
-                            </button>
-                        </div>
+                        <div class="col-md-2"><button type="submit" class="btn btn-custom-primary w-100"><i class="fa-solid fa-magnifying-glass me-2"></i>Filtrar</button></div>
                     </form>
                 </div>
 
-                {{-- TABLA DE DATOS --}}
                 <div class="table-responsive">
                     <table class="table table-custom w-100 align-middle">
-                        <thead>
-                            <tr>
-                                <th>Municipio</th>
-                                <th>Variable</th>
-                                <th class="text-center">Año</th>
-                                <th class="text-end">Valor</th>
-                                @can('datos.editar')
-                                <th class="text-center">Acciones</th>
-                                @endcan
-                            </tr>
-                        </thead>
+                        <thead><tr>
+                            <th>{{ $isTerritorial ? 'Territorio' : 'Municipio' }}</th><th>Variable</th><th class="text-center">Año</th><th class="text-end">Valor</th>
+                            @canany(['datos.editar', 'datos.eliminar'])<th class="text-center">Acciones</th>@endcanany
+                        </tr></thead>
                         <tbody>
                             @forelse($datos as $dato)
-                            <tr id="dato-row-{{ $dato->id }}">
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="rounded-circle bg-light text-muted d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
-                                            <i class="fa-solid fa-location-dot small"></i>
-                                        </div>
-                                        <span class="fw-medium text-secondary">{{ $dato->municipio->nombre }}</span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <span class="text-vino fw-bold">{{ $dato->variable->nombre_amigable }}</span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge bg-light text-dark border fw-normal px-3">{{ $dato->anio }}</span>
-                                </td>
-                                <td class="valor-col text-end fw-bold text-dark fs-6">
-                                    {{ $dato->motivoSinDato?->codigo ?? number_format((float) $dato->valor, 2) }}
-                                </td>
-                                @can('datos.editar')
-                                <td class="text-center">
-                                    {{-- Botón Cuadrado Dorado (Estilo Edit) --}}
-                                    <button type="button" class="btn-icon-square edit edit-btn"
-                                        data-bs-toggle="modal" data-bs-target="#editModal"
-                                        data-update-url="{{ route('admin.datos.update', $dato) }}"
-                                        data-info-text="{{ $dato->variable->nombre_amigable }} de {{ $dato->municipio->nombre }} ({{ $dato->anio }})"
-                                        data-current-value="{{ rtrim(rtrim(number_format($dato->valor, 8, '.', ''), '0'), '.') }}">
-                                        <i class="fa-regular fa-pen-to-square" data-bs-toggle="tooltip" title="Editar valor"></i>
-                                    </button>
-                                </td>
-                                @endcan
-                            </tr>
+                                @php($geografia = $isTerritorial ? $dato->unidadGeografica : $dato->municipio)
+                                <tr id="dato-row-{{ $dato->id }}">
+                                    <td><span class="fw-medium text-secondary">{{ $geografia?->nombre }}@if($isTerritorial)<small class="text-muted"> ({{ $geografia?->nivel }})</small>@endif</span></td>
+                                    <td><span class="text-vino fw-bold">{{ $dato->variable?->nombre_amigable }}</span></td>
+                                    <td class="text-center"><span class="badge bg-light text-dark border fw-normal px-3">{{ $dato->anio }}</span></td>
+                                    <td class="text-end fw-bold">{{ $dato->motivoSinDato?->codigo ?? number_format((float) $dato->valor, 2) }}</td>
+                                    @canany(['datos.editar', 'datos.eliminar'])
+                                        <td class="text-center text-nowrap">
+                                            @can('datos.editar')
+                                                <button type="button" class="btn-icon-square edit-btn" data-bs-toggle="modal" data-bs-target="#editModal"
+                                                    data-update-url="{{ $isTerritorial ? route('admin.datos.territorial.update', $dato) : route('admin.datos.update', $dato) }}"
+                                                    data-info-text="{{ $dato->variable?->nombre_amigable }} de {{ $geografia?->nombre }} ({{ $dato->anio }})"
+                                                    data-current-value="{{ rtrim(rtrim(number_format($dato->valor, 8, '.', ''), '0'), '.') }}"><i class="fa-regular fa-pen-to-square" title="Editar valor"></i></button>
+                                            @endcan
+                                            @if($isTerritorial)
+                                                @can('datos.eliminar')
+                                                    <button type="button" class="btn btn-sm btn-outline-danger delete-btn ms-1" data-delete-url="{{ route('admin.datos.territorial.destroy', $dato) }}" data-info-text="{{ $dato->variable?->nombre_amigable }} de {{ $geografia?->nombre }} ({{ $dato->anio }})"><i class="fa-regular fa-trash-can" title="Solicitar eliminación"></i></button>
+                                                @endcan
+                                            @endcan
+                                        </td>
+                                    @endcanany
+                                </tr>
                             @empty
-                            <tr>
-                                <td colspan="{{ auth()->user()->can('datos.editar') ? 5 : 4 }}" class="text-center py-5">
-                                    <div class="opacity-50 mb-3">
-                                        <i class="fa-solid fa-folder-open fa-3x text-muted"></i>
-                                    </div>
-                                    <h5 class="text-muted small fw-bold">No se encontraron registros</h5>
-                                    <p class="text-muted small mb-0">Intenta ajustar los filtros de búsqueda.</p>
-                                </td>
-                            </tr>
+                                <tr><td colspan="5" class="text-center py-5 text-muted">No se encontraron registros. Intenta ajustar los filtros de búsqueda.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
-
-                {{-- Paginación --}}
-                <div class="mt-4 d-flex justify-content-center">
-                    {{ $datos->links() }}
-                </div>
+                <div class="mt-4 d-flex justify-content-center">{{ $datos->links() }}</div>
             </div>
         </div>
     </div>
 
-    {{-- MODAL DE EDICIÓN (Estilizado) --}}
     <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-white border-bottom">
-                    <h5 class="modal-title fw-bold text-vino" id="editModalLabel">
-                        <i class="fa-solid fa-pen-to-square me-2 text-dorado"></i>Proponer Edición
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="editForm" method="POST" autocomplete="off">
-                    @csrf
-                    @method('PUT')
-                    <div class="modal-body p-4">
-                        <div class="alert alert-light border mb-4 d-flex">
-                            <i class="fa-solid fa-circle-info text-dorado mt-1 me-2"></i>
-                            <span id="modal-info-text" class="text-muted small"></span>
-                        </div>
-                        <div class="mb-2">
-                            <label for="modal-valor" class="form-label fw-bold text-secondary">Nuevo Valor</label>
-                            <div class="input-group input-group-lg">
-                                <span class="input-group-text bg-light text-muted">#</span>
-                                <input type="text"
-                                    inputmode="decimal"
-                                    pattern="[0-9]*[.,]?[0-9]*"
-                                    class="form-control fw-bold text-vino border-start-0 ps-0"
-                                    id="modal-valor"
-                                    name="valor"
-                                    required>
-                            </div>
-                            <div class="invalid-feedback"></div>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-0 bg-light">
-                        <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-custom-primary px-4">
-                            <i class="fa-solid fa-paper-plane me-2"></i>Enviar a revisión
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+        <div class="modal-dialog modal-dialog-centered"><div class="modal-content border-0 shadow">
+            <div class="modal-header"><h5 class="modal-title fw-bold text-vino" id="editModalLabel"><i class="fa-solid fa-pen-to-square me-2 text-dorado"></i>Proponer edición</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+            <form id="editForm" method="POST" autocomplete="off">@csrf @method('PUT')
+                <div class="modal-body p-4"><div class="alert alert-light border small" id="modal-info-text"></div><label for="modal-valor" class="form-label fw-bold">Nuevo valor</label><input type="text" inputmode="decimal" class="form-control" id="modal-valor" name="valor" required><div class="invalid-feedback"></div></div>
+                <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-custom-primary"><i class="fa-solid fa-paper-plane me-2"></i>Enviar a revisión</button></div>
+            </form>
+        </div></div>
     </div>
 
-    {{-- SCRIPTS (Tu lógica AJAX original + Tooltips) --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Inicializar Tooltips de Bootstrap
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-            var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl)
-            });
+        document.addEventListener('DOMContentLoaded', () => {
+            const config = { create: false, allowEmptyOption: true, plugins: ['clear_button'], sortField: { field: 'text', direction: 'asc' } };
+            new TomSelect('#select-territorio', config);
+            new TomSelect('#select-variable', config);
 
-            // Referencias del Modal
-            const editModalEl = document.getElementById('editModal');
-            const editModal = new bootstrap.Modal(editModalEl);
             const editForm = document.getElementById('editForm');
-            const modalInfoText = document.getElementById('modal-info-text');
-            const modalValorInput = document.getElementById('modal-valor');
-
-            // 1. Llenar el modal
-            document.querySelectorAll('.edit-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    editForm.action = this.dataset.updateUrl;
-                    modalInfoText.textContent = this.dataset.infoText;
-                    modalValorInput.value = this.dataset.currentValue;
-                    modalValorInput.classList.remove('is-invalid');
+            const modal = new bootstrap.Modal(document.getElementById('editModal'));
+            const value = document.getElementById('modal-valor');
+            document.querySelectorAll('.edit-btn').forEach(button => button.addEventListener('click', () => {
+                editForm.action = button.dataset.updateUrl;
+                document.getElementById('modal-info-text').textContent = button.dataset.infoText;
+                value.value = button.dataset.currentValue;
+                value.classList.remove('is-invalid');
+            }));
+            editForm.addEventListener('submit', event => {
+                event.preventDefault();
+                fetch(editForm.action, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }, body: JSON.stringify({ _method: 'PUT', valor: value.value.replace(',', '.') }) })
+                    .then(response => response.ok ? response.json() : response.json().then(Promise.reject.bind(Promise)))
+                    .then(data => { modal.hide(); Swal.fire({ icon: 'success', title: 'Enviado a revisión', html: `${data.success}<br><a href="${data.detail_url}" class="fw-bold">Ver lote #${data.lote_id}</a>`, confirmButtonColor: '#5f1b2d' }); })
+                    .catch(error => { value.classList.toggle('is-invalid', Boolean(error.errors?.valor)); if (error.errors?.valor) value.nextElementSibling.textContent = error.errors.valor[0]; });
+            });
+            document.querySelectorAll('.delete-btn').forEach(button => button.addEventListener('click', () => {
+                Swal.fire({ icon: 'warning', title: '¿Solicitar eliminación?', text: `El dato seguirá publicado hasta que se apruebe el lote de revisión.`, showCancelButton: true, confirmButtonText: 'Enviar a revisión', cancelButtonText: 'Cancelar', confirmButtonColor: '#af1731' }).then(result => {
+                    if (!result.isConfirmed) return;
+                    fetch(button.dataset.deleteUrl, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } })
+                        .then(response => response.ok ? response.json() : Promise.reject())
+                        .then(data => Swal.fire({ icon: 'success', title: 'Enviado a revisión', html: `${data.success}<br><a href="${data.detail_url}" class="fw-bold">Ver lote #${data.lote_id}</a>`, confirmButtonColor: '#5f1b2d' }))
+                        .catch(() => Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo crear la solicitud de eliminación.', confirmButtonColor: '#af1731' }));
                 });
-            });
-
-            // 2. AJAX Submit
-            editForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                let valorLimpio = modalValorInput.value.replace(',', '.');
-                fetch(this.action, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            _method: 'PUT',
-                            valor: valorLimpio
-                        })
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            return response.json().then(err => Promise.reject(err));
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        editModal.hide();
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Enviado a revisión',
-                            html: `${data.success}<br><a href="${data.detail_url}" class="fw-bold">Ver lote #${data.lote_id}</a>`,
-                            showConfirmButton: true,
-                            confirmButtonColor: '#5f1b2d'
-                        });
-                    })
-                    .catch(errorData => {
-                        if (errorData.errors && errorData.errors.valor) {
-                            modalValorInput.classList.add('is-invalid');
-                            modalValorInput.nextElementSibling.textContent = errorData.errors.valor[0];
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: 'No se pudo actualizar el dato.',
-                                confirmButtonColor: '#af1731'
-                            });
-                        }
-                    });
-            });
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-
-            // Configuración Común para Tom Select
-            const tomSelectConfig = {
-                create: false, // No permitir crear nuevos items
-                sortField: {
-                    field: "text",
-                    direction: "asc"
-                },
-                allowEmptyOption: true, // ¡IMPORTANTE! Permite seleccionar el value="" (Todos)
-                plugins: ['clear_button'], // Opcional: añade una 'x' para limpiar rápido
-            };
-
-            // Inicializar Municipio
-            if (document.getElementById('select-municipio')) {
-                new TomSelect('#select-municipio', tomSelectConfig);
-            }
-
-            // Inicializar Variable
-            if (document.getElementById('select-variable')) {
-                new TomSelect('#select-variable', tomSelectConfig);
-            }
+            }));
         });
     </script>
-
 </x-admin-layout>

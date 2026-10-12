@@ -1,64 +1,76 @@
-<div class="variable-card border rounded p-3 mb-3 bg-white" data-index="{{ $index }}">
+<div class="variable-card border rounded-3 p-3 p-md-4 mb-3 bg-white shadow-sm" data-index="{{ $index }}">
     <input type="hidden" name="variables[{{ $index }}][id]" value="{{ $var->id ?? '' }}">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <span class="badge bg-secondary">#<span class="var-display-index">{{ is_numeric($index) ? $index + 1 : '__DISPLAY_INDEX__' }}</span></span>
-        <button type="button" class="btn btn-sm btn-outline-danger remove-variable-btn"><i class="fa-solid fa-trash"></i></button>
+    <div class="d-flex justify-content-between align-items-center gap-3 pb-3 mb-3 border-bottom">
+        <div class="d-flex align-items-center gap-2">
+            <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-light text-vino fw-bold small" style="width:2rem; height:2rem;">
+                <span class="var-display-index">{{ is_numeric($index) ? $index + 1 : '__DISPLAY_INDEX__' }}</span>
+            </span>
+            <div>
+                <h6 class="mb-0 fw-bold text-dark">Variable <span class="var-display-index">{{ is_numeric($index) ? $index + 1 : '__DISPLAY_INDEX__' }}</span></h6>
+                <span class="small text-muted">Configuración del valor</span>
+            </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-danger remove-variable-btn" title="Eliminar variable">
+            <i class="fa-solid fa-trash me-1"></i><span class="d-none d-sm-inline">Eliminar</span>
+        </button>
     </div>
-    <div class="row g-2">
-        <div class="col-md-3">
+    <div class="row g-3">
+        <div class="col-md-5">
             <label class="form-label fw-bold text-secondary small">Nombre Amigable</label>
             <input type="text" name="variables[{{ $index }}][nombre_amigable]" class="form-control form-control-sm var-nombre-amigable" value="{{ $var->nombre_amigable ?? '' }}">
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <label class="form-label fw-bold text-secondary small">Nombre Técnico</label>
             <input type="text" name="variables[{{ $index }}][nombre_tecnico]" class="form-control form-control-sm font-monospace var-nombre-tecnico" value="{{ $var->nombre_tecnico ?? '' }}" data-auto-gen="true">
         </div>
-        <div class="col-md-2">
+        <div class="col-md-3">
             <label class="form-label fw-bold text-secondary small">Unidad</label>
             <input type="text" name="variables[{{ $index }}][unidad_medida]" class="form-control form-control-sm" value="{{ $var->unidad_medida ?? '' }}">
         </div>
-        <div class="col-md-1">
+    </div>
+    <div class="row g-3 mt-1 p-3 mx-0 bg-light rounded-3 border">
+        <div class="col-md-2">
             <label class="form-label fw-bold text-secondary small">Orden</label>
             <input type="number" name="variables[{{ $index }}][orden]" class="form-control form-control-sm" value="{{ $var->orden ?? (is_numeric($index) ? $index : '') }}">
         </div>
-        <div class="col-md-3 d-flex align-items-end gap-2 pb-1 flex-wrap">
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="variables[{{ $index }}][es_destacada]" value="1" id="var_dest_{{ $index }}" {{ ($var->es_destacada ?? false) ? 'checked' : '' }}>
-                <label class="form-check-label small" for="var_dest_{{ $index }}">Destacada</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="variables[{{ $index }}][es_kpi]" value="1" id="var_kpi_{{ $index }}" {{ ($var->es_kpi ?? false) ? 'checked' : '' }}>
-                <label class="form-check-label small" for="var_kpi_{{ $index }}">KPI</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="variables[{{ $index }}][visible_en_ficha]" value="1" id="var_visible_{{ $index }}" {{ ($var->visible_en_ficha ?? true) ? 'checked' : '' }}>
-                <label class="form-check-label small" for="var_visible_{{ $index }}">Visible</label>
-            </div>
-        </div>
-    </div>
-    <div class="row g-2 mt-1">
-        <div class="col-md-4">
-            <label class="form-label fw-bold text-secondary small">Tipo de Valor</label>
+        <div class="col-md-3">
+            <label class="form-label fw-bold text-secondary small">Tipo de valor</label>
             <select name="variables[{{ $index }}][tipo_valor]" class="form-select form-select-sm tipo-valor-select">
                 <option value="">Automático</option>
                 <option value="categorica" {{ ($var->tipo_valor ?? '') == 'categorica' ? 'selected' : '' }}>Categórica</option>
                 <option value="numerica" {{ ($var->tipo_valor ?? '') == 'numerica' ? 'selected' : '' }}>Numérica</option>
             </select>
         </div>
-        <div class="col-md-8 mapeo-valores-wrapper" style="{{ ($var->tipo_valor ?? '') == 'numerica' ? 'display:none;' : '' }}">
-            <label class="form-label fw-bold text-secondary small">Mapeo de Valores (JSON)</label>
-            <textarea name="variables[{{ $index }}][mapeo_valores]" class="form-control form-control-sm font-monospace" rows="1" placeholder='{"1":"Urbano","2":"Rural"}'>{{ is_array($var->mapeo_valores ?? null) ? json_encode($var->mapeo_valores) : ($var->mapeo_valores ?? '') }}</textarea>
-        </div>
-    </div>
-    <div class="row g-2 mt-2">
-        <div class="col-12">
-            <div class="form-check form-switch">
-                <input class="form-check-input es-construida-check" type="checkbox" name="variables[{{ $index }}][es_construida]" value="1" id="var_const_{{ $index }}" {{ ($var->es_construida ?? false) ? 'checked' : '' }}>
-                <label class="form-check-label small fw-bold text-info" for="var_const_{{ $index }}">Es construida <span class="text-muted fw-normal">(calculada a partir de otras variables)</span></label>
+        <div class="col-md-7 d-flex align-items-end gap-3 pb-1 flex-wrap">
+            <span class="small fw-bold text-secondary me-1">Mostrar como</span>
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" name="variables[{{ $index }}][es_destacada]" value="1" id="var_dest_{{ $index }}" {{ ($var->es_destacada ?? false) ? 'checked' : '' }}>
+                <label class="form-check-label small" for="var_dest_{{ $index }}">Destacada</label>
+            </div>
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" name="variables[{{ $index }}][es_kpi]" value="1" id="var_kpi_{{ $index }}" {{ ($var->es_kpi ?? false) ? 'checked' : '' }}>
+                <label class="form-check-label small" for="var_kpi_{{ $index }}">KPI</label>
+            </div>
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" name="variables[{{ $index }}][visible_en_ficha]" value="1" id="var_visible_{{ $index }}" {{ ($var->visible_en_ficha ?? true) ? 'checked' : '' }}>
+                <label class="form-check-label small" for="var_visible_{{ $index }}">Visible</label>
             </div>
         </div>
     </div>
-    <div class="formula-section border rounded p-3 mt-2 bg-info bg-opacity-10" style="display:{{ ($var->es_construida ?? false) ? 'block' : 'none' }};">
+    <div class="row g-3 mt-1">
+        <div class="col-12 mapeo-valores-wrapper" style="{{ ($var->tipo_valor ?? '') == 'numerica' ? 'display:none;' : '' }}">
+            <label class="form-label fw-bold text-secondary small">Mapeo de Valores (JSON)</label>
+            <textarea name="variables[{{ $index }}][mapeo_valores]" class="form-control form-control-sm font-monospace" rows="1" placeholder='{"1":"Urbano","2":"Rural"}'>{{ is_array($var->mapeo_valores ?? null) ? json_encode($var->mapeo_valores) : ($var->mapeo_valores ?? '') }}</textarea>
+            <div class="form-text">Úsalo solo para convertir valores categóricos en etiquetas legibles.</div>
+        </div>
+    </div>
+    <div class="mt-3 pt-3 border-top">
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input es-construida-check" type="checkbox" name="variables[{{ $index }}][es_construida]" value="1" id="var_const_{{ $index }}" {{ ($var->es_construida ?? false) ? 'checked' : '' }}>
+                <label class="form-check-label small fw-bold text-info" for="var_const_{{ $index }}">Variable construida <span class="text-muted fw-normal">Calcula este valor a partir de otras variables.</span></label>
+            </div>
+    </div>
+    <div class="formula-section border rounded-3 p-3 mt-3 bg-info bg-opacity-10" style="display:{{ ($var->es_construida ?? false) ? 'block' : 'none' }};">
         <div class="row g-2">
             <div class="col-md-4">
                 <div class="d-flex align-items-center gap-1">

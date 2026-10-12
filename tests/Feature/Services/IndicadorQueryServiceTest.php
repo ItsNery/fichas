@@ -13,6 +13,7 @@ use App\Models\Tematica;
 use App\Models\Variable;
 use App\Models\UnidadGeografica;
 use App\Services\IndicadorQueryService;
+use App\Services\GeographicUnitService;
 use Database\Seeders\UnidadesGeograficasSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -315,6 +316,80 @@ class IndicadorQueryServiceTest extends TestCase
         $this->assertSame(24.5, $result['series'][0]['data'][0][1]);
         $this->assertEquals([2025], $result['available_years']->all());
         $this->assertTrue($this->service->getStateAvailableIndicatorIds()->contains($ind->id));
+    }
+
+    public function test_official_microrregion_value_has_priority_over_municipal_aggregation(): void
+    {
+        $macro = new Macrorregion();
+        $macro->nombre = 'Sierra';
+        $macro->save();
+        $micro = new Microrregion();
+        $micro->nombre = 'Sierra Norte';
+        $micro->macrorregion_id = $macro->id;
+        $micro->save();
+        $municipio = Municipio::create(['nombre' => 'Ahuacatlán', 'slug' => 'ahuacatlan', 'microrregion_id' => $micro->id]);
+        $ind = $this->makeIndicador('Tasa regional oficial', ['tipo_dato' => 'tasa']);
+        $var = Variable::create([
+            'indicador_id' => $ind->id,
+            'nombre_amigable' => 'Tasa',
+            'nombre_tecnico' => 'tasa_regional_oficial',
+            'unidad_medida' => 'por cada 100 mil habitantes',
+        ]);
+        DatoHistorico::create(['municipio_id' => $municipio->id, 'variable_id' => $var->id, 'anio' => 2025, 'valor' => 18]);
+        $unit = app(GeographicUnitService::class)->forSelection('microrregion', $micro->id);
+        DatoGeograficoHistorico::create([
+            'unidad_geografica_id' => $unit->id,
+            'variable_id' => $var->id,
+            'anio' => 2025,
+            'valor' => 21.4,
+        ]);
+
+        $result = $this->service->getChartData([
+            'indicador_id' => $ind->id,
+            'nivel_de_agregacion' => 'microrregion',
+            'region_id' => $micro->id,
+            'anios' => [2025],
+        ]);
+
+        $this->assertSame('oficial_microrregion', $result['origen_dato']);
+        $this->assertSame(21.4, $result['series'][0]['data'][0][1]);
+    }
+
+    public function test_official_macrorregion_value_has_priority_over_municipal_aggregation(): void
+    {
+        $macro = new Macrorregion();
+        $macro->nombre = 'Mixteca';
+        $macro->save();
+        $micro = new Microrregion();
+        $micro->nombre = 'Mixteca Baja';
+        $micro->macrorregion_id = $macro->id;
+        $micro->save();
+        $municipio = Municipio::create(['nombre' => 'Izúcar', 'slug' => 'izucar', 'microrregion_id' => $micro->id]);
+        $ind = $this->makeIndicador('Índice regional oficial', ['tipo_dato' => 'indice']);
+        $var = Variable::create([
+            'indicador_id' => $ind->id,
+            'nombre_amigable' => 'Índice',
+            'nombre_tecnico' => 'indice_regional_oficial',
+            'unidad_medida' => 'índice',
+        ]);
+        DatoHistorico::create(['municipio_id' => $municipio->id, 'variable_id' => $var->id, 'anio' => 2025, 'valor' => 0.4]);
+        $unit = app(GeographicUnitService::class)->forSelection('macrorregion', $macro->id);
+        DatoGeograficoHistorico::create([
+            'unidad_geografica_id' => $unit->id,
+            'variable_id' => $var->id,
+            'anio' => 2025,
+            'valor' => 0.62,
+        ]);
+
+        $result = $this->service->getChartData([
+            'indicador_id' => $ind->id,
+            'nivel_de_agregacion' => 'macrorregion',
+            'region_id' => $macro->id,
+            'anios' => [2025],
+        ]);
+
+        $this->assertSame('oficial_macrorregion', $result['origen_dato']);
+        $this->assertSame(0.62, $result['series'][0]['data'][0][1]);
     }
 
     public function test_state_year_is_available_only_when_all_visible_variables_have_official_values(): void

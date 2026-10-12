@@ -11,6 +11,8 @@ class UnidadGeografica extends Model
 
     public const NIVEL_PAIS = 'pais';
     public const NIVEL_ENTIDAD = 'entidad';
+    public const NIVEL_MACRORREGION = 'macrorregion';
+    public const NIVEL_MICRORREGION = 'microrregion';
     public const CLAVE_MEXICO = '00';
     public const CLAVE_PUEBLA = '21';
 

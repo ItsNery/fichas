@@ -16,6 +16,7 @@ use App\Models\Municipio;
 use App\Models\Variable;
 use App\Models\LoteDatos;
 use App\Services\LoteDatosService;
+use App\Services\GeographicUnitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
@@ -41,9 +42,11 @@ class ImportController extends Controller
      *
      * @return \Illuminate\View\View
      */
-    public function index()
+    public function index(GeographicUnitService $geographicUnits)
     {
-        return view('import.index');
+        return view('import.index', [
+            'geographicReferences' => $geographicUnits->importReferences(),
+        ]);
     }
 
     /**

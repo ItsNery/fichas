@@ -2220,10 +2220,17 @@ document.addEventListener("DOMContentLoaded", function () {
         const esAbsoluto =
             indicadorSeleccionado &&
             indicadorSeleccionado.dataset.tipoDato.toLowerCase() === "absoluto";
+        const tieneDatoEstatalOficial =
+            indicadorSeleccionado &&
+            indicadorSeleccionado.dataset.disponibleEstatal === "true";
 
-        if (appState.nivelDeAgregacion === "estatal" && !esAbsoluto) {
+        if (
+            appState.nivelDeAgregacion === "estatal" &&
+            !esAbsoluto &&
+            !tieneDatoEstatalOficial
+        ) {
             const mensaje =
-                "Este indicador no se puede consultar como total estatal porque sus valores no son sumables.";
+                "Este indicador no tiene datos oficiales estatales completos disponibles.";
             chartTitleRegions.innerText = "Consulta no disponible";
             chartContainerRegions.innerHTML =
                 `<p class="text-muted text-center pt-5 px-4">${mensaje}</p>`;

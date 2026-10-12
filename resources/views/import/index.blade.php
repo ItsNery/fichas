@@ -40,7 +40,7 @@
                     ['id' => 'indicadores', 'label' => 'Indicadores'],
                     ['id' => 'variables', 'label' => 'Variables'],
                     ['id' => 'datoshistoricos', 'label' => 'Históricos'],
-                    ['id' => 'datosgeograficos', 'label' => 'Estatales'],
+                    ['id' => 'datosgeograficos', 'label' => 'Territoriales'],
                     ['id' => 'datoscomplejos', 'label' => 'Complejos'],
                     ['id' => 'instrumentos', 'label' => 'Cat. Inst.'],
                     ['id' => 'asignaciones', 'label' => 'Asignaciones'],
@@ -210,6 +210,77 @@
                     </div>
 
                     <div class="tab-pane fade" id="datosgeograficos" role="tabpanel">
+                        <div class="rounded-3 border p-4 mb-4 bg-light">
+                            <div class="d-flex align-items-start gap-3 mb-4">
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-white text-vino shadow-sm" style="width:2.5rem; height:2.5rem;">
+                                    <i class="fa-solid fa-map-location-dot"></i>
+                                </span>
+                                <div>
+                                    <h5 class="fw-bold text-vino mb-1">Valores oficiales por territorio</h5>
+                                    <p class="text-muted small mb-0">Usa esta carga para tasas, porcentajes, índices u otros valores publicados directamente para Puebla, una micro o una macrorregión. Estos valores tienen prioridad sobre la agregación municipal.</p>
+                                </div>
+                            </div>
+
+                            <div class="row g-4">
+                                <div class="col-lg-7">
+                                    <h6 class="fw-bold mb-3">Antes de cargar</h6>
+                                    <div class="d-flex gap-2 mb-3">
+                                        <span class="badge rounded-pill text-bg-secondary">1</span>
+                                        <p class="small mb-0">Descarga la plantilla y captura una fila por combinación de territorio, variable y año.</p>
+                                    </div>
+                                    <div class="d-flex gap-2 mb-3">
+                                        <span class="badge rounded-pill text-bg-secondary">2</span>
+                                        <p class="small mb-0">Copia la clave territorial de la tabla de referencia. No uses claves de municipio ni nombres de regiones.</p>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <span class="badge rounded-pill text-bg-secondary">3</span>
+                                        <p class="small mb-0">Valida y envía el lote a revisión. El dato se publica solo después de su aprobación.</p>
+                                    </div>
+                                </div>
+                                <div class="col-lg-5">
+                                    <h6 class="fw-bold mb-3">Columnas requeridas</h6>
+                                    <div class="table-responsive bg-white rounded border">
+                                        <table class="table table-sm mb-0 small">
+                                            <tbody>
+                                                <tr><th>nivel_geografico</th><td>entidad, microrregion o macrorregion</td></tr>
+                                                <tr><th>clave_geografica</th><td>Clave de la tabla de referencia</td></tr>
+                                                <tr><th>variable_tecnico</th><td>Variable destino</td></tr>
+                                                <tr><th>anio y valor</th><td>Año y valor oficial</td></tr>
+                                                <tr><th>motivo_sin_dato</th><td>Opcional si valor está vacío</td></tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-3 border-top">
+                                <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-2">
+                                    <h6 class="fw-bold mb-0">Claves territoriales disponibles</h6>
+                                    <span class="small text-muted">Copia nivel y clave exactamente como aparecen.</span>
+                                </div>
+                                <div class="table-responsive bg-white rounded border">
+                                    <table class="table table-sm table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr><th>Nivel</th><th>Clave para el archivo</th><th>Territorio</th></tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach ($geographicReferences as $reference)
+                                                <tr>
+                                                    <td><code>{{ $reference['nivel'] }}</code></td>
+                                                    <td><code>{{ $reference['clave'] }}</code></td>
+                                                    <td>{{ $reference['nombre'] }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info small mb-0 mt-4">
+                                <i class="fa-solid fa-lightbulb me-2"></i>
+                                Ejemplo: para una tasa oficial de una microrregión, usa <code>nivel_geografico = microrregion</code> y la clave <code>micro-{id}</code> que corresponda en la tabla.
+                            </div>
+                        </div>
                         <x-import-form
                             action="{{ route('admin.import.datos_geograficos') }}"
                             template="{{ route('admin.import.plantilla', ['tipo' => 'datos-geograficos']) }}"
@@ -218,7 +289,7 @@
                                 <code>nivel_geografico</code>, <code>clave_geografica</code>,
                                 <code>variable_tecnico</code>, <code>anio</code>, <code>valor</code>,
                                 <code>motivo_sin_dato</code>.<br>
-                                Para Puebla usa nivel <code>entidad</code> y clave <code>21</code>.
+                                Para Puebla usa <code>entidad</code> y <code>21</code>. Consulta la tabla superior para las claves de micro y macrorregión.
                             </x-slot>
                         </x-import-form>
                     </div>

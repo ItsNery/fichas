@@ -248,9 +248,7 @@ class LoteDatosService
             return ['errors' => [['fila' => 1, 'error' => 'Se requiere variable_tecnico o variable_id.']]];
         }
 
-        $unidades = UnidadGeografica::where('activo', true)->get()->mapWithKeys(
-            fn ($unidad) => ["{$unidad->nivel}:{$unidad->clave_inegi}" => $unidad->id]
-        );
+        $geographicUnits = app(GeographicUnitService::class);
         $variablesTecnico = Variable::pluck('id', 'nombre_tecnico');
         $variablesIds = Variable::pluck('id')->flip();
         $motivos = CatMotivoSinDato::pluck('id', 'codigo')->mapWithKeys(
@@ -272,7 +270,7 @@ class LoteDatosService
             if (in_array($nivel, [UnidadGeografica::NIVEL_PAIS, UnidadGeografica::NIVEL_ENTIDAD], true)) {
                 $clave = str_pad($clave, 2, '0', STR_PAD_LEFT);
             }
-            $unidadId = $unidades["{$nivel}:{$clave}"] ?? null;
+            $unidadId = $geographicUnits->forImport($nivel, $clave)?->id;
 
             $variableId = null;
             if (!empty($rowData['variable_tecnico'])) {
@@ -577,7 +575,7 @@ class LoteDatosService
             match ($locked->tipo) {
                 'datos_historicos', 'dato_historico_manual' => $this->aprobarHistoricos($locked, $now),
                 'datos_complejos' => $this->aprobarComplejos($locked, $now),
-                'datos_geograficos' => $this->aprobarGeograficos($locked, $now),
+                'datos_geograficos', 'dato_geografico_manual' => $this->aprobarGeograficos($locked, $now),
                 default => throw ValidationException::withMessages(['lote' => 'El tipo de lote no es compatible.']),
             };
 
@@ -672,12 +670,62 @@ class LoteDatosService
         });
     }
 
+    public function crearEdicionManualGeografica(DatoGeograficoHistorico $dato, float $valor, User $usuario): LoteDatos
+    {
+        return $this->crearCambioManualGeografico($dato, $usuario, 'actualizar', $valor);
+    }
+
+    public function crearEliminacionGeografica(DatoGeograficoHistorico $dato, User $usuario): LoteDatos
+    {
+        return $this->crearCambioManualGeografico($dato, $usuario, 'eliminar');
+    }
+
+    private function crearCambioManualGeografico(DatoGeograficoHistorico $dato, User $usuario, string $accion, ?float $valor = null): LoteDatos
+    {
+        return DB::transaction(function () use ($dato, $usuario, $accion, $valor) {
+            $descripcion = $accion === 'eliminar' ? 'Eliminación' : 'Edición';
+            $lote = LoteDatos::create([
+                'tipo' => 'dato_geografico_manual',
+                'estado' => LoteDatos::EN_REVISION,
+                'archivo_original' => "{$descripcion} manual del dato geográfico #{$dato->id}",
+                'archivo_path' => "manual://dato-geografico/{$dato->id}",
+                'usuario_carga_id' => $usuario->id,
+                'total_filas' => 1,
+                'filas_insertar' => 0,
+                'filas_actualizar' => 1,
+                'enviado_revision_at' => now(),
+            ]);
+
+            $lote->filasGeograficas()->create([
+                'fila_origen' => 1,
+                'unidad_geografica_id' => $dato->unidad_geografica_id,
+                'variable_id' => $dato->variable_id,
+                'anio' => $dato->anio,
+                'valor' => $accion === 'eliminar' ? $dato->valor : $valor,
+                'motivo_sin_dato_id' => $accion === 'eliminar' ? $dato->motivo_sin_dato_id : null,
+                'accion' => $accion,
+                'valor_original' => $dato->valor,
+                'motivo_sin_dato_original_id' => $dato->motivo_sin_dato_id,
+                'dato_geografico_historico_updated_at' => $dato->updated_at,
+            ]);
+
+            return $lote;
+        });
+    }
+
     private function aprobarGeograficos(LoteDatos $lote, $now): void
     {
         $filas = $lote->filasGeograficas()->get();
         $this->assertGeographicConflicts($filas);
 
-        $filas->chunk(1000)->each(function ($chunk) use ($lote, $now) {
+        $filas->where('accion', 'eliminar')->each(function ($fila) {
+            DatoGeograficoHistorico::where('unidad_geografica_id', $fila->unidad_geografica_id)
+                ->where('variable_id', $fila->variable_id)
+                ->where('anio', $fila->anio)
+                ->delete();
+        });
+
+        $filas->reject(fn ($fila) => $fila->accion === 'eliminar')->chunk(1000)->each(function ($chunk) use ($lote, $now) {
             $rows = $chunk->map(fn ($fila) => [
                 'unidad_geografica_id' => $fila->unidad_geografica_id,
                 'variable_id' => $fila->variable_id,
@@ -750,7 +798,7 @@ class LoteDatosService
                 throw ValidationException::withMessages(['lote' => "Conflicto en la fila {$fila->fila_origen}: el dato geográfico ya existe."]);
             }
             $hasSnapshot = $fila->dato_geografico_historico_updated_at !== null;
-            if ($fila->accion === 'actualizar' && (!$actual || ($hasSnapshot && (
+            if (in_array($fila->accion, ['actualizar', 'eliminar'], true) && (!$actual || ($hasSnapshot && (
                 (float) $actual->valor !== (float) $fila->valor_original
                 || $actual->motivo_sin_dato_id !== $fila->motivo_sin_dato_original_id
                 || $actual->updated_at?->format('Y-m-d H:i:s') !== $fila->dato_geografico_historico_updated_at?->format('Y-m-d H:i:s')

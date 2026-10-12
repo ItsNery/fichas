@@ -125,6 +125,8 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
 
     // CRUDs principales
     Route::get('/datos/exportar', [DatoHistoricoController::class, 'export'])->name('datos.export');
+    Route::put('/datos/territorial/{datoGeograficoHistorico}', [DatoHistoricoController::class, 'updateTerritorial'])->name('datos.territorial.update');
+    Route::delete('/datos/territorial/{datoGeograficoHistorico}', [DatoHistoricoController::class, 'destroyTerritorial'])->name('datos.territorial.destroy');
     Route::resource('datos', DatoHistoricoController::class);
     Route::resource('users', UserController::class)->except(['show']);
     Route::resource('instrumentos', InstrumentoController::class)->only(['index', 'store', 'update', 'destroy']);

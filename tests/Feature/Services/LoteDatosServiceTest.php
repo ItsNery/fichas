@@ -43,6 +43,7 @@ class LoteDatosServiceTest extends TestCase
         Permission::create(['name' => 'datos.ver']);
         Permission::create(['name' => 'datos.aprobar']);
         Permission::create(['name' => 'datos.editar']);
+        Permission::create(['name' => 'datos.eliminar']);
 
         $this->capturista = User::factory()->create();
         $this->capturista->givePermissionTo(['datos.ver', 'datos.editar']);
@@ -165,6 +166,87 @@ class LoteDatosServiceTest extends TestCase
             'valor' => 73.25,
             'lote_datos_id' => $lote->id,
         ]);
+    }
+
+    public function test_geographic_excel_accepts_a_microrregion_reference(): void
+    {
+        Storage::fake('local');
+        $micro = $this->municipio->microrregion;
+        $spreadsheet = new Spreadsheet();
+        $spreadsheet->getActiveSheet()->fromArray([
+            ['nivel_geografico', 'clave_geografica', 'variable_tecnico', 'anio', 'valor'],
+            ['microrregion', 'micro-' . $micro->id, $this->variable->nombre_tecnico, 2025, 18.5],
+        ]);
+        $path = tempnam(sys_get_temp_dir(), 'lote-micro') . '.xlsx';
+        (new Xlsx($spreadsheet))->save($path);
+        $file = new UploadedFile(
+            $path,
+            'datos-microrregion.xlsx',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            null,
+            true
+        );
+
+        $result = app(LoteDatosService::class)->crearBorradorGeografico($file, $this->capturista);
+
+        $this->assertArrayHasKey('lote', $result);
+        $unit = UnidadGeografica::where('nivel', 'microrregion')
+            ->where('clave_inegi', 'micro-' . $micro->id)
+            ->firstOrFail();
+        $this->assertDatabaseHas('lote_dato_geografico_historicos', [
+            'lote_datos_id' => $result['lote']->id,
+            'unidad_geografica_id' => $unit->id,
+            'variable_id' => $this->variable->id,
+            'anio' => 2025,
+            'valor' => 18.5,
+        ]);
+    }
+
+    public function test_geographic_deletion_is_staged_until_approval(): void
+    {
+        $this->seed(UnidadesGeograficasSeeder::class);
+        $dato = DatoGeograficoHistorico::create([
+            'unidad_geografica_id' => UnidadGeografica::where('slug', 'puebla')->value('id'),
+            'variable_id' => $this->variable->id,
+            'anio' => 2025,
+            'valor' => 73.25,
+        ]);
+
+        $lote = app(LoteDatosService::class)->crearEliminacionGeografica($dato, $this->capturista);
+
+        $this->assertDatabaseHas('dato_geografico_historicos', ['id' => $dato->id]);
+        $this->assertDatabaseHas('lote_dato_geografico_historicos', [
+            'lote_datos_id' => $lote->id,
+            'accion' => 'eliminar',
+            'valor_original' => 73.25,
+        ]);
+
+        app(LoteDatosService::class)->aprobar($lote, $this->revisor);
+
+        $this->assertDatabaseMissing('dato_geografico_historicos', ['id' => $dato->id]);
+        $this->assertSame(LoteDatos::APROBADO, $lote->fresh()->estado);
+    }
+
+    public function test_geographic_deletion_detects_changes_after_the_request(): void
+    {
+        $this->seed(UnidadesGeograficasSeeder::class);
+        $dato = DatoGeograficoHistorico::create([
+            'unidad_geografica_id' => UnidadGeografica::where('slug', 'puebla')->value('id'),
+            'variable_id' => $this->variable->id,
+            'anio' => 2025,
+            'valor' => 73.25,
+        ]);
+        $lote = app(LoteDatosService::class)->crearEliminacionGeografica($dato, $this->capturista);
+        $dato->update(['valor' => 80]);
+
+        try {
+            app(LoteDatosService::class)->aprobar($lote, $this->revisor);
+            $this->fail('La aprobación debió detectar el cambio posterior a la eliminación.');
+        } catch (ValidationException $e) {
+            $this->assertStringContainsString('cambió después', $e->errors()['lote'][0]);
+        }
+
+        $this->assertDatabaseHas('dato_geografico_historicos', ['id' => $dato->id, 'valor' => 80]);
     }
 
     public function test_approval_inserts_and_links_canonical_data(): void

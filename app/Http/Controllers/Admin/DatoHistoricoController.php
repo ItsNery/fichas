@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Exports\DatosHistoricosExport;
 use App\Http\Controllers\Controller;
 use App\Models\DatoHistorico;
+use App\Models\DatoGeograficoHistorico;
 use App\Models\Municipio;
+use App\Models\UnidadGeografica;
 use App\Models\Variable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -21,8 +23,8 @@ class DatoHistoricoController extends Controller
     {
         $this->middleware('permission:datos.ver')->only(['index', 'show', 'export']);
         $this->middleware('permission:datos.crear')->only(['create', 'store']);
-        $this->middleware('permission:datos.editar')->only(['edit', 'update']);
-        $this->middleware('permission:datos.eliminar')->only(['destroy']);
+        $this->middleware('permission:datos.editar')->only(['edit', 'update', 'updateTerritorial']);
+        $this->middleware('permission:datos.eliminar')->only(['destroy', 'destroyTerritorial']);
     }
 
     /**
@@ -32,6 +34,25 @@ class DatoHistoricoController extends Controller
      */
     public function index(Request $request)
     {
+        $mode = $request->input('mode') === 'territorial' ? 'territorial' : 'municipal';
+
+        if ($mode === 'territorial') {
+            $query = DatoGeograficoHistorico::with('unidadGeografica', 'variable');
+            if ($request->filled('unidad_geografica_id')) {
+                $query->where('unidad_geografica_id', $request->unidad_geografica_id);
+            }
+            if ($request->filled('variable_id')) {
+                $query->where('variable_id', $request->variable_id);
+            }
+
+            return view('datos.index', [
+                'datos' => $query->orderByDesc('anio')->orderBy('unidad_geografica_id')->paginate(10)->withQueryString(),
+                'mode' => $mode,
+                'territorios' => UnidadGeografica::where('activo', true)->orderBy('nivel')->orderBy('nombre')->get(),
+                'variables' => Variable::orderBy('nombre_amigable')->get(),
+            ]);
+        }
+
         // Iniciamos la consulta a la base de datos
         $query = DatoHistorico::with('municipio', 'variable');
 
@@ -56,7 +77,7 @@ class DatoHistoricoController extends Controller
             'datos'      => $datos,
             'municipios' => Municipio::orderBy('nombre')->get(),
             'variables'  => Variable::orderBy('nombre_amigable')->get(),
-            'filters'    => $request->only(['municipio_id', 'variable_id']),
+            'mode'       => $mode,
         ]);
     }
 
@@ -146,6 +167,36 @@ class DatoHistoricoController extends Controller
     public function destroy(DatoHistorico $datoHistorico)
     {
         // --- IGNORE ---
+    }
+
+    public function updateTerritorial(Request $request, DatoGeograficoHistorico $datoGeograficoHistorico, LoteDatosService $service)
+    {
+        $validated = $request->validate(['valor' => 'required|numeric']);
+        $lote = $service->crearEdicionManualGeografica($datoGeograficoHistorico, (float) $validated['valor'], auth()->user());
+
+        return $this->territorialResponse($request, $lote, 'La propuesta fue enviada a revisión. El valor publicado no cambió.');
+    }
+
+    public function destroyTerritorial(Request $request, DatoGeograficoHistorico $datoGeograficoHistorico, LoteDatosService $service)
+    {
+        $lote = $service->crearEliminacionGeografica($datoGeograficoHistorico, auth()->user());
+
+        return $this->territorialResponse($request, $lote, 'La solicitud de eliminación fue enviada a revisión. El dato seguirá publicado hasta su aprobación.');
+    }
+
+    private function territorialResponse(Request $request, $lote, string $success)
+    {
+        $response = [
+            'success' => $success,
+            'lote_id' => $lote->id,
+            'detail_url' => route('admin.lotes-datos.show', $lote),
+        ];
+
+        if ($request->expectsJson()) {
+            return response()->json($response, 202);
+        }
+
+        return redirect()->route('admin.lotes-datos.show', $lote)->with('success', $success);
     }
 
     /**

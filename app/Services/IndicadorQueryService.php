@@ -28,17 +28,21 @@ class IndicadorQueryService
         $this->usarVariablesPublicas($indicador);
         $nivel     = $validated['nivel_de_agregacion'];
 
-        if ($nivel === 'estatal') {
-            $datosOficiales = $this->getOfficialStateChartData($indicador, $validated['anios'] ?? []);
+        $selection = $this->prepareGeographicSelection($nivel, $validated);
+
+        if (in_array($nivel, ['estatal', 'microrregion', 'macrorregion'], true)) {
+            $unit = app(GeographicUnitService::class)->forSelection($nivel, $validated['region_id'] ?? null);
+            $datosOficiales = $unit
+                ? $this->getOfficialGeographicChartData($indicador, $unit, $selection['titulo'], $validated['anios'] ?? [])
+                : null;
             if ($datosOficiales) {
                 return $datosOficiales;
             }
             if (mb_strtolower(trim((string) $indicador->tipo_dato), 'UTF-8') !== 'absoluto') {
-                abort(422, 'Este indicador no tiene datos oficiales estatales completos disponibles.');
+                abort(422, 'Este indicador no tiene datos oficiales completos disponibles para la ubicación seleccionada.');
             }
         }
 
-        $selection = $this->prepareGeographicSelection($nivel, $validated);
         $esPiramidePoblacional = $this->esPiramide($indicador);
 
         if ($indicador->es_complejo) {
@@ -217,18 +221,19 @@ class IndicadorQueryService
         })->keys()->map(fn ($key) => (int) ((string) str($key)->before(':')))->unique()->values();
     }
 
-    private function getOfficialStateChartData(Indicador $indicador, array $selectedYears): ?array
+    private function getOfficialGeographicChartData(
+        Indicador $indicador,
+        UnidadGeografica $unit,
+        string $territoryName,
+        array $selectedYears,
+    ): ?array
     {
-        $unidadId = UnidadGeografica::where('nivel', UnidadGeografica::NIVEL_ENTIDAD)
-            ->where('clave_inegi', UnidadGeografica::CLAVE_PUEBLA)
-            ->where('activo', true)
-            ->value('id');
         $variables = $indicador->variables->sortBy(['orden', 'nombre_amigable'])->values();
-        if (!$unidadId || $variables->isEmpty()) {
+        if ($variables->isEmpty()) {
             return null;
         }
 
-        $datos = DatoGeograficoHistorico::where('unidad_geografica_id', $unidadId)
+        $datos = DatoGeograficoHistorico::where('unidad_geografica_id', $unit->id)
             ->whereIn('variable_id', $variables->pluck('id'))
             ->whereNotNull('valor')
             ->orderBy('anio')
@@ -288,7 +293,7 @@ class IndicadorQueryService
         }
 
         return [
-            'titulo' => $indicador->nombre_amigable . ' - Estado de Puebla (' . $chartTitleYear . ')',
+            'titulo' => $indicador->nombre_amigable . ' - ' . $territoryName . ' (' . $chartTitleYear . ')',
             'descripcion' => $indicador->descripcion,
             'fuente' => $indicador->fuente,
             'metodo_calculo' => $indicador->metodo_calculo,
@@ -298,8 +303,10 @@ class IndicadorQueryService
             'eje_y' => ['titulo' => $variables->first()->unidad_medida ?? 'Valor'],
             'available_years' => $availableYears,
             'selected_years' => $selectedYears,
-            'nota_explicativa' => 'Dato oficial cargado directamente para el Estado de Puebla.',
-            'origen_dato' => 'oficial_estatal',
+            'nota_explicativa' => 'Dato oficial cargado directamente para ' . $territoryName . '.',
+            'origen_dato' => $unit->nivel === UnidadGeografica::NIVEL_ENTIDAD
+                ? 'oficial_estatal'
+                : 'oficial_' . $unit->nivel,
         ];
     }
 
