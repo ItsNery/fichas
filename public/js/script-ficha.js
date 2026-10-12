@@ -2662,6 +2662,12 @@ document.addEventListener("DOMContentLoaded", function () {
         tab.addEventListener("click", function (event) {
             const target = event.currentTarget;
             const nivel = target.dataset.nivel;
+            const nivelAnterior = appState.nivelDeAgregacion;
+            const indicadorAnterior =
+                nivel === "municipio" && nivelAnterior !== "municipio"
+                    ? appState.indicatorId
+                    : null;
+            let municipioAleatorio = null;
 
             // Si ya estamos en este nivel, no hacemos nada (opcional)
             // if (appState.nivelDeAgregacion === nivel) return;
@@ -2713,7 +2719,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // 1. Actualizamos el estado central
             appState.nivelDeAgregacion = nivel;
-            appState.indicatorId = null;
+            appState.indicatorId = indicadorAnterior;
             appState.municipioIds = [];
             appState.microrregionId = null;
             appState.macrorregionId = null;
@@ -2755,12 +2761,13 @@ document.addEventListener("DOMContentLoaded", function () {
             if (geojsonLayerRegional && mapRegional) {
                 mapRegional.removeLayer(geojsonLayerRegional);
             }
-            // 5. Deseleccionamos todos los indicadores
-            document
-                .querySelectorAll(".indicador-link")
-                .forEach((el) =>
-                    el.classList.remove("fw-bold", "text-primary"),
-                );
+            if (!indicadorAnterior) {
+                document
+                    .querySelectorAll(".indicador-link")
+                    .forEach((el) =>
+                        el.classList.remove("fw-bold", "text-primary"),
+                    );
+            }
 
             if (metadataContainer) metadataContainer.style.display = "none";
             if (metadataContainerRegions)
@@ -2829,15 +2836,28 @@ document.addEventListener("DOMContentLoaded", function () {
                 setTimeout(() => {
                     if (mapMunicipal) mapMunicipal.invalidateSize();
                 }, 10);
-                appState.municipioIds = [];
+                const municipiosDisponibles = Object.keys(municipioSelector.options)
+                    .filter((id) => id && id !== "estatal");
+                municipioAleatorio = municipiosDisponibles[
+                    Math.floor(Math.random() * municipiosDisponibles.length)
+                ];
+
+                if (municipioAleatorio) {
+                    appState.municipioIds = [municipioAleatorio];
+                    municipioSelector.setValue(municipioAleatorio, true);
+                }
             }
 
             actualizarGuiaVista(
-                `Cambiaste a ${nivel}. Se reiniciaron los filtros para evitar mezclar consultas de distintos niveles.`,
+                nivel === "municipio" && municipioAleatorio
+                    ? "Se seleccionó un municipio al azar para continuar la consulta. Puedes cambiarlo en cualquier momento."
+                    : `Cambiaste a ${nivel}. Se reiniciaron los filtros para evitar mezclar consultas de distintos niveles.`,
             );
             if (nivel === "municipio") {
                 mostrarToastGuia(
-                    "Puedes seleccionar hasta 2 municipios. El nivel estatal está disponible para indicadores absolutos.",
+                    municipioAleatorio
+                        ? "No había un municipio seleccionado; elegimos uno al azar. Puedes cambiarlo en cualquier momento."
+                        : "Puedes seleccionar hasta 2 municipios. El nivel estatal está disponible para indicadores absolutos.",
                 );
             }
             actualizarResumenConsulta();
@@ -2858,6 +2878,13 @@ document.addEventListener("DOMContentLoaded", function () {
             if (fullscreenBtnRegions) fullscreenBtnRegions.style.display = "none";
             if (printBtn) printBtn.style.display = "none";
             if (printBtnRegions) printBtnRegions.style.display = "none";
+
+            if (indicadorAnterior && municipioAleatorio) {
+                document
+                    .querySelector(`.indicador-link[data-indicador-id='${indicadorAnterior}']`)
+                    ?.classList.add("fw-bold", "text-primary");
+                updateDashboard();
+            }
         });
     });
 
