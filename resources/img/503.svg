@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 620" role="img" aria-labelledby="title desc">
+  <title id="title">503 - Servicio no disponible</title>
+  <desc id="desc">Ilustración de mantenimiento y servicio no disponible con pantalla, engranajes y servidor.</desc>
+  
+  <!-- Base y fondo -->
+  <ellipse cx="400" cy="555" rx="330" ry="28" fill="#edf1f5"/>
+  <circle cx="400" cy="300" r="245" fill="#f3f5f8"/>
+
+  <!-- Monitor central - Base y pie -->
+  <path d="M365 455h70l15 70h-100z" fill="#6c9da0"/>
+  <rect x="315" y="525" width="170" height="16" rx="8" fill="#356f70"/>
+
+  <!-- Monitor central - Carcasa -->
+  <rect x="185" y="165" width="430" height="295" rx="18" fill="#1e555c"/>
+  <path d="M185 183v-0c0-10 8-18 18-18h394c10 0 18 8 18 18v18H185z" fill="#143c41"/>
+  
+  <!-- Botones ventana -->
+  <circle cx="212" cy="184" r="6" fill="#e76f51"/>
+  <circle cx="232" cy="184" r="6" fill="#f4a261"/>
+  <circle cx="252" cy="184" r="6" fill="#2a9d8f"/>
+
+  <!-- Pantalla interior -->
+  <rect x="202" y="210" width="396" height="235" rx="6" fill="#dce9ea"/>
+
+  <!-- Líneas de interfaz en pantalla -->
+  <rect x="225" y="228" width="120" height="10" rx="5" fill="#aecbcd"/>
+  <rect x="225" y="246" width="170" height="8" rx="4" fill="#cfdde0"/>
+  <rect x="225" y="260" width="130" height="8" rx="4" fill="#cfdde0"/>
+
+  <!-- Engranaje Grande (Borgoña Puebla) -->
+  <g transform="translate(365, 305)">
+    <!-- Dientes -->
+    <rect x="-11" y="-56" width="22" height="112" rx="4" fill="#a0153e"/>
+    <rect x="-11" y="-56" width="22" height="112" rx="4" fill="#a0153e" transform="rotate(45)"/>
+    <rect x="-11" y="-56" width="22" height="112" rx="4" fill="#a0153e" transform="rotate(90)"/>
+    <rect x="-11" y="-56" width="22" height="112" rx="4" fill="#a0153e" transform="rotate(135)"/>
+    <!-- Cuerpo central -->
+    <circle cx="0" cy="0" r="46" fill="#a0153e"/>
+    <circle cx="0" cy="0" r="36" fill="#6f2638"/>
+    <!-- Orificio central -->
+    <circle cx="0" cy="0" r="18" fill="#dce9ea"/>
+  </g>
+
+  <!-- Engranaje Mediano (Dorado / Ocre) -->
+  <g transform="translate(445, 265)">
+    <!-- Dientes -->
+    <rect x="-8" y="-40" width="16" height="80" rx="3" fill="#cf9964"/>
+    <rect x="-8" y="-40" width="16" height="80" rx="3" fill="#cf9964" transform="rotate(45)"/>
+    <rect x="-8" y="-40" width="16" height="80" rx="3" fill="#cf9964" transform="rotate(90)"/>
+    <rect x="-8" y="-40" width="16" height="80" rx="3" fill="#cf9964" transform="rotate(135)"/>
+    <!-- Cuerpo central -->
+    <circle cx="0" cy="0" r="32" fill="#cf9964"/>
+    <circle cx="0" cy="0" r="24" fill="#b07a48"/>
+    <!-- Orificio central -->
+    <circle cx="0" cy="0" r="12" fill="#dce9ea"/>
+  </g>
+
+  <!-- Engranaje Pequeño (Verde Institucional) -->
+  <g transform="translate(450, 345)">
+    <!-- Dientes -->
+    <rect x="-6" y="-28" width="12" height="56" rx="2" fill="#356f70"/>
+    <rect x="-6" y="-28" width="12" height="56" rx="2" fill="#356f70" transform="rotate(45)"/>
+    <rect x="-6" y="-28" width="12" height="56" rx="2" fill="#356f70" transform="rotate(90)"/>
+    <rect x="-6" y="-28" width="12" height="56" rx="2" fill="#356f70" transform="rotate(135)"/>
+    <!-- Cuerpo central -->
+    <circle cx="0" cy="0" r="22" fill="#356f70"/>
+    <circle cx="0" cy="0" r="16" fill="#1e555c"/>
+    <!-- Orificio central -->
+    <circle cx="0" cy="0" r="8" fill="#dce9ea"/>
+  </g>
+
+  <!-- Barra de progreso en pantalla -->
+  <rect x="245" y="388" width="310" height="18" rx="9" fill="#ffffff"/>
+  <rect x="245" y="388" width="215" height="18" rx="9" fill="#a0153e"/>
+  <circle cx="460" cy="397" r="5" fill="#cf9964"/>
+  <text x="400" y="378" font-family="Arial, sans-serif" font-size="11" font-weight="bold" fill="#6f2638" text-anchor="middle" letter-spacing="1.2">SISTEMA EN MANTENIMIENTO</text>
+
+  <!-- Cono de mantenimiento (Izquierda) -->
+  <g>
+    <path d="M125 540l32-120h22l32 120z" fill="#cf9964"/>
+    <polygon points="140,480 192,480 186,458 146,458" fill="#ffffff"/>
+    <polygon points="132,518 200,518 196,498 136,498" fill="#ffffff"/>
+    <rect x="110" y="535" width="112" height="15" rx="5" fill="#a0153e"/>
+  </g>
+
+  <!-- Servidor rack (Derecha) -->
+  <g>
+    <rect x="585" y="285" width="95" height="245" rx="12" fill="#24242b"/>
+    <rect x="580" y="525" width="105" height="12" rx="6" fill="#1a1a20"/>
+    
+    <!-- Módulo 1 -->
+    <rect x="595" y="300" width="75" height="50" rx="6" fill="#323541"/>
+    <circle cx="612" cy="325" r="4.5" fill="#2a9d8f"/>
+    <circle cx="628" cy="325" r="4.5" fill="#2a9d8f"/>
+    <line x1="642" y1="325" x2="660" y2="325" stroke="#6c7280" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- Módulo 2 -->
+    <rect x="595" y="362" width="75" height="50" rx="6" fill="#323541"/>
+    <circle cx="612" cy="387" r="4.5" fill="#cf9964"/>
+    <circle cx="628" cy="387" r="4.5" fill="#2a9d8f"/>
+    <line x1="642" y1="387" x2="660" y2="387" stroke="#6c7280" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- Módulo 3 -->
+    <rect x="595" y="424" width="75" height="50" rx="6" fill="#323541"/>
+    <circle cx="612" cy="449" r="4.5" fill="#a0153e"/>
+    <circle cx="628" cy="449" r="4.5" fill="#cf9964"/>
+    <line x1="642" y1="449" x2="660" y2="449" stroke="#6c7280" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <!-- Llave inglesa flotante de mantenimiento -->
+  <g transform="translate(245, 300) rotate(-35)">
+    <rect x="-6" y="-35" width="12" height="70" rx="4" fill="#aecbcd"/>
+    <circle cx="0" cy="-35" r="16" fill="#6c9da0"/>
+    <rect x="-6" y="-47" width="12" height="18" fill="#dce9ea"/>
+    <circle cx="0" cy="35" r="12" fill="#6c9da0"/>
+    <circle cx="0" cy="35" r="6" fill="#dce9ea"/>
+  </g>
+
+  <!-- Insignia 503 -->
+  <g transform="translate(145, 120)">
+    <rect x="0" y="0" width="115" height="46" rx="12" fill="#a0153e"/>
+    <rect x="2" y="2" width="111" height="42" rx="10" fill="none" stroke="#6f2638" stroke-width="2"/>
+    <text x="57" y="32" font-family="Arial, sans-serif" font-weight="900" font-size="24" fill="#ffffff" text-anchor="middle" letter-spacing="1">503</text>
+  </g>
+</svg>

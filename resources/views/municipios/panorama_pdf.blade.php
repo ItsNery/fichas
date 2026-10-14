@@ -19,11 +19,22 @@
                 $values = $item['datos']['valores'] ?? [];
                 $type = mb_strtolower(\Illuminate\Support\Str::ascii((string) $item['indicador']->tipo_grafico_default));
                 $isPyramid = str_contains($type, 'piramide');
-                $longestLabel = collect($values)->max(fn ($value) => mb_strlen((string) ($value['nombre'] ?? ''))) ?? 0;
-                $span = $isPyramid || count($values) > 8
+                // El tamaño de la tarjeta responde a las categorías que realmente se dibujarán.
+                // Variables sin dato no deben consumir espacio reservado para ejes y etiquetas.
+                $numericValues = collect($values)->filter(
+                    fn ($value) => is_numeric($value['valor'] ?? null)
+                );
+                $valueCount = max(1, $numericValues->count());
+                $longestLabel = $numericValues->max(
+                    fn ($value) => mb_strlen((string) ($value['nombre'] ?? ''))
+                ) ?? 0;
+                // Las categorías numerosas requieren altura para no superponer etiquetas del eje Y.
+                $isDenseChart = $valueCount >= 6;
+                // Con tres o más categorías, una sola columna no deja espacio para las etiquetas del eje X.
+                $span = $isPyramid || $isDenseChart
                     ? 3
-                    : ((count($values) > 4 || (count($values) > 1 && $longestLabel > 32)) ? 2 : 1);
-                $rowSpan = $isPyramid ? 2 : 1;
+                    : (($valueCount >= 3 || ($valueCount > 1 && $longestLabel > 24)) ? 2 : 1);
+                $rowSpan = ($isPyramid || $isDenseChart) ? 2 : 1;
                 $position = null;
 
                 for ($row = 0; $row <= 3 - $rowSpan && $position === null; $row++) {
@@ -54,7 +65,12 @@
                         $grid[$gridRow][$gridColumn] = true;
                     }
                 }
-                $chunk->push($item + ['span' => $span, 'rowSpan' => $rowSpan, 'isPyramid' => $isPyramid]);
+                $chunk->push($item + [
+                    'span' => $span,
+                    'rowSpan' => $rowSpan,
+                    'isPyramid' => $isPyramid,
+                    'isDenseChart' => $isDenseChart,
+                ]);
             }
             if ($chunk->isNotEmpty()) $chunks->push($chunk);
             return $chunks->map(fn ($pageItems, $index) => [
@@ -176,7 +192,7 @@
             @foreach($page['items'] as $item)
                 @php($indicator = $item['indicador'])
                 @php($data = $item['datos'])
-                <article class="card card--span-{{ $item['span'] }} card--rows-{{ $item['rowSpan'] }}{{ $item['isPyramid'] ? ' card--pyramid' : '' }}">
+                <article class="card card--span-{{ $item['span'] }} card--rows-{{ $item['rowSpan'] }}{{ $item['isPyramid'] ? ' card--pyramid' : '' }}{{ $item['isDenseChart'] ? ' card--dense' : '' }}">
                     <p class="topic">{{ $item['tematica'] }}</p>
                     <div class="card-header"><h3>{{ $indicator->nombre_amigable }}</h3><span class="year">{{ $data['anio'] ?? 'S/D' }}</span></div>
                     @if($data && !empty($data['complejo']))
@@ -278,6 +294,7 @@
             grid:{left:6,right:16,top:12,bottom:6,containLabel:true}};
         const isWideChart = el.closest('.card')?.classList.contains('card--span-2')
             || el.closest('.card')?.classList.contains('card--span-3');
+        const isTallChart = el.closest('.card')?.classList.contains('card--rows-2');
         const wrapCategoryLabels = categories.length <= 5;
         const categoryAxisLabel = {
             fontSize:9,
@@ -341,13 +358,21 @@
                     label:{show:true,position:'right',fontSize:9,color:'#262626',formatter:params => numberLabel(params.value[0])}}]});
         } else {
             const vertical = numeric.length <= 5 && Math.max(...categories.map(value => value.length)) < 28;
-            chart.setOption(vertical ? {...base,grid:{left:8,right:8,top:12,bottom:5,containLabel:true},
-                xAxis:{type:'category',data:categories,axisLabel:{fontSize:9,width:100,overflow:'break'}},
+            chart.setOption(vertical ? {...base,grid:{left:8,right:8,top:12,bottom:numeric.length > 2 ? 38 : 24,containLabel:true},
+                xAxis:{type:'category',data:categories,axisLabel:{
+                    fontSize:8,
+                    lineHeight:9,
+                    interval:0,
+                    margin:10,
+                    width:isWideChart ? 110 : 60,
+                    overflow:'break',
+                    formatter:value => wrapAxisLabel(value, isWideChart ? 18 : 10)
+                }},
                 yAxis:{type:'value',axisLabel:{fontSize:8}},
-                series:[{type:'bar',data:numbers,barMaxWidth:30,itemStyle:{color:dimensionAccent},label:{show:true,position:'top',fontSize:9,formatter:params => numberLabel(params.value)}}]}
+                series:[{type:'bar',data:numbers,barMaxWidth:isWideChart ? 30 : 18,itemStyle:{color:dimensionAccent},label:{show:true,position:'top',fontSize:9,formatter:params => numberLabel(params.value)}}]}
                 : {...base,xAxis:{type:'value',axisLabel:{fontSize:8}},
-                    yAxis:{type:'category',data:categories,axisLabel:categoryAxisLabel},
-                    series:[{type:'bar',data:numbers,barMaxWidth:18,itemStyle:{color:dimensionAccent},label:{show:true,position:'right',fontSize:9,formatter:params => numberLabel(params.value)}}]});
+                    yAxis:{type:'category',data:categories,axisLabel:{...categoryAxisLabel,margin:12}},
+                    series:[{type:'bar',data:numbers,barMaxWidth:isTallChart ? 18 : 12,barCategoryGap:'25%',itemStyle:{color:dimensionAccent},label:{show:true,position:'right',fontSize:9,formatter:params => numberLabel(params.value)}}]});
         }
     }
 
