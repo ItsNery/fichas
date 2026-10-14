@@ -16,8 +16,8 @@
                 </h6>
                 <div class="d-flex justify-content-start">
                     <a title="X/Twitter de la Secretaría de Planeación y Finanzas"
-                        class="btn btn-outline-primary btn-square mr-2" href="https://x.com/SPFAGobPue"
-                        rel="noopener" target="_blank">
+                        class="btn btn-outline-primary btn-square mr-2" href="https://x.com/SPFAGobPue" rel="noopener"
+                        target="_blank">
                         <i class="fa-brands fa-x-twitter"></i>
                     </a>
                     <a title="Facebook de la Secretaría de Planeación y Finanzas"
@@ -59,15 +59,19 @@
                     Mapa de sitio
                 </h5>
                 <div class="d-flex flex-column justify-content-start">
-                    <a class="text-white-50 mb-2" href="{{ url('/') }}">
+                    <a class="text-white-50 mb-2" href="{{ route('inicio') }}">
                         <i class="fa fa-home mr-2"></i>
                         Inicio
                     </a>
-                    <a class="text-white-50 mb-2" href="{{ url('/banco-indicadores') }}">
+                    <a class="text-white-50 mb-2" href="{{ route('banco-indicadores.index') }}">
                         <i class="fa-solid fa-chart-bar mr-2"></i>
                         Banco de Indicadores
                     </a>
-                    <a class="text-white-50 mb-2" href="{{ url('/datos-abiertos') }}">
+                    <a class="text-white-50 mb-2" href="{{ route('ficha-municipal.index') }}">
+                        <i class="fa-solid fa-map-marker-alt mr-2"></i>
+                        Fichas Municipales
+                    </a>
+                    <a class="text-white-50 mb-2" href="{{ route('datos-abiertos.index') }}">
                         <i class="fa-solid fa-chart-pie mr-2"></i>
                         Datos abiertos
                     </a>
@@ -131,9 +135,8 @@
                 </p>
                 <p>
                     <i class="fa fa-phone-alt mr-2"></i>
-                    <a class="no_s text-inherit" href="tel:2222297000">
-                        222 229
-                        7000 Ext. 7137
+                    <a class="no_s text-inherit" href="tel:2221442449">
+                        222 144 2449, Ext. 5040
                     </a>
                 </p>
                 <p>
@@ -216,7 +219,8 @@
 
             // Feedback visual de espera
             if (comment !== null && feedbackForm) {
-                feedbackForm.innerHTML = '<p class="text-white-50" style="margin:10px 0;">Procesando tu voto...</p>';
+                feedbackForm.innerHTML =
+                    '<p class="text-white-50" style="margin:10px 0;">Procesando tu voto...</p>';
             } else {
                 evaluationDiv.innerHTML = '<p class="text-black">Procesando tu voto...</p>';
             }
@@ -247,7 +251,8 @@
                     evaluationDiv.classList.add('thank-you');
 
                     setTimeout(() => {
-                        evaluationDiv.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                        evaluationDiv.style.transition =
+                            'opacity 0.5s ease-out, transform 0.5s ease-out';
                         evaluationDiv.style.opacity = '0';
                         evaluationDiv.style.transform = 'translateY(-20px)';
                         setTimeout(() => evaluationDiv.style.display = 'none', 500);

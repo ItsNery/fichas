@@ -59,7 +59,7 @@
                     Municipios</a>
                 <a href="{{ route('banco-indicadores.index') }}"><i class="fas fa-chart-line" aria-hidden="true"></i>
                     Indicadores</a>
-                <a href="{{ route('regiones.estatal.perfil') }}"><i class="fas fa-map" aria-hidden="true"></i> Perfiles
+                <a href="{{ route('regiones.index') }}"><i class="fas fa-map" aria-hidden="true"></i> Perfiles
                     regionales</a>
                 <a href="{{ route('datos-abiertos.index') }}"><i class="fas fa-download" aria-hidden="true"></i> Datos
                     abiertos</a>

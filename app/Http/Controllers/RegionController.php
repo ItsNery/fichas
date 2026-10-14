@@ -15,6 +15,23 @@ use Illuminate\Support\Str;
 class RegionController extends Controller
 {
     /**
+     * Muestra el índice público de perfiles estatales y regionales.
+     */
+    public function index()
+    {
+        $macrorregiones = Macrorregion::with([
+            'microrregiones' => fn ($query) => $query
+                ->withCount('municipios')
+                ->orderBy('nombre'),
+        ])
+            ->withCount('microrregiones')
+            ->orderBy('id')
+            ->get();
+
+        return view('regiones.index', compact('macrorregiones'));
+    }
+
+    /**
      * Muestra el perfil de una macrorregión
      */
     public function perfilMacrorregion(Macrorregion $macrorregion)

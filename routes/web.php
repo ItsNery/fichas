@@ -69,6 +69,7 @@ Route::get('/datos-abiertos/exportar-indicadores-coyuntura', [HomeController::cl
 
 // --- Módulo 3: Perfiles Regionales ---
 Route::name('regiones.')->group(function () {
+    Route::get('/perfiles-regionales', [RegionController::class, 'index'])->name('index');
     Route::get('ficha/estatal/perfil', [RegionController::class, 'perfilEstatal'])->name('estatal.perfil');
     Route::get('ficha/estatal/pdf', [RegionController::class, 'exportarEstatalPDF'])->name('estatal.pdf');
     Route::get('ficha/estatal/excel', [RegionController::class, 'exportarEstatalExcel'])->name('estatal.excel');
