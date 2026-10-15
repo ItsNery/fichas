@@ -16,6 +16,7 @@ use Illuminate\Support\Str;
 use App\Services\ExportService;
 use App\Services\ExportV3Service;
 use App\Services\FichaDataStore;
+use App\Services\FichaLayoutService;
 use App\Services\FichaNarratorService;
 use App\Services\FichaProfilerService;
 use App\Services\IndicadorQueryService;
@@ -205,42 +206,166 @@ class FichaController extends Controller
     {
         $municipio->load('microrregion.macrorregion');
 
+        // Get the configured indicators for the public perfil (same as interactive /perfil view)
         $configuraciones = ConfiguracionFicha::with(['indicador.variables', 'indicador.tematica.dimension', 'variables'])
             ->visibleEnPerfilPublico()
             ->orderBy('orden')
             ->orderBy('id')
             ->get();
 
-        $allVariableIds = FichaDataStore::extractVariableIds($configuraciones);
-        $dataStore = new FichaDataStore($municipio, $allVariableIds);
+        // Build dimension colors from configurations
+        $dimensionColors = [];
+        foreach ($configuraciones as $config) {
+            $dimensionNombre = $config->indicador?->tematica?->dimension?->nombre;
+            if ($dimensionNombre && !isset($dimensionColors[$dimensionNombre])) {
+                $dimensionColors[$dimensionNombre] = $config->indicador?->tematica?->dimension?->color ?: '#872341';
+            }
+        }
+
+        // Collect all variable IDs from configured indicators only
+        $indicadorIds = $configuraciones->pluck('indicador_id')->unique()->filter()->all();
+        $variableIds = $configuraciones->pluck('variables')->flatten()->pluck('id')->all();
+        $indicadorVariableIds = Variable::whereIn('indicador_id', $indicadorIds)
+            ->where('visible_en_ficha', true)
+            ->pluck('id')
+            ->all();
+        $allVariableIds = array_unique(array_merge($variableIds, $indicadorVariableIds));
+
+        // Query historical data for these variables only
+        $datosHistoricos = DatoHistorico::with(['variable', 'motivoSinDato'])
+            ->where('municipio_id', $municipio->id)
+            ->whereIn('variable_id', $allVariableIds)
+            ->get()
+            ->groupBy('variable_id');
+
+        // Also fetch complex indicator data
+        $complejoIndicadorIds = $configuraciones->where('indicador.es_complejo', true)
+            ->pluck('indicador_id')
+            ->unique()
+            ->filter()
+            ->all();
+        $datosComplejos = DatoIndicadorComplejo::where('municipio_id', $municipio->id)
+            ->whereIn('indicador_id', $complejoIndicadorIds)
+            ->latest('anio')
+            ->get()
+            ->groupBy('indicador_id');
 
         $perfil = [];
+        $processedIndicadorIds = [];
 
-        foreach ($configuraciones as $config) {
-            $datos = app(FichaComposerService::class)->obtenerDatosParaConfig($config, $municipio, $dataStore);
+        // Deduplicate by unique indicador_id (keep first config per indicator)
+        // This matches the panorama view behavior: one card per indicator, not per config
+        $uniqueConfigs = $configuraciones->unique('indicador_id');
 
-            $dimensionKey = $this->dimensionKey($config);
-            $perfil[$dimensionKey][] = [
-                'config'    => $config,
-                'datos'     => $datos,
-                'narrativa' => FichaNarratorService::procesar($config->plantilla_narrativa, $municipio, $datos),
+        foreach ($uniqueConfigs as $config) {
+            $indicador = $config->indicador;
+            $indicadorId = $indicador?->id;
+
+            if (in_array($indicadorId, $processedIndicadorIds)) {
+                continue;
+            }
+            $processedIndicadorIds[] = $indicadorId;
+
+            $dimensionNombre = $indicador?->tematica?->dimension?->nombre ?? 'Sin Dimensión';
+            $tematicaNombre = $indicador?->tematica?->nombre ?? 'Sin Temática';
+
+            // Use config's tipo_visualizacion if set, otherwise fall back to indicator's default
+            $tipoVisualizacion = $config->tipo_visualizacion ?? $indicador?->tipo_grafico_default ?? 'bar';
+
+            $datos = null;
+
+            if ($indicador && $indicador->es_complejo) {
+                $registro = $datosComplejos->get($indicadorId, collect())->first();
+                $datos = $registro ? ['anio' => $registro->anio, 'complejo' => $registro->datos] : null;
+            } elseif ($indicador && $indicador->variables->isNotEmpty()) {
+                $variables = $indicador->variables->where('visible_en_ficha', true);
+                $aniosComunes = $variables->map(function ($variable) use ($datosHistoricos) {
+                    return $datosHistoricos->get($variable->id, collect())->pluck('anio')->all();
+                })->reduce(fn ($carry, $anios) => $carry === null ? $anios : array_values(array_intersect($carry, $anios)));
+                $anio = $aniosComunes ? max($aniosComunes) : null;
+
+                // Fallback: if no common years across all variables, use the latest year
+                // available for each variable independently (handles multi-variable indicators
+                // where variables have different year ranges)
+                if (!$anio) {
+                    $latestAnio = $variables->map(function ($variable) use ($datosHistoricos) {
+                        $years = $datosHistoricos->get($variable->id, collect())->pluck('anio')->all();
+                        return $years ? max($years) : null;
+                    })->filter()->max();
+                    $anio = $latestAnio;
+                }
+
+                if ($anio) {
+                    $valores = $variables->map(function ($variable) use ($datosHistoricos, $anio) {
+                        $dato = $datosHistoricos->get($variable->id, collect())->firstWhere('anio', $anio);
+                        return [
+                            'nombre' => $variable->nombre_amigable,
+                            'valor' => $dato?->valor,
+                            'display' => $dato?->valor_display ?? 'N/D',
+                            'unidad' => $variable->unidad_medida,
+                        ];
+                    });
+                    $datos = [
+                        'anio' => $anio,
+                        'type' => $tipoVisualizacion, // Use config's visualization type
+                        'categorias' => $valores->pluck('nombre')->all(),
+                        'series' => [[
+                            'name' => $indicador->nombre_amigable,
+                            'data' => $valores->pluck('valor')->map(fn ($valor) => $valor === null ? 0 : (float) $valor)->all(),
+                        ]],
+                        'valores' => $valores->all(),
+                    ];
+                }
+            }
+
+            $perfil[$dimensionNombre][$tematicaNombre][] = [
+                'indicador' => $indicador,
+                'datos' => $datos,
+                'config' => $config,
             ];
         }
 
         if ($request->query('preview')) {
-            return view('municipios.perfil_pdf', [
-                'municipio' => $municipio,
-                'perfil'    => $perfil,
+            // Get map image and cintillo for the preview too
+            $mapImageService = app(MunicipalityMapImageService::class);
+            $mapImageDataUri = 'data:image/png;base64,'.base64_encode(
+                $mapImageService->render((string) $municipio->cvegeo)
+            );
+            $cintillo = base64_encode(file_get_contents(public_path('img/Cintillo SEI-07.png')));
+
+            return view('municipios.panorama_pdf', [
+                'municipio'       => $municipio,
+                'perfil'          => $perfil,
+                'dimensionColors' => $dimensionColors,
+                'hero'            => $this->getHeroStats($municipio),
+                'mapImageDataUri' => $mapImageDataUri,
+                'cintillo'        => $cintillo,
+                'geojsonUrl'      => asset('geojson/municipios_puebla_slim.geojson'),
             ]);
         }
 
-        $html = view('municipios.perfil_pdf', [
-            'municipio' => $municipio,
-            'perfil'    => $perfil,
+        // Get map image data for the panorama layout
+        $mapImageService = app(MunicipalityMapImageService::class);
+        $mapImageDataUri = 'data:image/png;base64,'.base64_encode(
+            $mapImageService->render((string) $municipio->cvegeo)
+        );
+        $cintillo = base64_encode(file_get_contents(public_path('img/Cintillo SEI-07.png')));
+
+        $html = view('municipios.panorama_pdf', [
+            'municipio'       => $municipio,
+            'perfil'          => $perfil,
+            'dimensionColors' => $dimensionColors,
+            'hero'            => $this->getHeroStats($municipio),
+            'mapImageDataUri' => $mapImageDataUri,
+            'cintillo'        => $cintillo,
+            'geojsonUrl'      => asset('geojson/municipios_puebla_slim.geojson'),
         ])->render();
 
         $fileName = 'perfil-' . str($municipio->nombre)->slug() . '.pdf';
-        return app(ExportV3Service::class)->exportPerfilPDF($html, $fileName);
+        return app(ExportV3Service::class)->exportPanoramaPDF(
+            $html,
+            $fileName
+        );
     }
 
 
@@ -527,11 +652,13 @@ class FichaController extends Controller
         $dataStore = new FichaDataStore($municipio, $allVariableIds);
 
         $perfil = [];
+        $dimensionColors = [];
 
         foreach ($configuraciones as $config) {
             $datos = app(FichaComposerService::class)->obtenerDatosParaConfig($config, $municipio, $dataStore);
 
             $dimensionKey = $this->dimensionKey($config);
+            $dimensionColors[$dimensionKey] ??= $config->indicador?->tematica?->dimension?->color ?: '#861e34';
             $perfil[$dimensionKey][] = [
                 'config' => $config,
                 'datos' => $datos,
@@ -539,9 +666,15 @@ class FichaController extends Controller
             ];
         }
 
+        $layout = app(FichaLayoutService::class);
+        foreach ($perfil as $dimension => $items) {
+            $perfil[$dimension] = $layout->compose($items);
+        }
+
         return view('municipios.perfil', array_merge($hero, [
             'municipio' => $municipio,
             'perfil' => $perfil,
+            'dimensionColors' => $dimensionColors,
             'similaresPoblacion' => app(RankingService::class)->getSimilaresPorPoblacion($municipio, $hero['poblacionTotal']),
             'similaresRegion' => app(RankingService::class)->getSimilaresPorRegion($municipio),
         ]));
@@ -597,6 +730,9 @@ class FichaController extends Controller
             ->get()
             ->groupBy('variable_id');
         $perfil = [];
+        $dimensionColors = $dimensiones->mapWithKeys(fn (Dimension $dimension) => [
+            $dimension->nombre => $dimension->color ?: '#872341',
+        ])->all();
 
         foreach ($dimensiones as $dimension) {
             foreach ($dimension->tematicas as $tematica) {
@@ -649,6 +785,7 @@ class FichaController extends Controller
             'municipio' => $municipio,
             'hero' => $this->getHeroStats($municipio),
             'perfil' => $perfil,
+            'dimensionColors' => $dimensionColors,
             'geojsonUrl' => asset('geojson/municipios_puebla_slim.geojson'),
             'cintillo' => base64_encode(file_get_contents(public_path('img/Cintillo SEI-07.png'))),
         ];

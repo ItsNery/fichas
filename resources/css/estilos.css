@@ -3815,6 +3815,136 @@ footer {
     text-transform: capitalize;
 }
 
+/* Composición editorial del perfil: cada módulo conserva la altura que su contenido necesita. */
+.section-perfil {
+    --dimension-accent: var(--color1);
+}
+
+.section-perfil .dimension-header {
+    display: flex;
+    align-items: center;
+    min-height: 4.75rem;
+    padding: 1rem 1.25rem;
+    border: 0;
+    border-left: 0.45rem solid rgba(255, 255, 255, 0.72);
+    border-radius: 0;
+    background: var(--dimension-accent);
+    box-shadow: none;
+}
+
+.section-perfil .dimension-header__title {
+    color: var(--dimension-accent-text, #fff);
+    font-family: var(--fontFamilyBold);
+    letter-spacing: -0.025em;
+}
+
+.perfil-grid {
+    display: grid;
+    grid-auto-flow: dense;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    align-items: start;
+    gap: 1.4rem;
+}
+
+.perfil-grid__item {
+    grid-column: span var(--grid-columns, 6);
+    align-self: start;
+    min-width: 0;
+}
+
+/* El script de perfil calcula la posición de cada módulo una vez que conoce
+   su altura real. Así un KPI no reserva el alto de una gráfica vecina. */
+.perfil-grid--masonry {
+    display: block;
+    position: relative;
+}
+
+.perfil-grid--masonry .perfil-grid__item {
+    position: absolute;
+    margin: 0;
+    will-change: transform;
+}
+
+.section-perfil .perfil-tarjeta {
+    height: auto;
+    border: 1px solid #e7e4df;
+    border-top: 0.35rem solid var(--dimension-accent);
+    border-radius: 0;
+    box-shadow: none !important;
+}
+
+.section-perfil .perfil-tarjeta__body {
+    padding: 1.5rem;
+    flex: 0 0 auto;
+    height: auto;
+    min-height: 0;
+}
+
+.section-perfil .perfil-tarjeta__titulo {
+    color: #262626;
+    font-family: var(--fontFamilyBold);
+}
+
+.section-perfil .perfil-tarjeta__anio-badge {
+    border: 0;
+    border-radius: 0;
+    background: var(--dimension-accent);
+    color: var(--dimension-accent-text, #fff);
+    font-weight: 700;
+}
+
+/* Los acentos secundarios heredan el color editorial de su dimensión. */
+.section-perfil .perfil-tarjeta__kpi-value,
+.section-perfil .perfil-tarjeta__benchmark-value,
+.section-perfil .perfil-tarjeta__metadatos-summary,
+.section-perfil .perfil-tarjeta__info-icon:hover {
+    color: var(--dimension-accent);
+}
+
+.section-perfil .perfil-tarjeta__spinner {
+    color: var(--dimension-accent) !important;
+}
+
+.section-perfil .perfil-tarjeta__empty-state {
+    border-left-color: var(--dimension-accent);
+}
+
+.section-perfil .perfil-tarjeta__empty-state > i {
+    color: var(--dimension-accent);
+}
+
+.perfil-grid__item--compact .perfil-tarjeta { min-height: 0; }
+.perfil-grid__item--compact .perfil-tarjeta__chart-box { height: 12rem; }
+.perfil-grid__item--standard .perfil-tarjeta__chart-box { height: 17rem; }
+.perfil-grid__item--wide .perfil-tarjeta__chart-box { height: 19rem; }
+.perfil-grid__item--featured .perfil-tarjeta__chart-wrapper {
+    margin-top: 1rem;
+}
+.perfil-grid__item--featured .perfil-tarjeta__chart-box {
+    height: clamp(25rem, 36vw, 34rem);
+}
+.perfil-grid__item--featured .perfil-tarjeta__kpi-value { font-size: clamp(3rem, 5vw, 5.5rem); }
+
+@media (max-width: 991.98px) {
+    .perfil-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .perfil-grid__item { grid-column: span min(var(--grid-columns, 6), 6); }
+}
+
+@media (max-width: 575.98px) {
+    .perfil-grid { display: block; }
+    .perfil-grid--masonry { height: auto !important; }
+    .perfil-grid--masonry .perfil-grid__item {
+        position: static;
+        width: auto !important;
+        transform: none !important;
+    }
+    .perfil-grid__item + .perfil-grid__item { margin-top: 1rem; }
+    .section-perfil .perfil-tarjeta__body { padding: 1.15rem; }
+    .perfil-grid__item--standard .perfil-tarjeta__chart-box,
+    .perfil-grid__item--wide .perfil-tarjeta__chart-box { height: 18rem; }
+    .perfil-grid__item--featured .perfil-tarjeta__chart-box { height: 25rem; }
+}
+
 /* Bloque Tarjeta de Perfil (BEM) */
 .perfil-tarjeta {
     background: white;
@@ -4001,6 +4131,59 @@ footer {
 
 .perfil-tarjeta__chart-wrapper--half {
     min-height: 300px;
+}
+
+.perfil-tarjeta__empty-state {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+    margin-top: 1rem;
+    color: #5e6670;
+    background: #f8f9fa;
+    border-left: 0.25rem solid var(--color4);
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.perfil-tarjeta__empty-state > i {
+    margin-top: 0.1rem;
+    color: var(--color1);
+}
+
+.perfil-tarjeta__empty-state strong,
+.perfil-tarjeta__empty-state span {
+    display: block;
+}
+
+.perfil-tarjeta__empty-state span {
+    margin-top: 0.15rem;
+}
+
+.perfil-tarjeta__data-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 1rem;
+    padding: 0.75rem 0 0;
+    margin-top: auto;
+    color: #69737d;
+    border-top: 1px solid #e9ecef;
+    font-size: 0.75rem;
+    line-height: 1.35;
+}
+
+.perfil-tarjeta__data-meta > span {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+}
+
+.perfil-tarjeta__data-meta i {
+    color: var(--color5);
+}
+
+.perfil-tarjeta__data-meta .perfil-tarjeta__source {
+    flex-basis: 100%;
 }
 
 .perfil-tarjeta__chart-box {

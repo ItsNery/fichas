@@ -39,6 +39,7 @@ class PanoramaPdfExportTest extends TestCase
         $dimension = Dimension::create([
             'nombre' => 'Social',
             'nombre_tecnico' => 'social',
+            'color' => '#123456',
             'visible_en_ficha' => true,
         ]);
         $tematica = Tematica::create([
@@ -104,6 +105,7 @@ class PanoramaPdfExportTest extends TestCase
             ->withArgs(function (string $html, string $fileName) use ($mapDataUri, $mapUrl): bool {
                 return $fileName === 'panorama-acatzingo.pdf'
                     && str_contains($html, $mapDataUri)
+                    && str_contains($html, '--dimension-accent: #123456;')
                     && str_contains($html, '"display":"No aplica"')
                     && ! str_contains($html, $mapUrl);
             })

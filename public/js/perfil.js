@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", function () {
         chartFontsReady.then(() => {
             initHeroMap();
             setupLazyCharts();
+            initProfileMasonry();
             setupScrollSpy();
             initPopovers();
         });
@@ -52,6 +53,47 @@ function formatChartValue(value, maximumFractionDigits = 2) {
         : value;
 }
 
+function contrastTextColor(color) {
+    const hex = color.trim().replace("#", "");
+    if (!/^[0-9a-f]{6}$/i.test(hex)) return "#fff";
+
+    const numeric = Number.parseInt(hex, 16);
+    const brightness = (((numeric >> 16) & 255) * 299
+        + ((numeric >> 8) & 255) * 587
+        + (numeric & 255) * 114) / 1000;
+
+    return brightness > 160 ? "#262626" : "#fff";
+}
+
+// Paleta institucional para los datos, independiente del color editorial de
+// cada dimensión. El orden alterna familias cromáticas para que las series
+// consecutivas mantengan contraste (vino, ocre, verde, rojo, etcétera).
+const institutionalChartColors = [
+    ["--color2", "#861e34"],
+    ["--color4", "#c79b66"],
+    ["--color6", "#246257"],
+    ["--color3", "#af1731"],
+    ["--color7", "#609b84"],
+    ["--color1", "#5f1b2d"],
+    ["--color8", "#484747"],
+    ["--color5", "#0c312d"],
+];
+const chartPalette = institutionalChartColors.map(([variable, fallback]) =>
+    getComputedStyle(document.documentElement).getPropertyValue(variable).trim() || fallback,
+);
+
+function colorTreemapNodes(nodes, depth = 0) {
+    return (nodes || []).map((node, index) => {
+        const color = node.itemStyle?.color || chartPalette[(index + depth) % chartPalette.length];
+
+        return {
+            ...node,
+            itemStyle: { ...(node.itemStyle || {}), color },
+            label: { ...(node.label || {}), color: node.label?.color || contrastTextColor(color) },
+            children: node.children ? colorTreemapNodes(node.children, depth + 1) : undefined,
+        };
+    });
+}
 function processNextInQueue() {
     if (renderQueue.length === 0) {
         processingQueue = false;
@@ -166,6 +208,99 @@ function setupLazyCharts() {
     setupStateRankings();
 }
 
+/**
+ * Empaca las tarjetas conservando su orden de lectura. CSS Grid alinea cada
+ * fila a la tarjeta más alta; este cálculo usa la altura disponible de cada
+ * columna para que los módulos bajos ocupen los huecos reales.
+ */
+function initProfileMasonry() {
+    if (window.isPdfExport) return;
+
+    const grids = Array.from(document.querySelectorAll(".perfil-grid"));
+    if (!grids.length || !window.ResizeObserver) return;
+
+    let frameId = null;
+    const scheduleLayout = () => {
+        if (frameId) cancelAnimationFrame(frameId);
+        frameId = requestAnimationFrame(() => {
+            frameId = null;
+            grids.forEach(layoutProfileGrid);
+        });
+    };
+
+    const itemObserver = new ResizeObserver(scheduleLayout);
+    const gridObserver = new ResizeObserver(scheduleLayout);
+
+    grids.forEach((grid) => {
+        gridObserver.observe(grid);
+        grid.querySelectorAll(".perfil-grid__item").forEach((item) => {
+            itemObserver.observe(item);
+        });
+    });
+
+    window.addEventListener("resize", scheduleLayout, { passive: true });
+    window.addEventListener("perfil:masonry-refresh", scheduleLayout);
+    scheduleLayout();
+}
+
+function layoutProfileGrid(grid) {
+    const isMobile = window.matchMedia("(max-width: 575.98px)").matches;
+    const items = Array.from(grid.querySelectorAll(".perfil-grid__item"));
+
+    if (isMobile) {
+        grid.classList.remove("perfil-grid--masonry");
+        grid.style.height = "";
+        items.forEach((item) => {
+            item.style.width = "";
+            item.style.transform = "";
+        });
+        return;
+    }
+
+    const columns = window.matchMedia("(max-width: 991.98px)").matches ? 6 : 12;
+    const gap = Number.parseFloat(getComputedStyle(grid).gap) || 0;
+    const columnWidth = (grid.clientWidth - gap * (columns - 1)) / columns;
+
+    if (columnWidth <= 0) return;
+
+    grid.classList.add("perfil-grid--masonry");
+    const columnHeights = Array(columns).fill(0);
+
+    items.forEach((item) => {
+        const requestedSpan = Number.parseInt(
+            getComputedStyle(item).getPropertyValue("--grid-columns"),
+            10,
+        );
+        const span = Math.min(Math.max(requestedSpan || columns, 1), columns);
+        const itemWidth = columnWidth * span + gap * (span - 1);
+        let bestColumn = 0;
+        let bestTop = Number.POSITIVE_INFINITY;
+
+        for (let column = 0; column <= columns - span; column += 1) {
+            const top = Math.max(...columnHeights.slice(column, column + span));
+            if (top < bestTop) {
+                bestTop = top;
+                bestColumn = column;
+            }
+        }
+
+        item.style.width = `${itemWidth}px`;
+        item.style.transform = `translate(${bestColumn * (columnWidth + gap)}px, ${bestTop}px)`;
+
+        const nextHeight = bestTop + item.offsetHeight + gap;
+        for (let column = bestColumn; column < bestColumn + span; column += 1) {
+            columnHeights[column] = nextHeight;
+        }
+    });
+
+    grid.style.height = `${Math.max(...columnHeights) - gap}px`;
+
+    grid.querySelectorAll(".lazy-chart").forEach((chartElement) => {
+        const chart = echarts.getInstanceByDom(chartElement);
+        if (chart) chart.resize();
+    });
+}
+
 function normalizeSearchText(value) {
     return String(value || "")
         .normalize("NFD")
@@ -266,6 +401,7 @@ function renderMainChart(itemData) {
             grid: {
                 left: "3%",
                 right: "4%",
+                top: "3%",
                 bottom: "10%",
                 containLabel: true,
             },
@@ -461,6 +597,7 @@ function renderMainChart(itemData) {
             const compactChart = chartDom.clientWidth < 600;
             const yAxisLabelWidth = compactChart ? 120 : 165;
             option = {
+                color: chartPalette,
                 tooltip: {
                     trigger: "axis",
                     triggerOn: "mousemove",
@@ -570,9 +707,13 @@ function renderMainChart(itemData) {
                 },
                 legend: { bottom: 0 },
                 grid: { top: 40, bottom: 60, left: 60, right: 30 },
-                color: ["#861e34", "#c79b66", "#0a192f", "#444444", "#7a7a7a"],
+                color: chartPalette,
                 series: (echartsData.series || []).map((s) => {
                     s.type = chartType;
+                    if (chartType === "treemap") {
+                        s.data = colorTreemapNodes(s.data);
+                        s.itemStyle = { ...(s.itemStyle || {}), borderColor: "#fff", borderWidth: 2 };
+                    }
                     if (chartType === "line" || tVis.includes("area")) {
                         s.smooth = true;
                         s.symbol = "circle";
@@ -649,7 +790,7 @@ function renderMainChart(itemData) {
                 {
                     data: vars.map((v) => v.valor || v.value || 0),
                     type: "bar",
-                    itemStyle: { color: "#861e34" },
+                    itemStyle: { color: chartPalette[0] },
                 },
             ],
         };
@@ -682,7 +823,6 @@ function renderSparkline(itemData) {
 
     var sparkChart = echarts.init(sparkDom, null, { renderer: "svg" });
     var trendData = itemData.datos.tendencia;
-
     var option = {
         grid: { left: 0, right: 0, top: 5, bottom: 5 },
         xAxis: {
@@ -697,11 +837,11 @@ function renderSparkline(itemData) {
                 type: "line",
                 smooth: true,
                 symbol: "none",
-                lineStyle: { color: "#861e34", width: 2 },
+                lineStyle: { color: chartPalette[0], width: 2 },
                 areaStyle: {
                     color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                        { offset: 0, color: "rgba(134, 30, 52, 0.3)" },
-                        { offset: 1, color: "rgba(134, 30, 52, 0)" },
+                        { offset: 0, color: "rgba(0, 114, 178, 0.3)" },
+                        { offset: 1, color: "rgba(0, 114, 178, 0)" },
                     ]),
                 },
             },
@@ -888,122 +1028,3 @@ function setupScrollSpy() {
         });
     };
 }
-
-// Manejo del selector de navegación por años
-document.addEventListener("click", function (e) {
-    const btn = e.target.closest(".btn-year-selector");
-    if (!btn) return;
-
-    e.preventDefault();
-
-    // Si ya está activo, no hacemos nada
-    if (btn.classList.contains("active")) return;
-
-    const year = btn.getAttribute("data-year");
-    const configId = btn.getAttribute("data-config-id");
-    const muniSlug = btn.getAttribute("data-muni-slug");
-
-    // Encontrar todos los botones del mismo contenedor
-    const container = btn.closest(".perfil-tarjeta__years-container");
-    if (!container) return;
-    const siblingBtns = container.querySelectorAll(".btn-year-selector");
-
-    // Encontrar el elemento de la tarjeta padre
-    const cardEl = btn.closest(".perfil-tarjeta");
-    if (!cardEl) return;
-    const chartDom = cardEl.querySelector(".perfil-tarjeta__chart-box");
-    const narrativeEl = cardEl.querySelector(
-        ".perfil-tarjeta__narrativa-texto",
-    );
-    const anioBadge = cardEl.querySelector(".perfil-tarjeta__anio-badge");
-    const skeleton = cardEl.querySelector(".perfil-tarjeta__skeleton");
-
-    // 1. Mostrar estado de carga (loading)
-    if (skeleton) {
-        skeleton.style.display = "flex";
-    }
-    const myChart = chartDom ? echarts.getInstanceByDom(chartDom) : null;
-    if (myChart) {
-        myChart.showLoading({
-            text: "Cargando datos...",
-            color: "#861e34",
-            textColor: "#861e34",
-            maskColor: "rgba(255, 255, 255, 0.7)",
-            zlevel: 0,
-        });
-    }
-
-    // 2. Realizar petición AJAX para obtener datos del año seleccionado
-    const graficoDatosUrl = window.FichaConfig.graficoDatosUrlTemplate
-        .replace("__MUNICIPIO__", encodeURIComponent(muniSlug))
-        .replace("__CONFIG__", encodeURIComponent(configId))
-        .replace("__ANIO__", encodeURIComponent(year));
-
-    fetch(graficoDatosUrl)
-        .then((response) => {
-            if (!response.ok)
-                throw new Error("Error en la respuesta del servidor");
-            return response.json();
-        })
-        .then((res) => {
-            if (res.success) {
-                // 3. Cambiar botón activo visualmente
-                siblingBtns.forEach((b) => {
-                    b.classList.remove(
-                        "active",
-                        "btn-vino",
-                        "text-white",
-                        "border-vino",
-                    );
-                    b.classList.add("btn-outline-secondary");
-                });
-                btn.classList.remove("btn-outline-secondary");
-                btn.classList.add(
-                    "active",
-                    "btn-vino",
-                    "text-white",
-                    "border-vino",
-                );
-
-                // 4. Actualizar Badge de año en el título
-                if (anioBadge) {
-                    anioBadge.textContent = year;
-                }
-
-                // 5. Actualizar Narrativa de forma fluida
-                if (narrativeEl && res.narrativa) {
-                    narrativeEl.style.opacity = 0;
-                    setTimeout(() => {
-                        narrativeEl.innerHTML = res.narrativa;
-                        narrativeEl.style.opacity = 1;
-                    }, 150);
-                }
-
-                // 6. Actualizar Gráfico
-                if (myChart && res.datos) {
-                    // Volver a renderizar llamando a renderMainChart pasándole la estructura actualizada
-                    renderMainChart({
-                        config: {
-                            id: configId,
-                            tipo_visualizacion: res.datos.echarts
-                                ? res.datos.echarts.type
-                                : "bar",
-                        },
-                        datos: res.datos,
-                    });
-                }
-            }
-        })
-        .catch((error) => {
-            console.error("Error al actualizar datos del año:", error);
-        })
-        .finally(() => {
-            // Ocultar cargando
-            if (skeleton) {
-                skeleton.style.display = "none";
-            }
-            if (myChart) {
-                myChart.hideLoading();
-            }
-        });
-});

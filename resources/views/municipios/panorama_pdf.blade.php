@@ -17,7 +17,8 @@
             $grid = array_fill(0, 3, array_fill(0, 3, false));
             foreach ($items as $item) {
                 $values = $item['datos']['valores'] ?? [];
-                $type = mb_strtolower(\Illuminate\Support\Str::ascii((string) $item['indicador']->tipo_grafico_default));
+                // Use datos.type (from config's tipo_visualizacion) with fallback to indicator's default
+                $type = mb_strtolower(\Illuminate\Support\Str::ascii((string) ($item['datos']['type'] ?? $item['indicador']->tipo_grafico_default)));
                 $isPyramid = str_contains($type, 'piramide');
                 // El tamaño de la tarjeta responde a las categorías que realmente se dibujarán.
                 // Variables sin dato no deben consumir espacio reservado para ejes y etiquetas.
@@ -110,10 +111,6 @@
         .sheet { width:432mm; height:279mm; margin:0 auto 5mm; padding:11mm 15mm 8mm; background:var(--color-surface); position:relative; overflow:hidden; break-after:page; page-break-after:always; }
         .sheet:last-of-type { break-after:auto; page-break-after:auto; }
         .sheet::before { content:""; position:absolute; top:11mm; left:0; width:3mm; height:48mm; background:var(--dimension-accent); }
-        .dimension--demografica-y-social { --dimension-accent:var(--brand-green-700); }
-        .dimension--economico { --dimension-accent:var(--brand-burgundy-700); }
-        .dimension--geografica-y-medio-ambiente { --dimension-accent:var(--brand-gold-500); }
-        .dimension--gobierno-seguridad-e-imparticion-de-justicia { --dimension-accent:var(--brand-green-900); }
         .identity { height:48mm; margin:0 0 5mm; padding:1mm 0 1.5mm; display:grid; grid-template-columns:58mm minmax(0,1fr) 126mm; align-items:center; gap:9mm; border-top:.6mm solid var(--color-accent); border-bottom:1.2mm solid var(--color-primary); }
         .identity-copy { min-width:0; text-align:center; }
         .municipality { margin:0; font:700 27pt/.95 Gilroy,Arial,sans-serif; color:var(--color-primary); }
@@ -173,7 +170,8 @@
 </head>
 <body>
 @foreach($pages as $page)
-    <section class="sheet dimension--{{ \Illuminate\Support\Str::slug($page['dimension']) }}">
+    @php($dimensionAccent = $dimensionColors[$page['dimension']] ?? '#872341')
+    <section class="sheet" style="--dimension-accent: {{ $dimensionAccent }};">
         <header class="identity">
             <div class="map"><div class="municipality-map"><img src="{{ $mapImageDataUri ?? route('ficha-municipal.panorama.map', $municipio) }}" alt="Ubicación de {{ $municipio->nombre }} en Puebla"></div><span class="map-label">Ubicación en Puebla</span></div>
             <div class="identity-copy">
@@ -256,7 +254,8 @@
         const data = item.datos;
         const values = data.valores || [];
         if (!values.length) return;
-        const type = normalized(item.indicador.tipo_grafico_default);
+        // Use datos.type (from config's tipo_visualizacion) with fallback to indicator's default
+        const type = normalized(data.type || item.indicador.tipo_grafico_default);
         if (['categoria','categorica'].includes(type)) {
             el.classList.add('visual--category');
             el.innerHTML = '<div class="category-value">' + values.map(value => escapeHtml(value.display)).join(' · ') + '</div>';

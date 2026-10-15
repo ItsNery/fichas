@@ -237,13 +237,14 @@ class RegionProfilePyramidTest extends TestCase
 
         $this->get(route('ficha-municipal.perfil', $municipio))
             ->assertOk()
+            ->assertSee('Sin dato disponible')
             ->assertViewHas('perfil', fn ($perfil) => collect($perfil)->flatten(1)
                 ->pluck('config.id')
                 ->all() === [$visible->id]);
 
         $this->get(route('ficha-municipal.perfil.pdf', [$municipio, 'preview' => true]))
             ->assertOk()
-            ->assertViewHas('perfil', fn ($perfil) => collect($perfil)->flatten(1)
+            ->assertViewHas('perfil', fn ($perfil) => collect($perfil)->flatten(2)
                 ->pluck('config.id')
                 ->all() === [$visible->id]);
 

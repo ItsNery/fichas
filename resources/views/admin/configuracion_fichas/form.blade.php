@@ -307,6 +307,19 @@
                                             <p class="section-lead">Escoge el formato que comunica mejor el dato. El formulario te avisará si el formato requiere una selección especial.</p>
 
                                             <label class="form-label mb-3">Formato de Visualización</label>
+                                            <div class="field-block mb-4">
+                                                @php $layoutMode = old('layout_mode', $configuracion->ajustes_visuales['layout_mode'] ?? 'auto'); @endphp
+                                                <label for="layout_mode" class="form-label fw-bold">Composición de la tarjeta</label>
+                                                <select class="form-select" id="layout_mode" name="layout_mode">
+                                                    <option value="auto" {{ $layoutMode === 'auto' ? 'selected' : '' }}>Automática — el sistema se adapta a la gráfica</option>
+                                                    <option value="compacto" {{ $layoutMode === 'compacto' ? 'selected' : '' }}>Compacta — para un KPI o lectura breve</option>
+                                                    <option value="estandar" {{ $layoutMode === 'estandar' ? 'selected' : '' }}>Estándar — media fila; ideal para dos gráficas equilibradas</option>
+                                                    <option value="amplio" {{ $layoutMode === 'amplio' ? 'selected' : '' }}>Amplia — para comparaciones y etiquetas extensas</option>
+                                                    <option value="destacado" {{ $layoutMode === 'destacado' ? 'selected' : '' }}>Destacada — tarjeta principal de la dimensión</option>
+                                                </select>
+                                                <div class="field-help"><i class="fa-solid fa-wand-magic-sparkles"></i><span>No define columnas Bootstrap. La ficha calcula el espacio a partir de la visualización, las variables y el texto, para evitar huecos.</span></div>
+                                            </div>
+
                                             <div class="row g-3 mb-4">
                                                 @php
                                                     $icons = [
@@ -346,36 +359,9 @@
                                             </div>
 
                                             <div class="row g-3 mb-4">
-                                                <div class="col-md-8">
-                                                    <label for="clase_grid" class="form-label">
-                                                        Ancho de la tarjeta
-                                                        <i class="fa-solid fa-circle-info text-muted ms-1 cursor-pointer"
-                                                            data-bs-toggle="tooltip" data-bs-placement="top"
-                                                            title="Define el ancho de la tarjeta en la pantalla del perfil: 100% ocupa todo el ancho, 50% permite colocar dos tarjetas lado a lado, etc."></i>
-                                                    </label>
-                                                    <select id="clase_grid" name="clase_grid" class="form-select"
-                                                        required>
-                                                        <option value="col-12"
-                                                            {{ old('clase_grid', $configuracion->clase_grid ?? '') == 'col-12' ? 'selected' : '' }}>
-                                                            Bloque Completo (100%)</option>
-                                                        <option value="col-md-6"
-                                                            {{ old('clase_grid', $configuracion->clase_grid ?? '') == 'col-md-6' ? 'selected' : '' }}>
-                                                            Media Pantalla (50%)</option>
-                                                        <option value="col-md-4"
-                                                            {{ old('clase_grid', $configuracion->clase_grid ?? '') == 'col-md-4' ? 'selected' : '' }}>
-                                                            Un Tercio (33%)</option>
-                                                        <option value="col-md-9"
-                                                            {{ old('clase_grid', $configuracion->clase_grid ?? '') == 'col-md-9' ? 'selected' : '' }}>
-                                                            Tres Cuartos (75%)</option>
-                                                        <option value="col-md-8"
-                                                            {{ old('clase_grid', $configuracion->clase_grid ?? '') == 'col-md-8' ? 'selected' : '' }}>
-                                                            Dos Tercios (66%)</option>
-                                                        <option value="col-md-3"
-                                                            {{ old('clase_grid', $configuracion->clase_grid ?? '') == 'col-md-3' ? 'selected' : '' }}>
-                                                            Un Cuarto (25%)</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-4">
+                                                <input type="hidden" name="clase_grid"
+                                                    value="{{ old('clase_grid', $configuracion->clase_grid ?? 'col-12') }}">
+                                                <div class="col-md-6">
                                                     <label for="anios_historial" class="form-label">
                                                         Años de historial
                                                             <i class="fa-solid fa-circle-info text-muted ms-1 cursor-pointer"

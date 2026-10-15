@@ -14,8 +14,28 @@ jobs:
     steps:
       - name: Deploy BETA
         run: |
+          set -euo pipefail
 
           cd /var/www/html/betafichas
+          backup_dir="/var/backups/fichas_municipales/beta"
+          backup_file="$backup_dir/fichas-$(date +%Y%m%d-%H%M%S).sql.gz"
+          mysql_defaults="$(mktemp)"
+          trap 'rm -f "$mysql_defaults"' EXIT
+
+          sudo install -d -m 0750 -o user_planeacion -g www-data "$backup_dir"
+          database_name="$(php -r '
+            require "vendor/autoload.php";
+            $env = Dotenv\Dotenv::createImmutable(__DIR__)->load();
+            if (($env["DB_CONNECTION"] ?? "mysql") !== "mysql") { fwrite(STDERR, "El respaldo de despliegue requiere una conexión MySQL.\n"); exit(1); }
+            $quote = static function ($value): string { return "\"" . str_replace(["\\", "\""], ["\\\\", "\\\""], $value) . "\""; };
+            file_put_contents($argv[1], "[client]\n" . "host=" . $quote($env["DB_HOST"] ?? "127.0.0.1") . "\n" . "port=" . $quote($env["DB_PORT"] ?? "3306") . "\n" . "user=" . $quote($env["DB_USERNAME"] ?? "") . "\n" . "password=" . $quote($env["DB_PASSWORD"] ?? "") . "\n");
+            echo $env["DB_DATABASE"] ?? "";
+          ' "$mysql_defaults")"
+          chmod 600 "$mysql_defaults"
+          test -n "$database_name"
+          mysqldump --defaults-extra-file="$mysql_defaults" --single-transaction --routines --events --triggers --hex-blob --add-drop-table --databases "$database_name" | gzip > "$backup_file"
+          gzip -t "$backup_file"
+          test -s "$backup_file"
 
           git fetch origin
           git reset --hard origin/beta
@@ -51,8 +71,28 @@ jobs:
     steps:
       - name: Deploy PRODUCCION
         run: |
+          set -euo pipefail
 
           cd /var/www/html/fichas
+          backup_dir="/var/backups/fichas_municipales/produccion"
+          backup_file="$backup_dir/fichas-$(date +%Y%m%d-%H%M%S).sql.gz"
+          mysql_defaults="$(mktemp)"
+          trap 'rm -f "$mysql_defaults"' EXIT
+
+          sudo install -d -m 0750 -o user_planeacion -g www-data "$backup_dir"
+          database_name="$(php -r '
+            require "vendor/autoload.php";
+            $env = Dotenv\Dotenv::createImmutable(__DIR__)->load();
+            if (($env["DB_CONNECTION"] ?? "mysql") !== "mysql") { fwrite(STDERR, "El respaldo de despliegue requiere una conexión MySQL.\n"); exit(1); }
+            $quote = static function ($value): string { return "\"" . str_replace(["\\", "\""], ["\\\\", "\\\""], $value) . "\""; };
+            file_put_contents($argv[1], "[client]\n" . "host=" . $quote($env["DB_HOST"] ?? "127.0.0.1") . "\n" . "port=" . $quote($env["DB_PORT"] ?? "3306") . "\n" . "user=" . $quote($env["DB_USERNAME"] ?? "") . "\n" . "password=" . $quote($env["DB_PASSWORD"] ?? "") . "\n");
+            echo $env["DB_DATABASE"] ?? "";
+          ' "$mysql_defaults")"
+          chmod 600 "$mysql_defaults"
+          test -n "$database_name"
+          mysqldump --defaults-extra-file="$mysql_defaults" --single-transaction --routines --events --triggers --hex-blob --add-drop-table --databases "$database_name" | gzip > "$backup_file"
+          gzip -t "$backup_file"
+          test -s "$backup_file"
 
           git fetch origin
           git reset --hard origin/main

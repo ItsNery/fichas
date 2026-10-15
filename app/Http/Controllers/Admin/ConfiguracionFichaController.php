@@ -87,6 +87,7 @@ class ConfiguracionFichaController extends Controller
             'clase_grid' => 'required|string',
             'icono' => 'nullable|string',
             'anios_historial' => 'required|integer|min:1',
+            'layout_mode' => 'nullable|in:auto,compacto,estandar,amplio,destacado',
             'ajustes_visuales' => 'nullable|json',
             'variables_ids' => 'nullable|array',
             'variables_ids.*' => 'integer|distinct|exists:variables,id',
@@ -103,6 +104,8 @@ class ConfiguracionFichaController extends Controller
             $validated['ajustes_visuales'] = [];
         }
         $validated['ajustes_visuales']['benchmark_mode'] = $request->input('benchmark_mode', 'avg');
+        $validated['ajustes_visuales']['layout_mode'] = $request->input('layout_mode', 'auto');
+        unset($validated['layout_mode']);
 
         $indicador = Indicador::with('tematica.dimension')->findOrFail($request->indicador_id);
         $validated['seccion'] = Str::lower($indicador->tematica->dimension->nombre_tecnico ?? 'general');
@@ -144,6 +147,7 @@ class ConfiguracionFichaController extends Controller
             'clase_grid' => 'required|string',
             'icono' => 'nullable|string',
             'anios_historial' => 'required|integer|min:1',
+            'layout_mode' => 'nullable|in:auto,compacto,estandar,amplio,destacado',
             'ajustes_visuales' => 'nullable|json',
             'variables_ids' => 'nullable|array',
             'variables_ids.*' => 'integer|distinct|exists:variables,id',
@@ -160,6 +164,8 @@ class ConfiguracionFichaController extends Controller
             $validated['ajustes_visuales'] = [];
         }
         $validated['ajustes_visuales']['benchmark_mode'] = $request->input('benchmark_mode', 'avg');
+        $validated['ajustes_visuales']['layout_mode'] = $request->input('layout_mode', 'auto');
+        unset($validated['layout_mode']);
 
         $indicador = Indicador::with('tematica.dimension')->findOrFail($request->indicador_id);
         $validated['seccion'] = Str::lower($indicador->tematica->dimension->nombre_tecnico ?? 'general');

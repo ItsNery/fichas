@@ -8,6 +8,16 @@ class MunicipalityMapImageService
 {
     public function render(string $cvegeo, int $width = 438, int $height = 302): string
     {
+        return $this->renderSelection([$cvegeo], $width, $height);
+    }
+
+    /**
+     * Renders Puebla and highlights every municipality in a territorial region.
+     *
+     * @param array<int, string|int> $cvegeos
+     */
+    public function renderSelection(array $cvegeos, int $width = 438, int $height = 302): string
+    {
         $contents = file_get_contents(public_path('geojson/municipios_puebla_slim.geojson'));
 
         if ($contents === false) {
@@ -31,22 +41,25 @@ class MunicipalityMapImageService
         $accent = imagecolorallocate($image, 184, 139, 91);
         imagefill($image, 0, 0, $white);
 
-        $selected = null;
+        $selected = [];
+        $selectedCvegeos = array_fill_keys(array_map('strval', $cvegeos), true);
 
         foreach ($features as $feature) {
-            $isSelected = (string) ($feature['properties']['cvegeo'] ?? '') === $cvegeo;
+            $isSelected = isset($selectedCvegeos[(string) ($feature['properties']['cvegeo'] ?? '')]);
 
             if ($isSelected) {
-                $selected = $feature;
+                $selected[] = $feature;
                 continue;
             }
 
             $this->drawFeature($image, $feature, $bounds, $width, $height, $neutral, $border, $white);
         }
 
-        if ($selected !== null) {
+        if ($selected !== []) {
             imagesetthickness($image, 2);
-            $this->drawFeature($image, $selected, $bounds, $width, $height, $primary, $accent, $white);
+            foreach ($selected as $feature) {
+                $this->drawFeature($image, $feature, $bounds, $width, $height, $primary, $accent, $white);
+            }
             imagesetthickness($image, 1);
         }
 

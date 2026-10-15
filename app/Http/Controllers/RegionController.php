@@ -7,7 +7,11 @@ use App\Models\Microrregion;
 use App\Models\Municipio;
 use App\Models\ConfiguracionFicha;
 use App\Models\DatoHistorico;
+use App\Models\Variable;
+use App\Models\DatoIndicadorComplejo;
+use App\Models\Dimension;
 use App\Services\IndicadorQueryService;
+use App\Services\MunicipalityMapImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -151,7 +155,11 @@ class RegionController extends Controller
                 || str_contains($unidad, 'grado');
 
             return ($tipoDato === 'absoluto' || $esCategorica) && (!$unidadNoAditiva || $esCategorica);
-        })->values();
+        })
+            // The regional PDF is static: one useful visualization per indicator.
+            // Multiple public configs are editorial alternatives for the interactive profile.
+            ->unique('indicador_id')
+            ->values();
 
         $variablesNecesarias = [];
         foreach ($configuraciones as $config) {
@@ -213,6 +221,7 @@ class RegionController extends Controller
 
         // 3. Estructurar el Perfil
         $perfil = ['general' => []];
+        $dimensionColors = [];
 
         // Datos básicos para el Hero
         $poblacionTotal = $varPobId ? $datosRecientes->where('variable_id', $varPobId)->sum('valor') : 0;
@@ -224,12 +233,26 @@ class RegionController extends Controller
         ];
         $superficieKm2 = $municipios->sum(fn($municipio) => (float) ($municipio->superficie ?? 0));
 
+        // Marginación is categorical, so the most frequent municipal value is meaningful.
+        $heroVariables = Variable::where('nombre_amigable', 'Grado de Marginación')
+            ->get()
+            ->keyBy('nombre_amigable');
+        $heroRows = DatoHistorico::with('motivoSinDato')
+            ->whereIn('municipio_id', $municipiosIds)
+            ->whereIn('variable_id', $heroVariables->pluck('id'))
+            ->get()
+            ->sortByDesc('anio')
+            ->unique(fn ($row) => $row->municipio_id . '-' . $row->variable_id);
+        $marginacionRows = $heroRows->where('variable_id', $heroVariables->get('Grado de Marginación')?->id);
+        $gradoMarginacion = $marginacionRows->pluck('valor_display')->filter()->mode()[0] ?? 'N/D';
+
         foreach ($configuraciones as $config) {
             $indicador = $config->indicador;
             if (!$indicador) continue;
 
             $dimension = $indicador->tematica->dimension->nombre ?? 'Sin Dimensión';
             $dimensionKey = str_replace(' ', '_', strtolower($dimension));
+            $dimensionColors[$dimensionKey] ??= $indicador->tematica?->dimension?->color ?: '#861e34';
 
             if (!isset($perfil[$dimensionKey])) {
                 $perfil[$dimensionKey] = [];
@@ -334,6 +357,11 @@ class RegionController extends Controller
                 $datosPiramide['total'] = $totalPoblacion;
                 $datosPiramide['unidad'] = 'Habitantes';
                 $datosPiramide['variables'] = [['unidad' => 'Habitantes']];
+                $datosPiramide['echarts'] = [
+                    'type' => 'piramide',
+                    'series' => $datosPiramide['series'],
+                    'eje_x' => $datosPiramide['eje_x'],
+                ];
 
                 $perfil[$dimensionKey][] = [
                     'config' => $config,
@@ -677,9 +705,11 @@ class RegionController extends Controller
             'poblacionAnio' => $poblacionAnio,
             'poblacionCobertura' => $poblacionCobertura,
             'superficieTotal' => $superficieKm2,
+            'gradoMarginacion' => $gradoMarginacion,
             'resumenTerritorial' => $resumenTerritorial,
             'alcanceTerritorial' => $alcanceTerritorial,
-            'perfil' => $perfil
+            'perfil' => $perfil,
+            'dimensionColors' => $dimensionColors,
         ];
     }
 
@@ -721,7 +751,7 @@ class RegionController extends Controller
     public function exportarMacrorregionPDF(Macrorregion $macrorregion)
     {
         $macrorregion->load('microrregiones.municipios');
-        
+
         $municipiosIds = [];
         $municipios = collect();
         foreach ($macrorregion->microrregiones as $micro) {
@@ -733,9 +763,11 @@ class RegionController extends Controller
         $municipios = $municipios->sortBy('nombre');
 
         $datos = $this->obtenerDatosPerfil('Macrorregión', $macrorregion, $municipios, $municipiosIds);
-        
-        $pdf = \PDF::loadView('regiones.resumen_pdf', $datos);
-        return $pdf->download('Resumen_Macrorregional_' . str_replace(' ', '_', $macrorregion->nombre) . '.pdf');
+
+        return $this->exportarPerfilRegionalPDF(
+            $datos,
+            'Perfil_Macrorregional_' . str_replace(' ', '_', $macrorregion->nombre) . '.pdf'
+        );
     }
 
     public function exportarMicrorregionPDF(Microrregion $microrregion)
@@ -744,7 +776,7 @@ class RegionController extends Controller
         $municipiosCount = $microrregion->municipios->count();
         if ($municipiosCount === 1) {
             $municipio = $microrregion->municipios->first();
-            return redirect()->route('ficha-municipal.pdf', $municipio->slug)
+            return redirect()->route('ficha-municipal.perfil.pdf', $municipio->slug)
                 ->with('info', "Esta microrregión no tiene información municipal desagregable en el sistema. Te hemos redirigido a la ficha de {$municipio->nombre}.");
         } elseif ($municipiosCount === 0) {
             return redirect()->back()->with('error', 'Microrregión sin datos.');
@@ -754,16 +786,38 @@ class RegionController extends Controller
         $municipios = $microrregion->municipios()->orderBy('nombre')->get();
 
         $datos = $this->obtenerDatosPerfil('Microrregión', $microrregion, $municipios, $municipiosIds);
-        
-        $pdf = \PDF::loadView('regiones.resumen_pdf', $datos);
-        return $pdf->download('Resumen_Microrregional_' . str_replace(' ', '_', $microrregion->nombre) . '.pdf');
+
+        return $this->exportarPerfilRegionalPDF(
+            $datos,
+            'Perfil_Microrregional_' . str_replace(' ', '_', $microrregion->nombre) . '.pdf'
+        );
     }
 
     public function exportarEstatalPDF()
     {
-        $datos = $this->datosEstatales();
-        $pdf = \PDF::loadView('regiones.resumen_pdf', $datos);
-        return $pdf->download('Resumen_Estatal_Puebla.pdf');
+        return $this->exportarPerfilRegionalPDF($this->datosEstatales(), 'Perfil_Estatal_Puebla.pdf');
+    }
+
+    /**
+     * El perfil regional comparte el motor visual del panorama: Chromium
+     * espera a que ECharts termine antes de capturar las hojas apaisadas.
+     */
+    private function exportarPerfilRegionalPDF(array $datos, string $fileName)
+    {
+        $municipios = $datos['municipios'] ?? collect();
+        $mapImageService = app(MunicipalityMapImageService::class);
+        $datos['mapImageDataUri'] = 'data:image/png;base64,'.base64_encode(
+            $mapImageService->renderSelection($municipios->pluck('cvegeo')->filter()->values()->all())
+        );
+        $datos['cintillo'] = base64_encode(file_get_contents(public_path('img/Cintillo SEI-07.png')));
+
+        if (request()->query('preview')) {
+            return view('regiones.perfil_pdf', $datos);
+        }
+
+        $html = view('regiones.perfil_pdf', $datos)->render();
+
+        return app(\App\Services\ExportV3Service::class)->exportPanoramaPDF($html, $fileName);
     }
 
     public function exportarMacrorregionExcel(Macrorregion $macrorregion)
