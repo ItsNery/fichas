@@ -67,10 +67,14 @@
                         <i class="fa-solid fa-chart-bar mr-2"></i>
                         Banco de Indicadores
                     </a>
-                    <a class="text-white-50 mb-2" href="{{ route('ficha-municipal.index') }}">
+                    <a class="text-white-50 mb-2 dropdown-trigger" href="#">
                         <i class="fa-solid fa-map-marker-alt mr-2"></i>
-                        Fichas Municipales
+                        Perfiles <span class="arrow ms-1">▾</span>
                     </a>
+                    <ul class="list-unstyled ps-4 mb-2">
+                        <li><a class="text-white-50 text-decoration-none" href="{{ route('ficha-municipal.index') }}">Municipales</a></li>
+                        <li><a class="text-white-50 text-decoration-none" href="{{ route('regiones.index') }}">Regionales</a></li>
+                    </ul>
                     <a class="text-white-50 mb-2" href="{{ route('datos-abiertos.index') }}">
                         <i class="fa-solid fa-chart-pie mr-2"></i>
                         Datos abiertos
