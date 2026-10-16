@@ -671,6 +671,32 @@ class FichaController extends Controller
             $perfil[$dimension] = $layout->compose($items);
         }
 
+        // Ordenar secciones del perfil por orden de dimensión
+        $dimensionOrden = [];
+        foreach ($configuraciones as $config) {
+            $dim = $config->indicador?->tematica?->dimension;
+            if ($dim && !isset($dimensionOrden[$dim->nombre])) {
+                $dimensionOrden[$dim->nombre] = (int) ($dim->orden ?? 0);
+            }
+        }
+
+        $general = $perfil['general'] ?? [];
+        unset($perfil['general']);
+
+        $clavesOrdenadas = [];
+        foreach ($dimensionOrden as $nombre => $orden) {
+            $key = str_replace(' ', '_', strtolower($nombre));
+            if (isset($perfil[$key])) {
+                $clavesOrdenadas[$key] = $perfil[$key];
+                unset($perfil[$key]);
+            }
+        }
+        foreach ($perfil as $key => $items) {
+            $clavesOrdenadas[$key] = $items;
+        }
+
+        $perfil = ['general' => $general] + $clavesOrdenadas;
+
         return view('municipios.perfil', array_merge($hero, [
             'municipio' => $municipio,
             'perfil' => $perfil,
@@ -1009,8 +1035,18 @@ class FichaController extends Controller
             ];
         }
 
+        // Construir colores por dimensión para la vista de comparación
+        $dimensionColors = [];
+        foreach ($data['configuraciones'] as $config) {
+            $dim = $config->indicador?->tematica?->dimension;
+            if ($dim && !isset($dimensionColors[$dim->nombre])) {
+                $dimensionColors[$dim->nombre] = $dim->color ?: '#861e34';
+            }
+        }
+
         return view('municipios.comparar', array_merge($data, [
             'todosMunicipios' => $data['todosMunicipios'],
+            'dimensionColors' => $dimensionColors,
         ]));
     }
 
