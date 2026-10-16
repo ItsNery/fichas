@@ -2589,19 +2589,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
             linkActivo = document.querySelector(".indicador-link");
             if (linkActivo) {
-                const tipoDato = linkActivo.dataset.tipoDato || "Absoluto";
-                if (tipoDato.toLowerCase() === "absoluto") {
-                    activarNivelProgramaticamente("estatal");
-                    appState.nivelDeAgregacion = "estatal";
-                    appState.municipioIds = [];
-                } else {
-                    activarNivelProgramaticamente("municipio");
-                    const primerMunicipio = document.querySelector(
-                        "#municipio-selector option",
-                    );
+                // Siempre abrir en un municipio al azar, no en estatal
+                const optionKeys = Object.keys(municipioSelector.options);
+                if (optionKeys.length > 0) {
+                    const randomKey =
+                        optionKeys[Math.floor(Math.random() * optionKeys.length)];
                     appState.nivelDeAgregacion = "municipio";
-                    appState.municipioIds = primerMunicipio ? [primerMunicipio.value] : [];
+                    appState.municipioIds = [randomKey];
                     municipioSelector.setValue(appState.municipioIds, true);
+                } else {
+                    appState.nivelDeAgregacion = "municipio";
+                    appState.municipioIds = [];
                 }
 
                 appState.indicatorId = linkActivo.dataset.indicadorId;
