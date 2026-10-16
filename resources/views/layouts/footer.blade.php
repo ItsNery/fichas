@@ -67,11 +67,11 @@
                         <i class="fa-solid fa-chart-bar mr-2"></i>
                         Banco de Indicadores
                     </a>
-                    <a class="text-white-50 mb-2 dropdown-trigger" href="#">
+                    <a class="text-white-50 mb-2 dropdown-trigger" href="#" id="footer-perfiles-toggle">
                         <i class="fa-solid fa-map-marker-alt mr-2"></i>
                         Perfiles <span class="arrow ms-1">▾</span>
                     </a>
-                    <ul class="list-unstyled ps-4 mb-2">
+                    <ul class="list-unstyled ps-4 mb-2" id="footer-perfiles-submenu" style="display: none;">
                         <li><a class="text-white-50 text-decoration-none" href="{{ route('ficha-municipal.index') }}">Municipales</a></li>
                         <li><a class="text-white-50 text-decoration-none" href="{{ route('regiones.index') }}">Regionales</a></li>
                     </ul>
@@ -263,7 +263,7 @@
                     }, 1500);
                 })
                 .catch(error => {
-                    console.error('Error al enviar la evaluación:', error);
+                    console.error('Error al enviar el voto:', error);
                     let targetDiv = (comment !== null && feedbackForm) ? feedbackForm : evaluationDiv;
                     targetDiv.innerHTML =
                         '<p class="text-danger">Hubo un error. Por favor, intenta más tarde.</p>';
@@ -321,5 +321,20 @@
                 submitFeedbackBtn.click();
             }
         });
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggle = document.getElementById('footer-perfiles-toggle');
+        const submenu = document.getElementById('footer-perfiles-submenu');
+        if (toggle && submenu) {
+            toggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                const isHidden = submenu.style.display === 'none';
+                submenu.style.display = isHidden ? 'block' : 'none';
+                toggle.querySelector('.arrow').textContent = isHidden ? '▴' : '▾';
+            });
+        }
     });
 </script>
