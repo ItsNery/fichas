@@ -1738,6 +1738,7 @@ footer {
     padding: 20px;
     text-align: center;
     transition: all 0.5s ease-in-out;
+    margin-top: 1rem;
 }
 
 .evaluation-container h5 {
@@ -2256,7 +2257,7 @@ footer {
 }
 
 .dimension-button {
-        font-family: "Corra-Montserra-Regular", sans-serif;
+    font-family: "Corra-Montserra-Regular", sans-serif;
     font-weight: 700 !important;
     color: #334155 !important;
     padding: 16px 20px !important;
@@ -2651,7 +2652,6 @@ footer {
         border-top: 1px solid #ddd;
         page-break-inside: avoid;
     }
-
 }
 
 /* Estilos directorio */
@@ -3913,36 +3913,62 @@ footer {
     color: var(--dimension-accent);
 }
 
-.perfil-grid__item--compact .perfil-tarjeta { min-height: 0; }
-.perfil-grid__item--compact .perfil-tarjeta__chart-box { height: 12rem; }
-.perfil-grid__item--standard .perfil-tarjeta__chart-box { height: 17rem; }
-.perfil-grid__item--wide .perfil-tarjeta__chart-box { height: 19rem; }
+.perfil-grid__item--compact .perfil-tarjeta {
+    min-height: 0;
+}
+.perfil-grid__item--compact .perfil-tarjeta__chart-box {
+    height: 12rem;
+}
+.perfil-grid__item--standard .perfil-tarjeta__chart-box {
+    height: 17rem;
+}
+.perfil-grid__item--wide .perfil-tarjeta__chart-box {
+    height: 19rem;
+}
 .perfil-grid__item--featured .perfil-tarjeta__chart-wrapper {
     margin-top: 1rem;
 }
 .perfil-grid__item--featured .perfil-tarjeta__chart-box {
     height: clamp(25rem, 36vw, 34rem);
 }
-.perfil-grid__item--featured .perfil-tarjeta__kpi-value { font-size: clamp(3rem, 5vw, 5.5rem); }
+.perfil-grid__item--featured .perfil-tarjeta__kpi-value {
+    font-size: clamp(3rem, 5vw, 5.5rem);
+}
 
 @media (max-width: 991.98px) {
-    .perfil-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-    .perfil-grid__item { grid-column: span min(var(--grid-columns, 6), 6); }
+    .perfil-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+    .perfil-grid__item {
+        grid-column: span min(var(--grid-columns, 6), 6);
+    }
 }
 
 @media (max-width: 575.98px) {
-    .perfil-grid { display: block; }
-    .perfil-grid--masonry { height: auto !important; }
+    .perfil-grid {
+        display: block;
+    }
+    .perfil-grid--masonry {
+        height: auto !important;
+    }
     .perfil-grid--masonry .perfil-grid__item {
         position: static;
         width: auto !important;
         transform: none !important;
     }
-    .perfil-grid__item + .perfil-grid__item { margin-top: 1rem; }
-    .section-perfil .perfil-tarjeta__body { padding: 1.15rem; }
+    .perfil-grid__item + .perfil-grid__item {
+        margin-top: 1rem;
+    }
+    .section-perfil .perfil-tarjeta__body {
+        padding: 1.15rem;
+    }
     .perfil-grid__item--standard .perfil-tarjeta__chart-box,
-    .perfil-grid__item--wide .perfil-tarjeta__chart-box { height: 18rem; }
-    .perfil-grid__item--featured .perfil-tarjeta__chart-box { height: 25rem; }
+    .perfil-grid__item--wide .perfil-tarjeta__chart-box {
+        height: 18rem;
+    }
+    .perfil-grid__item--featured .perfil-tarjeta__chart-box {
+        height: 25rem;
+    }
 }
 
 /* Bloque Tarjeta de Perfil (BEM) */

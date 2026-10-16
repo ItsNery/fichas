@@ -1129,13 +1129,12 @@ footer {
 
 .evaluation-container {
     background-color: #f8f9fa;
-    /* Un gris muy claro */
     border: 1px solid #e9ecef;
     border-radius: 8px;
     padding: 20px;
     text-align: center;
     transition: all 0.5s ease-in-out;
-    /* Para la desaparición suave */
+    margin-top: 1rem;
 }
 
 .evaluation-container h5 {

@@ -27,7 +27,7 @@
                         <span class="badge bg-gold px-3 py-2 text-uppercase hero-ficha__badge m-0">FICHA MUNICIPAL</span>
                         <button type="button" class="btn btn-outline-light btn-sm fw-bold px-3 py-1 rounded-pill"
                             data-bs-toggle="modal" data-bs-target="#compararModal">
-                            Comparar
+                            <i class="fa-solid fa-scale-balanced me-1"></i> Comparar
                         </button>
                         <a href="{{ route('ficha-municipal.perfil.pdf', $municipio->slug) }}"
                             class="btn btn-outline-light btn-sm fw-bold px-3 py-1 rounded-pill" target="_blank"
@@ -724,7 +724,7 @@
             <div class="modal-content border-0 shadow-lg rounded-4">
                 <div class="modal-header bg-vino text-white rounded-top-4 py-3">
                     <h5 class="modal-title fw-bold" id="compararModalLabel">
-                        <i class="fa-solid fa-scale-balanced me-2"></i> Comparar con otro Municipio
+                        Comparar con otro Municipio
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                         aria-label="Close"></button>

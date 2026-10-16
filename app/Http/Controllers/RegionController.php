@@ -683,6 +683,32 @@ class RegionController extends Controller
                 ->all();
         }
 
+        // Ordenar secciones del perfil por orden de dimensión antes de regresar
+        $dimensionOrden = [];
+        foreach ($configuraciones as $config) {
+            $dim = $config->indicador?->tematica?->dimension;
+            if ($dim && !isset($dimensionOrden[$dim->nombre])) {
+                $dimensionOrden[$dim->nombre] = (int) ($dim->orden ?? 0);
+            }
+        }
+
+        $general = $perfil['general'] ?? [];
+        unset($perfil['general']);
+
+        $clavesOrdenadas = [];
+        foreach ($dimensionOrden as $nombre => $orden) {
+            $key = str_replace(' ', '_', strtolower($nombre));
+            if (isset($perfil[$key])) {
+                $clavesOrdenadas[$key] = $perfil[$key];
+                unset($perfil[$key]);
+            }
+        }
+        foreach ($perfil as $key => $items) {
+            $clavesOrdenadas[$key] = $items;
+        }
+
+        $perfil = ['general' => $general] + $clavesOrdenadas;
+
         $microrregionesRepresentadas = $municipios->pluck('microrregion_id')->filter()->unique()->count();
         $macrorregionesRepresentadas = $esEstatal
             ? collect($resumenTerritorial)->whereNotNull('id')->count()

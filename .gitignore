@@ -23,6 +23,7 @@ yarn-error.log
 fichas_municipales.sql
 fichas_municipales.rar
 opencode.json
+fix.bat
 scripts/*
 /docs/*
 !/docs/manual-de-usuario.md

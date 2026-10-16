@@ -52,11 +52,14 @@
                 </a>
             </li>
 
-            {{-- ENLACE 3: Fichas Municipales --}}
-            <li>
-                <a href="{{ route('ficha-municipal.index') }}" class="{{ request()->is('ficha*') ? 'active' : '' }}">
-                    Fichas Municipales
+            <li class="dropdown">
+                <a href="#" class="{{ request()->is('/perfiles*') || request()->is('ficha*') ? 'active' : '' }}">
+                    Perfiles <span class="arrow">▾</span>
                 </a>
+                <ul class="dropdown-content">
+                    <li><a href="{{ route('ficha-municipal.index') }}">Municipales</a></li>
+                    <li><a href="{{ url('/perfiles-regionales') }}">Regionales</a></li>
+                </ul>
             </li>
 
             {{-- ENLACE 3: Datos Abiertos --}}
@@ -86,7 +89,6 @@
                     </li>
                 </ul>
             </li>  --}}
-
         </ul>
     </div>
 </nav>
