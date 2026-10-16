@@ -1039,8 +1039,11 @@ class FichaController extends Controller
         $dimensionColors = [];
         foreach ($data['configuraciones'] as $config) {
             $dim = $config->indicador?->tematica?->dimension;
-            if ($dim && !isset($dimensionColors[$dim->nombre])) {
-                $dimensionColors[$dim->nombre] = $dim->color ?: '#861e34';
+            if ($dim) {
+                $dimKey = str_replace(' ', '_', strtolower($dim->nombre));
+                if (!isset($dimensionColors[$dimKey])) {
+                    $dimensionColors[$dimKey] = $dim->color ?: '#861e34';
+                }
             }
         }
 
