@@ -452,6 +452,15 @@
                                     </select>
                                 </div>
                                 <div class="col-md-6">
+                                    <label class="form-label fw-bold text-secondary small">Periodicidad</label>
+                                    <select name="periodicidad" id="ind_periodicidad" class="form-select">
+                                        <option value="">Sin declarar</option>
+                                        @foreach(\App\Models\Indicador::PERIODICIDADES as $valor => $definicion)
+                                            <option value="{{ $valor }}">{{ $definicion['etiqueta'] }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
                                     <label class="form-label fw-bold text-secondary small">Orden</label>
                                     <input type="number" name="orden" id="ind_orden" class="form-control" placeholder="0">
                                 </div>

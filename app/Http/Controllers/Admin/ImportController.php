@@ -189,7 +189,7 @@ class ImportController extends Controller
                 ];
                 break;
             case 'indicadores':
-                $headings           = ['tematica_tecnico', 'nombre_amigable', 'nombre_tecnico', 'descripcion', 'fuente', 'tipo_dato', 'tipo_grafico_default', 'metodo_calculo', 'solo_resumen', 'es_complejo', 'priorizar_total', 'orden'];
+                $headings           = ['tematica_tecnico', 'nombre_amigable', 'nombre_tecnico', 'descripcion', 'fuente', 'tipo_dato', 'periodicidad', 'tipo_grafico_default', 'metodo_calculo', 'solo_resumen', 'es_complejo', 'priorizar_total', 'orden'];
                 $fileName           = 'plantilla_indicadores.xlsx';
                 $diccionarioDeDatos = [
                     ['tematica_tecnico', 'Nombre técnico de la temática. ', 'Texto, ej: "gob_poblacion", debe coincidir con alguno en la pestaña "Catálogo Temáticas"'],
@@ -198,6 +198,7 @@ class ImportController extends Controller
                     ['descripcion', 'Descripción detallada del indicador.', 'Texto, puede estar vacío'],
                     ['fuente', 'Fuente de donde se obtiene el dato.', 'Texto, puede estar vacío'],
                     ['tipo_dato', 'Tipo de dato que representa el indicador.', 'Texto, ej: "absoluto" o "porcentaje"'],
+                    ['periodicidad', 'Frecuencia con la que se publica el dato.', 'Opcional. Texto: "Anual", "Bienal", "Trienal", "Cuatrienal", "Quinquenal" o "Irregular"'],
                     ['tipo_grafico_default', 'Tipo de gráfico recomendado para este indicador.', 'Texto, ej: "barras", "lineal", "piramide"'],
                     ['metodo_calculo', 'Método usado para calcular el indicador.', 'Texto, ej: "promedio", "suma", etc.'],
                     ['solo_resumen', 'Indica si el indicador es solo para resúmenes de municipio.', '0 o 1 (0 = No, 1 = Sí)'],

@@ -33,7 +33,7 @@ class CatalogoController extends Controller
             'storeDimension', 'storeTematica', 'storeIndicador', 'storeVariable', 'guardarIndicador', 'generarConstruido',
         ]);
         $this->middleware('permission:catalogos.editar')->only([
-            'updateDimension', 'updateTematica', 'updateIndicador', 'updateVariable', 'actualizarIndicador', 'reorderIndicadores', 'reorderVariables', 'regenerarConstruido',
+            'updateDimension', 'updateTematica', 'updateIndicador', 'updateVariable', 'actualizarIndicador', 'reorderIndicadores', 'reorderVariables', 'regenerarConstruido', 'asignarVariable',
         ]);
         $this->middleware('permission:catalogos.eliminar')->only([
             'destroyDimension', 'destroyTematica', 'destroyIndicador', 'destroyVariable',
@@ -150,6 +150,7 @@ class CatalogoController extends Controller
             'priorizar_total'      => 'nullable|boolean',
             'es_complejo'          => 'nullable|boolean',
             'polaridad'            => 'nullable|string|in:asendente,descendente,neutro',
+            'periodicidad'         => 'nullable|string|in:' . implode(',', array_keys(Indicador::PERIODICIDADES)),
             'orden'                => 'nullable|integer',
             'visible_en_ficha'    => 'nullable|boolean',
         ]);
@@ -159,18 +160,20 @@ class CatalogoController extends Controller
             'nombre_amigable'      => $validated['nombre_amigable'],
             'nombre_tecnico'       => $this->nombreTecnicoIndicador($validated['nombre_tecnico'] ?? '', $validated['nombre_amigable']),
             'tematica_id'          => $validated['parent_id'],
-            'descripcion'          => $validated['descripcion'],
-            'fuente'               => $validated['fuente'],
+            'descripcion'          => $validated['descripcion'] ?? null,
+            'fuente'               => $validated['fuente'] ?? null,
             'tipo_dato'            => $validated['tipo_dato'],
-            'metodo_calculo'       => $validated['metodo_calculo'],
+            'metodo_calculo'       => $validated['metodo_calculo'] ?? null,
             'tipo_grafico_default' => $request->input('tipo_grafico_default'),
             'solo_resumen'         => $request->has('solo_resumen'),
-            'priorizar_total'      => $request->has('priorizar_total'),
             'es_complejo'          => $request->has('es_complejo'),
+            'priorizar_total'      => $request->has('priorizar_total'),
             'polaridad'            => $validated['polaridad'] ?? 'neutro',
+            'periodicidad'         => $validated['periodicidad'] ?? null,
             'orden'                => $validated['orden'] ?? 0,
             'visible_en_ficha'     => $request->has('visible_en_ficha'),
         ]);
+
         return response()->json($indicador);
     }
 
@@ -186,6 +189,7 @@ class CatalogoController extends Controller
             'tipo_dato'            => 'required|string|in:absoluto,porcentaje,tasa,indice',
             'tipo_grafico_default' => 'nullable|string|in:Barras,Lineal,Piramide',
             'polaridad'            => 'nullable|string|in:asendente,descendente,neutro',
+            'periodicidad'         => 'nullable|string|in:' . implode(',', array_keys(Indicador::PERIODICIDADES)),
             'orden'                => 'nullable|integer',
             'visible_en_ficha'    => 'nullable|boolean',
         ]);
@@ -242,6 +246,7 @@ class CatalogoController extends Controller
             'es_complejo'          => 'nullable|boolean',
             'priorizar_total'      => 'nullable|boolean',
             'polaridad'            => 'nullable|string|in:asendente,descendente,neutro',
+            'periodicidad'         => 'nullable|string|in:' . implode(',', array_keys(Indicador::PERIODICIDADES)),
             'orden'                => 'nullable|integer',
             'visible_en_ficha'     => 'nullable|boolean',
         ]);
@@ -250,15 +255,16 @@ class CatalogoController extends Controller
             'nombre_amigable'      => $validated['nombre_amigable'],
             'nombre_tecnico'       => $this->nombreTecnicoIndicador($validated['nombre_tecnico'] ?? '', $validated['nombre_amigable']),
             'tematica_id'          => $validated['tematica_id'],
-            'descripcion'          => $validated['descripcion'],
-            'fuente'               => $validated['fuente'],
+            'descripcion'          => $validated['descripcion'] ?? null,
+            'fuente'               => $validated['fuente'] ?? null,
             'tipo_dato'            => $validated['tipo_dato'],
-            'metodo_calculo'       => $validated['metodo_calculo'],
+            'metodo_calculo'       => $validated['metodo_calculo'] ?? null,
             'tipo_grafico_default' => $request->input('tipo_grafico_default'),
             'solo_resumen'         => $request->has('solo_resumen'),
             'es_complejo'          => $request->has('es_complejo'),
             'priorizar_total'      => $request->has('priorizar_total'),
             'polaridad'            => $validated['polaridad'] ?? 'neutro',
+            'periodicidad'         => $validated['periodicidad'] ?? null,
             'orden'                => $validated['orden'] ?? 0,
             'visible_en_ficha'     => $request->has('visible_en_ficha'),
         ]);
@@ -291,6 +297,7 @@ class CatalogoController extends Controller
             'tipo_dato'            => 'required|string|in:absoluto,porcentaje,tasa,indice',
             'tipo_grafico_default' => 'nullable|string|in:Barras,Lineal,Piramide',
             'polaridad'            => 'nullable|string|in:asendente,descendente,neutro',
+            'periodicidad'         => 'nullable|string|in:' . implode(',', array_keys(Indicador::PERIODICIDADES)),
             'orden'                => 'nullable|integer',
             'visible_en_ficha'     => 'nullable|boolean',
         ]);
@@ -601,6 +608,31 @@ class CatalogoController extends Controller
     {
         $variable->delete();
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Asigna una variable a un indicador (moviéndola si ya pertenecía a otro).
+     */
+    public function asignarVariable(Request $request, Indicador $indicador)
+    {
+        $validated = $request->validate([
+            'variable_id' => 'required|exists:variables,id',
+        ]);
+
+        $variable = Variable::findOrFail($validated['variable_id']);
+        $origen = $variable->indicador?->nombre_amigable;
+
+        $variable->update(['indicador_id' => $indicador->id]);
+
+        $mensaje = "La variable «{$variable->nombre_amigable}» quedó asignada al indicador «{$indicador->nombre_amigable}».";
+
+        if ($origen && $origen !== $indicador->nombre_amigable) {
+            $mensaje .= " Antes pertenecía a «{$origen}».";
+        }
+
+        return redirect()
+            ->route('admin.salud-datos')
+            ->with('success', $mensaje);
     }
 
     // --- EXPORTS ---

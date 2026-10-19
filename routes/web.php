@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\CatalogoController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DatoHistoricoController;
 use App\Http\Controllers\Admin\DiccionarioController;
+use App\Http\Controllers\Admin\FormulaController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\InstrumentoController;
 use App\Http\Controllers\Admin\LoteDatosController;
@@ -170,6 +171,7 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
 
         Route::post('/variables', [CatalogoController::class, 'storeVariable'])->name('variables.store');
         Route::put('/variables/{variable}', [CatalogoController::class, 'updateVariable'])->name('variables.update');
+        Route::post('/indicadores/{indicador}/asignar-variable', [CatalogoController::class, 'asignarVariable'])->name('indicadores.asignar-variable');
         Route::delete('/variables/{variable}', [CatalogoController::class, 'destroyVariable'])->name('variables.destroy');
 
         Route::get('/variables/{variable}/preview', [CatalogoController::class, 'previewConstruido'])->name('variables.preview');
@@ -194,6 +196,20 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
         Route::post('/instrumentos', [ImportController::class, 'importInstrumentos'])->name('instrumentos');
         Route::post('/instrumentos-asignacion', [ImportController::class, 'importInstrumentosAsignacion'])->name('instrumentos_asignacion');
     });
+    // Grupo de rutas para el catálogo de fórmulas
+    Route::prefix('formulas')->name('formulas.')->group(function () {
+        Route::get('/', [FormulaController::class, 'index'])->name('index');
+        Route::get('/crear', [FormulaController::class, 'create'])->name('create');
+        Route::post('/', [FormulaController::class, 'store'])->name('store');
+        Route::post('/preview', [FormulaController::class, 'preview'])->name('preview');
+        Route::post('/importar', [FormulaController::class, 'importar'])->name('importar');
+        Route::get('/{formula}', [FormulaController::class, 'show'])->name('show');
+        Route::get('/{formula}/editar', [FormulaController::class, 'edit'])->name('edit');
+        Route::put('/{formula}', [FormulaController::class, 'update'])->name('update');
+        Route::delete('/{formula}', [FormulaController::class, 'destroy'])->name('destroy');
+        Route::post('/{formula}/generar', [FormulaController::class, 'generar'])->name('generar');
+    });
+
     Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
     Route::get('/lotes-datos', [LoteDatosController::class, 'index'])->name('lotes-datos.index');
     Route::get('/lotes-datos/{lote}', [LoteDatosController::class, 'show'])->name('lotes-datos.show');
@@ -204,6 +220,7 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
     Route::put('/diccionario/{indicador}', [DiccionarioController::class, 'update'])->name('diccionario.update');
 
     Route::get('/salud-datos', [DashboardController::class, 'dataHealth'])->name('salud-datos');
+    Route::post('/salud-datos/indicadores/{indicador}/periodicidad', [DashboardController::class, 'actualizarPeriodicidad'])->name('salud-datos.periodicidad');
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
 
     Route::prefix('catalogos/exportar')->name('catalogos.export.')->group(function () {

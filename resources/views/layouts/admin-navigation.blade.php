@@ -27,6 +27,11 @@
                     href="{{ route('admin.catalogos.index') }}" title="Catálogos"><i
                         class="fas fa-book"></i><span>Catálogos</span></a></li>
         @endcan
+        @can('catalogos.ver')
+            <li class="sidebar-item"><a class="sidebar-link {{ request()->routeIs('admin.formulas.*') ? 'active' : '' }}"
+                    href="{{ route('admin.formulas.index') }}" title="Fórmulas"><i
+                        class="fa-solid fa-superscript"></i><span>Fórmulas</span></a></li>
+        @endcan
         @can('datos.ver')
             <li class="sidebar-item"><a class="sidebar-link {{ request()->routeIs('admin.datos.*') ? 'active' : '' }}"
                     href="{{ route('admin.datos.index') }}" title="Datos"><i
@@ -44,7 +49,8 @@
                         class="fas fa-clipboard-list"></i><span>Auditoría</span></a></li>
         @endcan
         @can('diccionario.ver')
-            <li class="sidebar-item"><a class="sidebar-link {{ request()->routeIs('admin.diccionario.*') ? 'active' : '' }}"
+            <li class="sidebar-item"><a
+                    class="sidebar-link {{ request()->routeIs('admin.diccionario.*') ? 'active' : '' }}"
                     href="{{ route('admin.diccionario.index') }}" title="Diccionario"><i
                         class="fas fa-book-open"></i><span>Diccionario</span></a></li>
         @endcan
@@ -53,13 +59,14 @@
                     href="{{ route('admin.salud-datos') }}" title="Salud"><i
                         class="fas fa-heartbeat"></i><span>Salud</span></a></li>
         @endcan
-        @if(Auth::user()->canAny(['datos.importar', 'catalogos.importar', 'instrumentos.importar']))
+        @if (Auth::user()->canAny(['datos.importar', 'catalogos.importar', 'instrumentos.importar']))
             <li class="sidebar-item"><a class="sidebar-link {{ request()->routeIs('admin.import.*') ? 'active' : '' }}"
                     href="{{ route('admin.import.index') }}" title="Importación"><i
                         class="fas fa-upload"></i><span>Importación</span></a></li>
         @endif
         @can('datos.ver')
-            <li class="sidebar-item"><a class="sidebar-link {{ request()->routeIs('admin.lotes-datos.*') ? 'active' : '' }}"
+            <li class="sidebar-item"><a
+                    class="sidebar-link {{ request()->routeIs('admin.lotes-datos.*') ? 'active' : '' }}"
                     href="{{ route('admin.lotes-datos.index') }}" title="Lotes de datos"><i
                         class="fas fa-box-archive"></i><span>Lotes de datos</span></a></li>
         @endcan
@@ -74,18 +81,20 @@
                         class="fas fa-user-shield"></i><span>Roles</span></a></li>
         @endcan
         @can('permisos.ver')
-            <li class="sidebar-item"><a class="sidebar-link {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}"
+            <li class="sidebar-item"><a
+                    class="sidebar-link {{ request()->routeIs('admin.permissions.*') ? 'active' : '' }}"
                     href="{{ route('admin.permissions.index') }}" title="Permisos"><i
                         class="fas fa-key"></i><span>Permisos</span></a></li>
         @endcan
     </ul>
 
-    @if(Auth::user()->can('municipios.ver') || Auth::user()->can('instrumentos.ver'))
+    @if (Auth::user()->can('municipios.ver') || Auth::user()->can('instrumentos.ver'))
         <hr class="sidebar-divider">
         <ul class="sidebar-nav">
             <li class="sidebar-item"><span class="sidebar-label">Territorio</span></li>
             @can('municipios.ver')
-                <li class="sidebar-item"><a class="sidebar-link {{ request()->routeIs('admin.municipios.*') ? 'active' : '' }}"
+                <li class="sidebar-item"><a
+                        class="sidebar-link {{ request()->routeIs('admin.municipios.*') ? 'active' : '' }}"
                         href="{{ route('admin.municipios.index') }}" title="Gestionar Municipios"><i
                             class="fas fa-city"></i><span>Municipios</span></a></li>
             @endcan

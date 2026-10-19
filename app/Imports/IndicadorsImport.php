@@ -50,7 +50,7 @@ class IndicadorsImport implements ToModel, WithHeadingRow, WithChunkReading
         }
 
         // Usamos firstOrCreate con el 'nombre_tecnico' del PROPIO indicador para evitar duplicados
-        return Indicador::firstOrCreate(
+        $indicador = Indicador::firstOrCreate(
             [
                 'nombre_tecnico' => $row['nombre_tecnico'],
             ],
@@ -61,6 +61,7 @@ class IndicadorsImport implements ToModel, WithHeadingRow, WithChunkReading
                 'descripcion'          => $row['descripcion'] ?? null,
                 'fuente'               => $row['fuente'] ?? null,
                 'tipo_dato'            => $row['tipo_dato'] ?? 'absoluto',
+                'periodicidad'         => $this->periodicidad($row['periodicidad'] ?? null),
                 'tipo_grafico_default' => trim($row['tipo_grafico_default'] ?? 'Barras'),
                 'metodo_calculo'       => $row['metodo_calculo'] ?? null,
                 'solo_resumen'         => filter_var($row['solo_resumen'] ?? false, FILTER_VALIDATE_BOOLEAN),
@@ -69,6 +70,38 @@ class IndicadorsImport implements ToModel, WithHeadingRow, WithChunkReading
                 'orden'                => $row['orden'] ?? 0,
             ]
         );
+
+        // Si el indicador ya existía y el archivo trae periodicidad, se actualiza.
+        if (! $indicador->wasRecentlyCreated) {
+            $periodicidad = $this->periodicidad($row['periodicidad'] ?? null);
+
+            if ($periodicidad && $indicador->periodicidad !== $periodicidad) {
+                $indicador->update(['periodicidad' => $periodicidad]);
+            }
+        }
+
+        return $indicador;
+    }
+
+    /**
+     * Normaliza la periodicidad del archivo: solo se aceptan los valores
+     * declarados en el catálogo; cualquier otro se descarta.
+     */
+    private function periodicidad(?string $valor): ?string
+    {
+        if ($valor === null) {
+            return null;
+        }
+
+        $valor = trim($valor);
+
+        foreach (array_keys(Indicador::PERIODICIDADES) as $permitida) {
+            if (strcasecmp($permitida, $valor) === 0) {
+                return $permitida;
+            }
+        }
+
+        return null;
     }
 
     public function chunkSize(): int

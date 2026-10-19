@@ -198,9 +198,21 @@
                             </option>
                         </select>
                     </div>
+                    <div class="col-md-3">
+                        <label for="periodicidad" class="form-label fw-bold text-secondary small">Periodicidad</label>
+                        <select name="periodicidad" id="periodicidad" class="form-select">
+                            <option value="">Sin declarar</option>
+                            @foreach(\App\Models\Indicador::PERIODICIDADES as $valor => $definicion)
+                                <option value="{{ $valor }}" @selected(($indicador->periodicidad ?? old('periodicidad', '')) === $valor)>
+                                    {{ $definicion['etiqueta'] }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="form-text">Frecuencia con la que se publica el dato. Se usa para saber si un indicador está al día.</div>
+                    </div>
                     <div class="col-12">
-                        <label class="form-label fw-bold text-secondary small">Descripción</label>
-                        <textarea name="descripcion" class="form-control" rows="2">{{ $indicador->descripcion ?? old('descripcion') }}</textarea>
+                        <label for="descripcion" class="form-label fw-bold text-secondary small">Descripción</label>
+                        <textarea name="descripcion" id="descripcion" class="form-control" rows="2">{{ $indicador->descripcion ?? old('descripcion') }}</textarea>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label fw-bold text-secondary small">Fuente</label>

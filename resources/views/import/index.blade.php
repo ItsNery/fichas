@@ -99,6 +99,9 @@
                                 <br>
                                 Para <code>es_complejo</code>, <code>priorizar_total</code> y <code>solo_resumen</code>:
                                 <code>1</code> significa verdadero y <code>0</code> falso.
+                                <br>
+                                <code>periodicidad</code> es opcional: <code>Anual</code>, <code>Bienal</code>,
+                                <code>Trienal</code>, <code>Cuatrienal</code>, <code>Quinquenal</code> o <code>Irregular</code>.
                             </x-slot>
                         </x-import-form>
                     </div>

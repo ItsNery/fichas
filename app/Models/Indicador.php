@@ -8,6 +8,18 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Indicador extends Model
 {
+    /**
+     * Periodicidades declarables: clave => intervalo en años y etiqueta.
+     */
+    public const PERIODICIDADES = [
+        'Anual' => ['intervalo' => 1, 'etiqueta' => 'Anual (cada 1 año)'],
+        'Bienal' => ['intervalo' => 2, 'etiqueta' => 'Bienal (cada 2 años)'],
+        'Trienal' => ['intervalo' => 3, 'etiqueta' => 'Trienal (cada 3 años)'],
+        'Cuatrienal' => ['intervalo' => 4, 'etiqueta' => 'Cuatrienal (cada 4 años)'],
+        'Quinquenal' => ['intervalo' => 5, 'etiqueta' => 'Quinquenal (cada 5 años)'],
+        'Irregular' => ['intervalo' => null, 'etiqueta' => 'Irregular (sin ciclo fijo)'],
+    ];
+
     public function scopeVisiblePublicamente($query)
     {
         return $query->where('visible_en_ficha', true)
