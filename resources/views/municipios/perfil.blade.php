@@ -23,20 +23,25 @@
                         </ol>
                     </nav>
 
-                    <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="hero-ficha__actions d-flex align-items-center gap-3 mb-3">
                         <span class="badge bg-gold px-3 py-2 text-uppercase hero-ficha__badge m-0">FICHA MUNICIPAL</span>
-                        <button type="button" class="btn btn-outline-light btn-sm fw-bold px-3 py-1 rounded-pill"
-                            data-bs-toggle="modal" data-bs-target="#compararModal">
-                            <i class="fa-solid fa-scale-balanced me-1"></i> Comparar
+                        <button type="button" class="hero-ficha__action btn btn-outline-light btn-sm fw-bold px-3 py-1 rounded-pill"
+                            data-bs-toggle="modal" data-bs-target="#compararModal" aria-label="Comparar municipios"
+                            title="Comparar municipios">
+                            <i class="fa-solid fa-scale-balanced hero-ficha__action-icon"></i>
+                            <span class="hero-ficha__action-label">Comparar</span>
                         </button>
                         <a href="{{ route('ficha-municipal.perfil.pdf', $municipio->slug) }}"
-                            class="btn btn-outline-light btn-sm fw-bold px-3 py-1 rounded-pill" target="_blank"
-                            data-pdf-link>
-                            <i class="fa-solid fa-file-pdf me-1"></i> PDF
+                            class="hero-ficha__action btn btn-outline-light btn-sm fw-bold px-3 py-1 rounded-pill" target="_blank"
+                            data-pdf-link aria-label="Abrir ficha en PDF" title="Abrir ficha en PDF">
+                            <i class="fa-solid fa-file-pdf hero-ficha__action-icon"></i>
+                            <span class="hero-ficha__action-label">PDF</span>
                         </a>
                         <a href="{{ route('ficha-municipal.panorama.pdf', $municipio->slug) }}"
-                            class="btn btn-outline-light btn-sm fw-bold px-3 py-1 rounded-pill" target="_blank">
-                            <i class="fa-solid fa-chart-pie me-1"></i> Panorama
+                            class="hero-ficha__action btn btn-outline-light btn-sm fw-bold px-3 py-1 rounded-pill" target="_blank"
+                            aria-label="Abrir panorama en PDF" title="Abrir panorama en PDF">
+                            <i class="fa-solid fa-chart-pie hero-ficha__action-icon"></i>
+                            <span class="hero-ficha__action-label">Panorama</span>
                         </a>
                     </div>
                     <h1 class="hero-ficha__titulo mb-2">{{ $municipio->nombre }}</h1>
