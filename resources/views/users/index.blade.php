@@ -131,7 +131,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
-                <form id="userForm" autocomplete="off">
+                <form id="userForm" action="{{ route('admin.users.store') }}" method="POST" autocomplete="off">
                     @csrf
                     <input type="hidden" id="formMethod" name="_method" value="POST">
                     <input type="hidden" id="userId" name="user_id">
@@ -215,6 +215,27 @@
             const userModal = new bootstrap.Modal(document.getElementById('userModal'));
             const form = document.getElementById('userForm');
             const modalTitle = document.getElementById('modalTitle');
+            const destroyUserUrlTemplate = @json(route('admin.users.destroy', ['user' => '__USER_ID__']));
+
+            async function readJsonResponse(response) {
+                const body = await response.text();
+                let data = {};
+
+                try {
+                    data = body ? JSON.parse(body) : {};
+                } catch (error) {
+                    data = {};
+                }
+
+                if (!response.ok) {
+                    const firstValidationError = data.errors
+                        ? Object.values(data.errors).flat()[0]
+                        : null;
+                    throw new Error(firstValidationError || data.message || data.error || `La solicitud falló (HTTP ${response.status}).`);
+                }
+
+                return data;
+            }
 
             // Configurar modal para "Crear"
             document.getElementById('addUserBtn')?.addEventListener('click', () => {
@@ -274,7 +295,7 @@
                         },
                         body: JSON.stringify(Object.fromEntries(new FormData(form)))
                     })
-                    .then(response => response.json())
+                    .then(readJsonResponse)
                     .then(data => {
                         if (data.success) {
                             userModal.hide();
@@ -297,7 +318,7 @@
                     })
                     .catch(error => {
                         console.error(error);
-                        Swal.fire('Error', 'Error de conexión.', 'error');
+                        Swal.fire('Error', error.message || 'No fue posible guardar el usuario.', 'error');
                     })
                     .finally(() => {
                         submitBtn.disabled = false;
@@ -319,14 +340,16 @@
                         cancelButtonText: 'Cancelar'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            fetch(`/admin/users/${button.dataset.id}`, {
+                            const destroyUrl = destroyUserUrlTemplate.replace('__USER_ID__', button.dataset.id);
+
+                            fetch(destroyUrl, {
                                     method: 'DELETE',
                                     headers: {
                                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                                         'Accept': 'application/json'
                                     }
                                 })
-                                .then(response => response.json())
+                                .then(readJsonResponse)
                                 .then(data => {
                                     if (data.success) {
                                         Swal.fire({
@@ -337,8 +360,12 @@
                                         });
                                         document.getElementById(`user-row-${button.dataset.id}`).remove();
                                     } else {
-                                        Swal.fire('Error', data.error, 'error');
+                                        Swal.fire('Error', data.error || data.message || 'No fue posible eliminar el usuario.', 'error');
                                     }
+                                })
+                                .catch(error => {
+                                    console.error(error);
+                                    Swal.fire('Error', error.message || 'No fue posible eliminar el usuario.', 'error');
                                 });
                         }
                     });
