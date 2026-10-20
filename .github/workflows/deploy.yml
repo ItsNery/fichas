@@ -145,5 +145,6 @@ jobs:
           php artisan view:cache
 
           php artisan storage:link
+          php artisan route:clear
 
 
