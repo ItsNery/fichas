@@ -131,7 +131,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
-                <form id="userForm" action="{{ route('admin.users.store') }}" method="POST" autocomplete="off">
+                <form id="userForm" action="{{ asset(ltrim(route('admin.users.store', [], false), '/')) }}" method="POST" autocomplete="off">
                     @csrf
                     <input type="hidden" id="formMethod" name="_method" value="POST">
                     <input type="hidden" id="userId" name="user_id">
@@ -215,7 +215,9 @@
             const userModal = new bootstrap.Modal(document.getElementById('userModal'));
             const form = document.getElementById('userForm');
             const modalTitle = document.getElementById('modalTitle');
-            const destroyUserUrlTemplate = @json(route('admin.users.destroy', ['user' => '__USER_ID__']));
+            const storeUserUrl = @json(asset(ltrim(route('admin.users.store', [], false), '/')));
+            const updateUserUrlTemplate = @json(asset(ltrim(route('admin.users.update', ['user' => '__USER_ID__'], false), '/')));
+            const destroyUserUrlTemplate = @json(asset(ltrim(route('admin.users.destroy', ['user' => '__USER_ID__'], false), '/')));
 
             async function readJsonResponse(response) {
                 const body = await response.text();
@@ -240,7 +242,7 @@
             // Configurar modal para "Crear"
             document.getElementById('addUserBtn')?.addEventListener('click', () => {
                 form.reset();
-                form.action = "{{ route('admin.users.store') }}";
+                form.action = storeUserUrl;
                 document.getElementById('formMethod').value = 'POST';
 
                 // Título con Icono Dorado
@@ -259,7 +261,7 @@
 
                 if (button) {
                     form.reset();
-                    form.action = `/admin/users/${button.dataset.id}`;
+                    form.action = updateUserUrlTemplate.replace('__USER_ID__', button.dataset.id);
                     document.getElementById('formMethod').value = 'PUT';
 
                     // Título con Icono Dorado
@@ -285,9 +287,10 @@
                 const originalText = submitBtn.innerText;
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
+                const requestMethod = document.getElementById('formMethod').value;
 
                 fetch(form.action, {
-                        method: 'POST',
+                        method: requestMethod,
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
