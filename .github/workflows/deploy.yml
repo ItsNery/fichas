@@ -52,6 +52,7 @@ jobs:
               rm -f "$config_file"
             fi
           done
+          rm -f fichas_municipales.rar
           test -f public/img/fondos/Fondo-hero.webp
           mkdir -p storage/framework/views
           mkdir -p storage/framework/cache
@@ -122,6 +123,7 @@ jobs:
               rm -f "$config_file"
             fi
           done
+          rm -f fichas_municipales.rar
           test -f public/img/fondos/Fondo-hero.webp
           sudo chown -R user_planeacion:www-data storage bootstrap/cache
           sudo chmod -R 775 storage bootstrap/cache
