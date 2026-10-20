@@ -421,6 +421,10 @@ p {
     display: none;
 }
 
+.mobile-menu-close {
+    display: none;
+}
+
 .nav-links {
     display: flex;
     gap: 5px;
@@ -595,6 +599,31 @@ p {
     .main-nav.active {
         transform: translateX(0);
         box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .mobile-menu-close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        top: 18px;
+        right: 20px;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: var(--text-color);
+        font-size: 2rem;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    .mobile-menu-close:hover,
+    .mobile-menu-close:focus-visible {
+        background-color: var(--light-gray);
+        outline: none;
     }
 
     .nav-container {

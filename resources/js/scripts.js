@@ -16,15 +16,32 @@ document.addEventListener("DOMContentLoaded", function () {
     
     const menuButton = document.getElementById("hamburger-menu");
     const mainNav = document.getElementById("main-nav");
+    const closeMenuButton = document.getElementById("mobile-menu-close");
+
+    const setMobileMenuOpen = (isOpen) => {
+        if (!mainNav) return;
+
+        mainNav.classList.toggle("active", isOpen);
+        menuButton?.classList.toggle("open", isOpen);
+        menuButton?.setAttribute("aria-expanded", String(isOpen));
+    };
 
     // A) ABRIR / CERRAR MENÚ PRINCIPAL (Móvil)
     if (menuButton && mainNav) {
         menuButton.addEventListener("click", function () {
-            mainNav.classList.toggle("active");
-            // Opcional: Animar el icono de hamburguesa
-            menuButton.classList.toggle("open");
+            setMobileMenuOpen(!mainNav.classList.contains("active"));
         });
     }
+
+    if (closeMenuButton && mainNav) {
+        closeMenuButton.addEventListener("click", () => setMobileMenuOpen(false));
+    }
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && mainNav?.classList.contains("active")) {
+            setMobileMenuOpen(false);
+        }
+    });
 
     // B) DROPDOWNS EN MÓVIL (Solución al problema de cerrarse al scrollear)
     // Seleccionamos los enlaces que activan menús desplegables

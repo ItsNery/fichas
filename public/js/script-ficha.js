@@ -1919,6 +1919,39 @@ document.addEventListener("DOMContentLoaded", function () {
                 }));
             }
 
+            const isSmallScreen = window.matchMedia("(max-width: 767.98px)").matches;
+            const hasLegend = seriesData.length > 1;
+            const maxCategoryLength = xAxisData.reduce(
+                (maxLength, category) => Math.max(maxLength, String(category ?? "").length),
+                0,
+            );
+            const wrapMobileAxisLabel = (value) => {
+                const label = value === "N/A" || value === null || value === ""
+                    ? "Total Estatal"
+                    : String(value);
+
+                if (!isSmallScreen || label.length <= 11) return label;
+
+                const words = label.split(/\s+/);
+                const lines = [];
+                let line = "";
+
+                words.forEach((word) => {
+                    const nextLine = line ? `${line} ${word}` : word;
+                    if (nextLine.length > 11 && line) {
+                        lines.push(line);
+                        line = word;
+                    } else {
+                        line = nextLine;
+                    }
+                });
+                if (line) lines.push(line);
+
+                return lines.join("\n");
+            };
+            const usesWrappedMobileLabels = isSmallScreen && maxCategoryLength > 11;
+            const mobileGridBottom = hasLegend ? 82 : (usesWrappedMobileLabels ? 68 : 48);
+
             options = {
                 color: PALETA_COLORES,
                 toolbox: {
@@ -2040,8 +2073,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     : {
                           left: "3%",
                           right: "4%",
-                          bottom: "22%",
-                          top: "15%",
+                          bottom: isSmallScreen ? mobileGridBottom : "22%",
+                          top: isSmallScreen ? 46 : "15%",
                           containLabel: true,
                       },
                 xAxis: {
@@ -2050,26 +2083,26 @@ document.addEventListener("DOMContentLoaded", function () {
                     name: ejeX.titulo || "",
                     nameLocation: "middle",
                     nameGap:
-                        xAxisData.length > 10
+                        isSmallScreen
+                            ? 34
+                            : xAxisData.length > 10
                             ? 80
                             : xAxisData.length > 4
                               ? 65
                               : 40,
                     axisLabel: {
-                        rotate:
-                            xAxisData.length > 10
-                                ? 45
-                                : xAxisData.length > 4
-                                  ? 30
-                                  : 0,
+                        rotate: isSmallScreen
+                            ? (xAxisData.length > 6 && !usesWrappedMobileLabels ? 35 : 0)
+                            : xAxisData.length > 10
+                              ? 45
+                              : xAxisData.length > 4
+                                ? 30
+                                : 0,
                         overflow: "break",
-                        width: 140,
+                        width: isSmallScreen ? 76 : 140,
                         fontSize: xAxisData.length > 15 ? 10 : 11,
                         interval: 0,
-                        formatter: (v) =>
-                            v === "N/A" || v === null || v === ""
-                                ? "Total Estatal"
-                                : v,
+                        formatter: wrapMobileAxisLabel,
                     },
                     axisPointer: { show: true, type: "shadow" },
                     triggerEvent: true,
@@ -2188,8 +2221,19 @@ document.addEventListener("DOMContentLoaded", function () {
         lastChartOptionsByView[viewKey] = options;
 
         // 4. Pintamos el lienzo
+        const isSmallScreen = window.matchMedia("(max-width: 767.98px)").matches;
+        const isSimpleBarChart =
+            datosRender.tipo_grafico === "bar" &&
+            (datosRender.series?.length ?? 0) === 1;
+        const compactMobileChart = isSmallScreen && isSimpleBarChart;
+        const chartWrapper = container.closest(".viz-wrapper");
+
+        container.classList.toggle("chart-container--compact-mobile", compactMobileChart);
+        chartWrapper?.classList.toggle("viz-wrapper--compact-mobile", compactMobileChart);
         container.style.width = "100%";
-        container.style.height = "500px";
+        container.style.height = isSmallScreen
+            ? (compactMobileChart ? "19rem" : "23.75rem")
+            : "500px";
 
         let chart = getChartInstance(viewKey);
         if (!chart || chart.getDom() !== container) {
@@ -2204,6 +2248,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         chart.setOption(options, true);
+        chart.resize();
         chart.hideLoading();
     }
 

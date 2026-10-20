@@ -116,6 +116,9 @@ $currentUrl = url()->current();
         #banco-indicadores .viz-wrapper,
         #banco-indicadores #chart-container,
         #banco-indicadores #chart-container-regions { min-height: 22rem !important; }
+        #banco-indicadores .viz-wrapper.viz-wrapper--compact-mobile,
+        #banco-indicadores #chart-container.chart-container--compact-mobile,
+        #banco-indicadores #chart-container-regions.chart-container--compact-mobile { min-height: 19rem !important; }
     }
 
     @media (prefers-reduced-motion: reduce) {

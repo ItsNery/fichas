@@ -22,7 +22,8 @@
             </div>
 
             {{-- Botón Hamburguesa --}}
-            <button id="hamburger-menu" class="hamburger-menu" aria-label="Abrir menú">
+            <button id="hamburger-menu" class="hamburger-menu" aria-label="Abrir menú" aria-controls="main-nav"
+                aria-expanded="false">
                 <span class="hamburger-line"></span>
                 <span class="hamburger-line"></span>
                 <span class="hamburger-line"></span>
@@ -34,6 +35,9 @@
 
 {{-- 2. NAVEGACIÓN (Hermano del header, para el Sticky) --}}
 <nav id="main-nav" class="main-nav">
+    <button id="mobile-menu-close" class="mobile-menu-close" type="button" aria-label="Cerrar menú">
+        <span aria-hidden="true">&times;</span>
+    </button>
     <div class="container nav-container">
         <ul class="nav-links">
 

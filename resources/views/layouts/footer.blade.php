@@ -72,8 +72,10 @@
                         Perfiles <span class="arrow ms-1">▾</span>
                     </a>
                     <ul class="list-unstyled ps-4 mb-2" id="footer-perfiles-submenu" style="display: none;">
-                        <li><a class="text-white-50 text-decoration-none" href="{{ route('ficha-municipal.index') }}">Municipales</a></li>
-                        <li><a class="text-white-50 text-decoration-none" href="{{ route('regiones.index') }}">Regionales</a></li>
+                        <li><a class="text-white-50 text-decoration-none"
+                                href="{{ route('ficha-municipal.index') }}">Municipales</a></li>
+                        <li><a class="text-white-50 text-decoration-none"
+                                href="{{ route('regiones.index') }}">Regionales</a></li>
                     </ul>
                     <a class="text-white-50 mb-2" href="{{ route('datos-abiertos.index') }}">
                         <i class="fa-solid fa-chart-pie mr-2"></i>
@@ -113,7 +115,8 @@
                         <i class="fa fa-angle-right mr-2"></i>
                         Sistema Estatal de Información
                     </a>
-                    <a target="_blank" class="text-white-50 mb-2" href="https://ceigep.puebla.gob.mx/" rel="noopener">
+                    <a target="_blank" class="text-white-50 mb-2" href="https://ceigep.puebla.gob.mx/"
+                        rel="noopener">
                         <i class="fa fa-angle-right mr-2"></i>
                         CEIGEP
                     </a>
@@ -152,12 +155,12 @@
                 <h6 class="text-white text-uppercase mt-4 mb-3 h6_planeader sm-d-none">
                     Ubicación
                 </h6>
-                {{-- <div class="w-100 sm-d-none">
+                <div class="w-100 sm-d-none">
                     <iframe id="mapIframe" title="Iframe de Mapas" class="iframe-footer"
-                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3771.6779345685!2d-98.18924812493688!3d19.033908382162036!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85cfc7113bf027f9%3A0x5019db208e053e0!2sSecretaria%20de%20Finanzas%20de%20Gobierno%20del%20Puebla!5e0!3m2!1sen!2smx!4v1700847803603!5m2!1sen!2smx"
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d235.74991801338356!2d-98.23562714550607!3d19.019779470285457!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85cfc70067539479%3A0xf49b8ffba2f7d28e!2sSecretar%C3%ADa%20de%20Finanzas%20-%20Nueva%20Sede%20(en%20construcci%C3%B3n)!5e0!3m2!1sen!2smx!4v1779210197938!5m2!1sen!2smx"
                         allowfullscreen="">
                     </iframe>
-                </div> --}}
+                </div>
             </div>
         </div>
     </div>
