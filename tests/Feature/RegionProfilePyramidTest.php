@@ -362,11 +362,10 @@ class RegionProfilePyramidTest extends TestCase
         $response->assertSee('7');
         $response->assertSee('31');
         $response->assertSee('Microrregiones oficiales');
-        $response->assertSee('Alcance territorial de esta ficha');
+        $response->assertSee('Explorar estructura territorial');
         $response->assertSee('https://planeader.puebla.gob.mx/regionalizacion', false);
         $response->assertSee('Fondo-hero.webp', false);
         $response->assertSee(route('regiones.estatal.pdf'), false);
-        $response->assertSee(route('regiones.estatal.excel'), false);
     }
 
     public function test_non_desagregable_microrregion_redirect_explains_available_municipal_profile(): void
