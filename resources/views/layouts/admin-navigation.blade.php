@@ -94,7 +94,7 @@
             <li class="sidebar-item"><span class="sidebar-label">Catálogos territoriales</span></li>
             <li class="sidebar-item"><a
                     class="sidebar-link {{ request()->routeIs('admin.catalogos.territorial*') ? 'active' : '' }}"
-                    href="{{ asset(ltrim(route('admin.catalogos.territorial', [], false), '/')) }}" title="Catálogo territorial"><i
+                    href="{{ route('admin.catalogos.territorial') }}" title="Catálogo territorial"><i
                         class="fas fa-map-marked-alt"></i><span>Catálogo territorial</span></a></li>
         </ul>
     @endcan

@@ -131,7 +131,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
 
-                <form id="userForm" action="{{ asset(ltrim(route('admin.users.store', [], false), '/')) }}" method="POST" autocomplete="off">
+                <form id="userForm" action="{{ route('admin.users.store') }}" method="POST" autocomplete="off">
                     @csrf
                     <input type="hidden" id="formMethod" name="_method" value="POST">
                     <input type="hidden" id="userId" name="user_id">
@@ -215,9 +215,9 @@
             const userModal = new bootstrap.Modal(document.getElementById('userModal'));
             const form = document.getElementById('userForm');
             const modalTitle = document.getElementById('modalTitle');
-            const storeUserUrl = @json(asset(ltrim(route('admin.users.store', [], false), '/')));
-            const updateUserUrlTemplate = @json(asset(ltrim(route('admin.users.update', ['user' => '__USER_ID__'], false), '/')));
-            const destroyUserUrlTemplate = @json(asset(ltrim(route('admin.users.destroy', ['user' => '__USER_ID__'], false), '/')));
+            const storeUserUrl = @json(route('admin.users.store'));
+            const updateUserUrlTemplate = @json(route('admin.users.update', ['user' => '__USER_ID__']));
+            const destroyUserUrlTemplate = @json(route('admin.users.destroy', ['user' => '__USER_ID__']));
 
             async function readJsonResponse(response) {
                 const body = await response.text();

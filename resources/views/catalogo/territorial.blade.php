@@ -20,14 +20,14 @@
                 <div class="card-panel h-100"><div class="card-body p-3">
                     <div class="small text-muted text-uppercase fw-bold">País</div>
                     <div class="h5 mb-2 text-vino">México</div>
-                    <a class="small" href="{{ asset(ltrim(route('admin.catalogos.territorial.export', 'pais', false), '/')) }}">Exportar</a>
+                    <a class="small" href="{{ route('admin.catalogos.territorial.export', 'pais') }}">Exportar</a>
                 </div></div>
             </div>
             <div class="col-sm-6 col-lg-2">
                 <div class="card-panel h-100"><div class="card-body p-3">
                     <div class="small text-muted text-uppercase fw-bold">Estado</div>
                     <div class="h5 mb-2 text-vino">Puebla</div>
-                    <a class="small" href="{{ asset(ltrim(route('admin.catalogos.territorial.export', 'estado', false), '/')) }}">Exportar</a>
+                    <a class="small" href="{{ route('admin.catalogos.territorial.export', 'estado') }}">Exportar</a>
                 </div></div>
             </div>
             <div class="col-sm-6 col-lg-2">
@@ -69,7 +69,7 @@
                     <div class="tab-pane fade show active" id="macrorregiones" role="tabpanel">
                         <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
                             <h2 class="h5 text-vino mb-0">Macrorregiones</h2>
-                            <a class="btn btn-outline-success btn-sm" href="{{ asset(ltrim(route('admin.catalogos.territorial.export', 'macrorregiones', false), '/')) }}"><i class="fa-solid fa-file-excel me-1"></i>Exportar Excel</a>
+                            <a class="btn btn-outline-success btn-sm" href="{{ route('admin.catalogos.territorial.export', 'macrorregiones') }}"><i class="fa-solid fa-file-excel me-1"></i>Exportar Excel</a>
                         </div>
                         <div class="table-responsive"><table class="table table-custom w-100 align-middle catalogo-territorial-table">
                             <thead><tr><th>PK: ID</th><th>Nombre</th><th class="text-center">Microrregiones</th></tr></thead>
@@ -80,7 +80,7 @@
                     <div class="tab-pane fade" id="microrregiones" role="tabpanel">
                         <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
                             <h2 class="h5 text-vino mb-0">Microrregiones</h2>
-                            <a class="btn btn-outline-success btn-sm" href="{{ asset(ltrim(route('admin.catalogos.territorial.export', 'microrregiones', false), '/')) }}"><i class="fa-solid fa-file-excel me-1"></i>Exportar Excel</a>
+                            <a class="btn btn-outline-success btn-sm" href="{{ route('admin.catalogos.territorial.export', 'microrregiones') }}"><i class="fa-solid fa-file-excel me-1"></i>Exportar Excel</a>
                         </div>
                         <div class="table-responsive"><table class="table table-custom w-100 align-middle catalogo-territorial-table">
                             <thead><tr><th>PK: ID</th><th>Microrregión</th><th>FK: macrorregion_id</th><th>Macrorregión</th><th class="text-center">Municipios</th></tr></thead>
@@ -91,7 +91,7 @@
                     <div class="tab-pane fade" id="municipios" role="tabpanel">
                         <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
                             <h2 class="h5 text-vino mb-0">Municipios</h2>
-                            <a class="btn btn-outline-success btn-sm" href="{{ asset(ltrim(route('admin.catalogos.territorial.export', 'municipios', false), '/')) }}"><i class="fa-solid fa-file-excel me-1"></i>Exportar Excel</a>
+                            <a class="btn btn-outline-success btn-sm" href="{{ route('admin.catalogos.territorial.export', 'municipios') }}"><i class="fa-solid fa-file-excel me-1"></i>Exportar Excel</a>
                         </div>
                         <div class="table-responsive"><table class="table table-custom w-100 align-middle catalogo-territorial-table">
                             <thead><tr><th>PK: ID</th><th>Clave GEO</th><th>Municipio</th><th>FK: microrregion_id</th><th>Microrregión</th><th>Macrorregión</th></tr></thead>
@@ -102,7 +102,7 @@
                     <div class="tab-pane fade" id="instrumentos" role="tabpanel">
                         <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
                             <h2 class="h5 text-vino mb-0">Instrumentos de planeación</h2>
-                            <a class="btn btn-outline-success btn-sm" href="{{ asset(ltrim(route('admin.catalogos.territorial.export', 'instrumentos', false), '/')) }}"><i class="fa-solid fa-file-excel me-1"></i>Exportar Excel</a>
+                            <a class="btn btn-outline-success btn-sm" href="{{ route('admin.catalogos.territorial.export', 'instrumentos') }}"><i class="fa-solid fa-file-excel me-1"></i>Exportar Excel</a>
                         </div>
                         <div class="table-responsive"><table class="table table-custom w-100 align-middle catalogo-territorial-table">
                             <thead><tr><th>PK: instrumento_id</th><th>Instrumento</th><th class="text-center">Municipios vinculados</th><th>Relación: instrumento_municipio</th></tr></thead>
