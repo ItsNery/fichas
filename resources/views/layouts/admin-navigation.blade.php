@@ -88,26 +88,20 @@
         @endcan
     </ul>
 
-    @if (Auth::user()->can('municipios.ver') || Auth::user()->can('instrumentos.ver'))
+    @can('catalogos.ver')
         <hr class="sidebar-divider">
         <ul class="sidebar-nav">
-            <li class="sidebar-item"><span class="sidebar-label">Territorio</span></li>
-            @can('municipios.ver')
-                <li class="sidebar-item"><a
-                        class="sidebar-link {{ request()->routeIs('admin.municipios.*') ? 'active' : '' }}"
-                        href="{{ route('admin.municipios.index') }}" title="Gestionar Municipios"><i
-                            class="fas fa-city"></i><span>Municipios</span></a></li>
-            @endcan
-            @can('instrumentos.ver')
-                <li class="sidebar-item"><a
-                        class="sidebar-link {{ request()->routeIs('admin.instrumentos.*') ? 'active' : '' }}"
-                        href="{{ route('admin.instrumentos.index') }}" title="Instrumentos"><i
-                            class="fas fa-tools"></i><span>Instrumentos</span></a></li>
-            @endcan
+            <li class="sidebar-item"><span class="sidebar-label">Catálogos territoriales</span></li>
+            <li class="sidebar-item"><a
+                    class="sidebar-link {{ request()->routeIs('admin.catalogos.territorial*') ? 'active' : '' }}"
+                    href="{{ route('admin.catalogos.territorial', [], false) }}" title="Catálogo territorial"><i
+                        class="fas fa-map-marked-alt"></i><span>Catálogo territorial</span></a></li>
         </ul>
-    @endif
+    @endcan
 
     <div class="sidebar-footer">
+        <a class="sidebar-link" href="{{ route('inicio') }}" title="Ver sitio"><i
+                class="fas fa-arrow-up-right-from-square"></i><span>Ver sitio</span></a>
         <form method="POST" action="{{ route('logout') }}" id="logout-form">
             @csrf
             <a class="sidebar-link text-danger" href="{{ route('logout') }}" title="Cerrar sesión"

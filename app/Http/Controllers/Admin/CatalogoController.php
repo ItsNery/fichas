@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Exports\CatalogoExport;
+use App\Exports\CatalogoGeograficoBaseExport;
 use App\Exports\DimensionesExport;
 use App\Exports\IndicadoresExport;
 use App\Exports\MacrorregionesExport;
@@ -12,6 +13,10 @@ use App\Exports\VariablesExport;
 use App\Http\Controllers\Controller;
 use App\Models\Dimension;
 use App\Models\Indicador;
+use App\Models\Instrumento;
+use App\Models\Macrorregion;
+use App\Models\Microrregion;
+use App\Models\Municipio;
 use App\Models\Tematica;
 use App\Models\Variable;
 use App\Services\IndicadorConstruidoService;
@@ -27,7 +32,7 @@ class CatalogoController extends Controller
     {
         $this->middleware('permission:catalogos.ver')->only([
             'index', 'export', 'exportDimensiones', 'exportTematicas', 'exportIndicadores', 'exportVariables',
-            'crearIndicador', 'editarIndicador', 'previewConstruido',
+            'crearIndicador', 'editarIndicador', 'previewConstruido', 'territorial', 'exportTerritorial',
         ]);
         $this->middleware('permission:catalogos.crear')->only([
             'storeDimension', 'storeTematica', 'storeIndicador', 'storeVariable', 'guardarIndicador', 'generarConstruido',
@@ -58,6 +63,49 @@ class CatalogoController extends Controller
     {
         $fileName = 'catalogo_indicadores_' . now()->format('Y-m-d') . '.xlsx';
         return Excel::download(new CatalogoExport, $fileName);
+    }
+
+    /**
+     * Catálogos territoriales disponibles para consulta, sin acciones de edición.
+     */
+    public function territorial()
+    {
+        return view('catalogo.territorial', [
+            'macrorregiones' => Macrorregion::withCount('microrregiones')->orderBy('nombre')->get(),
+            'microrregiones' => Microrregion::with('macrorregion')->withCount('municipios')->orderBy('nombre')->get(),
+            'municipios' => Municipio::with('microrregion.macrorregion')->orderBy('nombre')->get(),
+            'instrumentos' => Instrumento::with(['municipios' => fn ($query) => $query->orderBy('nombre')])
+                ->withCount('municipios')->orderBy('nombre')->get(),
+        ]);
+    }
+
+    /**
+     * Descarga un catálogo territorial individual.
+     */
+    public function exportTerritorial(string $tipo)
+    {
+        return match ($tipo) {
+            'municipios' => Excel::download(new MunicipiosExport, 'catalogo-municipios.xlsx'),
+            'microrregiones' => Excel::download(new MicrorregionesExport, 'catalogo-microrregiones.xlsx'),
+            'macrorregiones' => Excel::download(new MacrorregionesExport, 'catalogo-macrorregiones.xlsx'),
+            'instrumentos' => Excel::download(new CatalogoGeograficoBaseExport(
+                ['instrumento_id', 'nombre', 'municipio_id', 'municipio', 'anio'],
+                Instrumento::with('municipios')->orderBy('nombre')->get()
+                    ->flatMap(fn (Instrumento $instrumento) => $instrumento->municipios->isEmpty()
+                        ? [[$instrumento->id, $instrumento->nombre, null, null, null]]
+                        : $instrumento->municipios->map(fn (Municipio $municipio) => [
+                            $instrumento->id, $instrumento->nombre, $municipio->id, $municipio->nombre, $municipio->pivot->anio,
+                        ])
+                    )->all()
+            ), 'catalogo-instrumentos.xlsx'),
+            'pais' => Excel::download(new CatalogoGeograficoBaseExport(
+                ['pais_id', 'nombre', 'codigo_iso'], [[1, 'México', 'MX']]
+            ), 'catalogo-pais.xlsx'),
+            'estado' => Excel::download(new CatalogoGeograficoBaseExport(
+                ['estado_id', 'pais_id', 'nombre', 'clave_entidad'], [[21, 1, 'Puebla', '21']]
+            ), 'catalogo-estado-puebla.xlsx'),
+            default => abort(404),
+        };
     }
 
     // --- DIMENSIONES ---

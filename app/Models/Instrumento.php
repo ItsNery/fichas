@@ -14,6 +14,8 @@ class Instrumento extends Model
 
     public function municipios()
     {
-        return $this->belongsToMany(Municipio::class, 'instrumento_municipio')->withTimestamps();
+        return $this->belongsToMany(Municipio::class, 'instrumento_municipio')
+            ->withPivot('anio')
+            ->withTimestamps();
     }
 }

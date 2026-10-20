@@ -148,6 +148,8 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
     Route::prefix('catalogos')->name('catalogos.')->group(function () {
         Route::get('/', [CatalogoController::class, 'index'])->name('index');
         Route::get('/exportar', [CatalogoController::class, 'export'])->name('export');
+        Route::get('/territorial', [CatalogoController::class, 'territorial'])->name('territorial');
+        Route::get('/territorial/exportar/{tipo}', [CatalogoController::class, 'exportTerritorial'])->name('territorial.export');
 
         // CRUD para Dimensiones
         Route::post('/dimensions', [CatalogoController::class, 'storeDimension'])->name('dimensions.store');
