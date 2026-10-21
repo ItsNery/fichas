@@ -447,6 +447,13 @@
 @endsection
 
 @section('jss')
+    @php
+        $compararUrlTemplate = route('ficha-municipal.comparar', [
+            'slug1' => '__SLUG1__',
+            'slug2' => '__SLUG2__',
+        ]);
+    @endphp
+
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <script>
         window.ComparadorConfig = {
@@ -461,10 +468,7 @@
                 slug: "{{ $municipio2->slug }}",
                 cvegeo: "{{ $municipio2->cvegeo }}"
             },
-            compararUrlTemplate: @json(route('ficha-municipal.comparar', [
-                'slug1' => '__SLUG1__',
-                'slug2' => '__SLUG2__',
-            ])),
+            compararUrlTemplate: @json($compararUrlTemplate),
             comparativaData: @json($comparativa)
         };
     </script>
