@@ -41,12 +41,26 @@ class ComparisonPageCacheService
     /**
      * @param Closure(): string $renderer
      */
-    public function remember(string $slug1, string $slug2, string $dataVersion, Closure $renderer): string
+    public function remember(
+        string $slug1,
+        string $slug2,
+        string $dataVersion,
+        Closure $renderer,
+        ?Closure $onCacheStatus = null
+    ): string
     {
         $key = 'fichas:comparativa:'.hash('sha256', $dataVersion.'|'.$slug1.'|'.$slug2);
 
         if (Cache::has($key)) {
+            if ($onCacheStatus) {
+                $onCacheStatus('hit');
+            }
+
             return Cache::get($key);
+        }
+
+        if ($onCacheStatus) {
+            $onCacheStatus('miss');
         }
 
         return Cache::lock($key.':lock', self::LOCK_SECONDS)->block(self::LOCK_WAIT_SECONDS, function () use ($key, $renderer) {

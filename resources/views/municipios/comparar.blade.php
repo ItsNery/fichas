@@ -8,7 +8,8 @@
         $heroAccent = $dimensionColors[array_key_first($dimensionColors)] ?? '#861e34';
     @endphp
     <section class="hero-comparar" style="--dimension-accent: {{ $heroAccent }};">
-        <div class="hero-comparar__gradient" style="background: linear-gradient(135deg, {{ $heroAccent }} 0%, {{ $heroAccent }}dd 100%);"></div>
+        <div class="hero-comparar__gradient"
+            style="background: linear-gradient(135deg, {{ $heroAccent }} 0%, {{ $heroAccent }}dd 100%);"></div>
         <div class="container hero-comparar__container text-white">
             <div class="row align-items-center mb-4">
                 <div class="col-md-8">
@@ -23,12 +24,12 @@
                     <h1 class="display-4 fw-bold mb-2">Comparador Municipal</h1>
                     <p class="lead opacity-75">Análisis comparativo directo entre dos municipios</p>
                 </div>
-                <div class="col-md-4 text-md-end">
+                {{-- <div class="col-md-4 text-md-end">
                     <a href="{{ route('ficha-municipal.comparar.pdf', [$municipio1->slug, $municipio2->slug]) }}"
                         class="badge bg-gold px-4 py-2 fw-bold text-uppercase shadow-sm">
                         <i class="fa-solid fa-file-pdf me-2"></i> Exportar Reporte PDF
                     </a>
-                </div>
+                </div> --}}
             </div>
 
             <div class="row g-4 align-items-stretch">
@@ -166,8 +167,10 @@
             @endphp
             <section id="section-{{ Str::slug($seccion) }}" class="section-perfil mb-5 pb-5"
                 style="--dimension-accent: {{ $dimensionAccent }};">
-                <div class="dimension-header shadow-sm mb-4" style="background: {{ $dimensionAccent }}; border-left: 3px solid {{ $dimensionAccentText == '#fff' ? '#c79b66' : '#c79b66' }};">
-                    <h2 class="display-5 fw-bold mb-0 text-center" style="color: {{ $dimensionAccentText }};">{{ ucwords(str_replace('_', ' ', $seccion)) }}</h2>
+                <div class="dimension-header shadow-sm mb-4"
+                    style="background: {{ $dimensionAccent }}; border-left: 3px solid {{ $dimensionAccentText == '#fff' ? '#c79b66' : '#c79b66' }};">
+                    <h2 class="display-5 fw-bold mb-0 text-center" style="color: {{ $dimensionAccentText }};">
+                        {{ ucwords(str_replace('_', ' ', $seccion)) }}</h2>
                 </div>
 
                 <div class="row g-4 align-items-stretch">
@@ -198,8 +201,10 @@
                                     @if ($isKpi)
                                         @php
                                             // --- Resolución de valores categóricos mediante mapeo_valores ---
-                                            $displayVal1 = $item['datos1']['valor_actual'] ?? ($item['datos1']['total'] ?? 'N/D');
-                                            $displayVal2 = $item['datos2']['valor_actual'] ?? ($item['datos2']['total'] ?? 'N/D');
+                                            $displayVal1 =
+                                                $item['datos1']['valor_actual'] ?? ($item['datos1']['total'] ?? 'N/D');
+                                            $displayVal2 =
+                                                $item['datos2']['valor_actual'] ?? ($item['datos2']['total'] ?? 'N/D');
 
                                             // Buscar mapeo en las variables (prioridad: ajustes_visuales > variable.mapeo)
                                             $mapeoActivo = null;
@@ -258,8 +263,7 @@
                                         <div class="row g-4 align-items-center justify-content-center my-2">
                                             {{-- Municipio 1 Value --}}
                                             <div class="col-5 text-center border-end">
-                                                <span
-                                                    class="badge mb-2 text-uppercase"
+                                                <span class="badge mb-2 text-uppercase"
                                                     style="background: {{ $dimensionAccent }}; color: {{ $dimensionAccentText }};">
                                                     {{ $municipio1->nombre }}</span>
                                                 <h4 class="perfil-tarjeta__kpi-value"
@@ -329,8 +333,7 @@
                                                                 ($pct >= 0 ? '+' : '') . number_format($pct, 1) . '%';
                                                         }
                                                     @endphp
-                                                    <div
-                                                        class="comparar-kpi__diff-badge shadow-sm px-2 py-1 rounded"
+                                                    <div class="comparar-kpi__diff-badge shadow-sm px-2 py-1 rounded"
                                                         style="background: {{ $dimensionAccent }}; border-color: {{ $dimensionAccent }};">
                                                         <span
                                                             class="{{ $colorClass }} small">{{ $label }}</span>
@@ -342,8 +345,7 @@
 
                                             {{-- Municipio 2 Value --}}
                                             <div class="col-5 text-center border-start">
-                                                <span
-                                                    class="badge mb-2 text-uppercase text-white"
+                                                <span class="badge mb-2 text-uppercase text-white"
                                                     style="background: {{ $dimensionAccent }};">
                                                     {{ $municipio2->nombre }}</span>
                                                 <h4 class="perfil-tarjeta__kpi-value"
@@ -414,8 +416,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <h5
-                                                        class="text-center small fw-bold text-uppercase mb-3"
+                                                    <h5 class="text-center small fw-bold text-uppercase mb-3"
                                                         style="color: {{ $dimensionAccent }};">
                                                         {{ $municipio2->nombre }}</h5>
                                                     <div

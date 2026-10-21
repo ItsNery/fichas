@@ -26,7 +26,10 @@ use App\Services\RankingService;
 use App\Services\FichaComposerService;
 use App\Services\CachedPdfService;
 use App\Services\ComparisonPageCacheService;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Contracts\Cache\LockTimeoutException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 
 /**
@@ -1049,44 +1052,89 @@ class FichaController extends Controller
         $datos[$dimension->id]['tematicas']['Ordenamiento Territorial'][] = $kpiFantasma;
     }
 
-    public function compararMunicipal($slug1, $slug2)
+    public function compararMunicipal(Request $request, $slug1, $slug2)
     {
+        $profileToken = config('traffic.comparison_profile_token');
+        $profiling = is_string($profileToken) && $profileToken !== ''
+            && hash_equals($profileToken, (string) $request->header('X-Comparison-Profile'));
+        $profile = [
+            'slug_1' => $slug1,
+            'slug_2' => $slug2,
+            'query_count' => 0,
+            'query_time_ms' => 0.0,
+        ];
+        $requestStartedAt = microtime(true);
+
+        if ($profiling) {
+            DB::listen(function (QueryExecuted $query) use (&$profile) {
+                $profile['query_count']++;
+                $profile['query_time_ms'] += $query->time;
+            });
+        }
+
         try {
             $cache = app(ComparisonPageCacheService::class);
+            $versionStartedAt = microtime(true);
+            $dataVersion = $cache->dataVersion();
+            $profile['data_version_ms'] = round((microtime(true) - $versionStartedAt) * 1000, 1);
             $html = $cache->remember(
                 $slug1,
                 $slug2,
-                $cache->dataVersion(),
-                fn () => $this->renderComparacionMunicipal($slug1, $slug2)
+                $dataVersion,
+                function () use ($slug1, $slug2, &$profile) {
+                    return $this->renderComparacionMunicipal($slug1, $slug2, $profile);
+                },
+                function (string $status) use (&$profile) {
+                    $profile['cache'] = $status;
+                }
             );
+            $profile['outcome'] = 'ok';
         } catch (LockTimeoutException) {
+            $profile['outcome'] = 'lock_timeout';
+
             return response()->json([
                 'message' => 'La comparativa se está preparando. Intenta nuevamente en unos segundos.',
             ], 503, ['Retry-After' => 10]);
+        } finally {
+            if ($profiling) {
+                $profile['total_ms'] = round((microtime(true) - $requestStartedAt) * 1000, 1);
+                $profile['query_time_ms'] = round($profile['query_time_ms'], 1);
+                Log::info('comparison.profile', $profile);
+            }
         }
 
         return response($html);
     }
 
-    private function renderComparacionMunicipal(string $slug1, string $slug2): string
+    private function renderComparacionMunicipal(string $slug1, string $slug2, array &$profile = []): string
     {
+        $rankingStartedAt = microtime(true);
         $data = app(RankingService::class)->cargarComparativa($slug1, $slug2);
+        $profile['ranking_ms'] = round((microtime(true) - $rankingStartedAt) * 1000, 1);
+
+        $municipiosStartedAt = microtime(true);
         $data['todosMunicipios'] = Municipio::orderBy('nombre', 'asc')->get();
+        $profile['municipios_ms'] = round((microtime(true) - $municipiosStartedAt) * 1000, 1);
+
+        $composer = app(FichaComposerService::class);
+        $compositionStartedAt = microtime(true);
 
         foreach ($data['configuraciones'] as $config) {
-            $datos1 = app(FichaComposerService::class)->obtenerDatosParaConfig($config, $data['municipio1'], $data['dataStore1']);
-            $datos2 = app(FichaComposerService::class)->obtenerDatosParaConfig($config, $data['municipio2'], $data['dataStore2']);
+            $datos1 = $composer->obtenerDatosParaConfig($config, $data['municipio1'], $data['dataStore1']);
+            $datos2 = $composer->obtenerDatosParaConfig($config, $data['municipio2'], $data['dataStore2']);
 
             $dimensionKey = $this->dimensionKey($config);
             $data['comparativa'][$dimensionKey][] = [
                 'config' => $config,
                 'datos1' => $datos1,
                 'datos2' => $datos2,
-                'echarts_combinado' => app(FichaComposerService::class)->combinarDatosParaECharts(
+                'echarts_combinado' => $composer->combinarDatosParaECharts(
                     $config, $datos1, $datos2, $data['municipio1'], $data['municipio2']
                 ),
             ];
         }
+        $profile['composition_ms'] = round((microtime(true) - $compositionStartedAt) * 1000, 1);
+        $profile['configuration_count'] = count($data['configuraciones']);
 
         // Construir colores por dimensión para la vista de comparación
         $dimensionColors = [];
@@ -1100,10 +1148,14 @@ class FichaController extends Controller
             }
         }
 
-        return view('municipios.comparar', array_merge($data, [
+        $viewStartedAt = microtime(true);
+        $html = view('municipios.comparar', array_merge($data, [
             'todosMunicipios' => $data['todosMunicipios'],
             'dimensionColors' => $dimensionColors,
         ]))->render();
+        $profile['view_ms'] = round((microtime(true) - $viewStartedAt) * 1000, 1);
+
+        return $html;
     }
 
     /**
