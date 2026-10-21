@@ -4661,6 +4661,37 @@ footer {
     overflow: hidden;
 }
 
+.hero-comparar__media {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    inset: 0;
+    position: absolute;
+    z-index: 0;
+}
+
+.hero-comparar__media-panel {
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    min-height: 100%;
+    transform: scale(1.015);
+}
+
+.hero-comparar__media-panel--left {
+    background-position: center left;
+}
+
+.hero-comparar__media-panel--right {
+    background-position: center right;
+}
+
+@media (max-width: 767.98px) {
+    .hero-comparar__media {
+        grid-template-columns: 1fr;
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+    }
+}
+
 .hero-comparar__gradient {
     position: absolute;
     top: 0;
@@ -4752,6 +4783,42 @@ footer {
     box-shadow: 0 0 0 0.25rem rgba(95, 27, 45, 0.25);
 }
 
+.barra-comparar .ts-wrapper {
+    font-family: var(--fontFamlyText);
+}
+
+.barra-comparar .ts-control {
+    border: 1px solid #ced4da;
+    border-radius: var(--radio-borde);
+    box-shadow: none;
+    min-height: 2.45rem;
+    padding: 0.38rem 0.75rem;
+}
+
+.barra-comparar .ts-wrapper.focus .ts-control {
+    border-color: var(--color1);
+    box-shadow: 0 0 0 0.25rem rgba(95, 27, 45, 0.18);
+}
+
+.barra-comparar .ts-dropdown {
+    border: 1px solid #e7d9dd;
+    border-radius: var(--radio-borde);
+    box-shadow: var(--shadow-dropdown);
+    margin-top: 0.35rem;
+    overflow: hidden;
+}
+
+.barra-comparar .ts-dropdown .option {
+    font-family: var(--fontFamlyText);
+    padding: 0.65rem 0.8rem;
+}
+
+.barra-comparar .ts-dropdown .active,
+.barra-comparar .ts-dropdown .option:hover {
+    background: #f8f0f2;
+    color: var(--color1);
+}
+
 .comparar-kpi__diff-badge {
     display: inline-block;
     background: #f8f9fa;
@@ -4783,6 +4850,150 @@ footer {
 
 .bg-vino {
     background-color: var(--color1) !important;
+}
+
+/* Carga progresiva de las dimensiones de la comparativa. */
+.comparison-section__skeleton {
+    border: 1px solid #eadde0;
+    box-shadow: 0 8px 22px rgba(95, 27, 45, 0.08);
+    border: 1px solid color-mix(in srgb, var(--dimension-accent) 20%, #ffffff);
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--dimension-accent) 10%, transparent);
+    overflow: hidden;
+}
+
+.comparison-section__skeleton-body {
+    display: grid;
+    gap: 1.4rem;
+    min-height: 15.5rem;
+    padding: 1.6rem;
+}
+
+.comparison-section__skeleton-title,
+.comparison-section__skeleton-chart {
+    background: linear-gradient(100deg, #f8f4f5 20%, #eee1e4 40%, #f8f4f5 60%);
+    background: linear-gradient(
+        100deg,
+        color-mix(in srgb, var(--dimension-accent) 9%, #ffffff) 20%,
+        color-mix(in srgb, var(--dimension-accent) 20%, #ffffff) 40%,
+        color-mix(in srgb, var(--dimension-accent) 9%, #ffffff) 60%
+    );
+    background-size: 220% 100%;
+    animation: comparison-skeleton-shimmer 1.6s ease-in-out infinite;
+    border-radius: var(--radio-borde);
+    display: block;
+}
+
+.comparison-section__skeleton-title {
+    height: 1.25rem;
+    max-width: 38%;
+}
+
+.comparison-section__skeleton-chart {
+    min-height: 10rem;
+}
+
+.comparison-section__status {
+    align-items: center;
+    color: var(--dimension-accent);
+    display: flex;
+    font-size: 0.86rem;
+    font-weight: 700;
+    gap: 0.5rem;
+    justify-content: center;
+    letter-spacing: 0.01em;
+}
+
+.comparison-section__feedback {
+    align-items: flex-start;
+    background: #fcf8f9;
+    background: color-mix(in srgb, var(--dimension-accent) 7%, #ffffff);
+    border-left: 4px solid var(--dimension-accent);
+    border-radius: var(--radio-borde);
+    box-shadow: var(--card-shadow);
+    color: var(--text-color);
+    display: flex;
+    gap: 1rem;
+    margin: 0 auto;
+    max-width: 46rem;
+    padding: 1.25rem 1.4rem;
+}
+
+.comparison-section__feedback-icon {
+    align-items: center;
+    background: var(--dimension-accent);
+    border-radius: 50%;
+    color: #ffffff;
+    display: inline-flex;
+    flex: 0 0 2.35rem;
+    height: 2.35rem;
+    justify-content: center;
+}
+
+.comparison-section__feedback-title {
+    color: var(--dimension-accent);
+    font-size: 1.05rem;
+    margin: 0 0 0.35rem;
+}
+
+.comparison-section__feedback-message {
+    font-family: var(--fontFamlyText);
+    margin: 0 0 0.9rem;
+}
+
+.comparison-section__retry {
+    background: var(--dimension-accent);
+    border: 1px solid var(--dimension-accent);
+    border-radius: var(--radio-borde);
+    color: #ffffff;
+    font-family: var(--fontFamilyBold);
+    font-size: 0.85rem;
+    padding: 0.45rem 0.8rem;
+    transition: filter 0.2s ease, transform 0.2s ease;
+}
+
+.comparison-section__retry:hover,
+.comparison-section__retry:focus-visible {
+    color: #ffffff;
+    filter: brightness(0.9);
+    transform: translateY(-1px);
+}
+
+@keyframes comparison-skeleton-shimmer {
+    from { background-position: 100% 0; }
+    to { background-position: -120% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .comparison-section__skeleton-title,
+    .comparison-section__skeleton-chart,
+    .hero-comparar__vs-circle,
+    .hero-comparar__card {
+        animation: none;
+        transition: none;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .comparison-section__skeleton-body { min-height: 12rem; padding: 1.15rem; }
+    .comparison-section__skeleton-title { max-width: 60%; }
+    .comparison-section__feedback { padding: 1rem; }
+
+    .sticky-nav__link {
+        align-items: center;
+        display: flex;
+        min-height: 44px;
+    }
+}
+
+.comparison-selector-feedback {
+    color: var(--color1);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.comparison-selector-feedback--error {
+    color: #9b1c31;
 }
 
 /* --- WIDGET MUNICIPIOS SIMILARES (FASE 4) --- */

@@ -77,6 +77,22 @@ class RouteServiceProvider extends ServiceProvider
             ];
         });
 
+        // Las secciones progresivas se solicitan en serie desde una sola
+        // comparativa. Tienen un limite propio para no bloquear una visita
+        // legitima, pero mantienen el tope horario compartido.
+        RateLimiter::for('ficha-comparativa-seccion', function (Request $request) {
+            $profileToken = config('traffic.comparison_profile_token');
+            if (is_string($profileToken) && $profileToken !== ''
+                && hash_equals($profileToken, (string) $request->header('X-Comparison-Profile'))) {
+                return Limit::none();
+            }
+
+            return [
+                Limit::perMinute(12)->by('ficha-comparativa-seccion:'.$request->ip()),
+                Limit::perHour(30)->by('ficha-comparativa:global'),
+            ];
+        });
+
         // La generación de PDF puede iniciar procesos de navegador; se limita
         // como un recurso compartido entre todos los PDF municipales.
         RateLimiter::for('ficha-pdf', function (Request $request) {

@@ -1123,6 +1123,131 @@ class FichaController extends Controller
     private function renderComparacionMunicipal(string $slug1, string $slug2, array &$profile = []): string
     {
         $rankingStartedAt = microtime(true);
+        $data = app(RankingService::class)->cargarComparativaResumen($slug1, $slug2);
+        $profile['ranking_ms'] = round((microtime(true) - $rankingStartedAt) * 1000, 1);
+
+        $municipiosStartedAt = microtime(true);
+        $data['todosMunicipios'] = Municipio::orderBy('nombre', 'asc')->get();
+        $profile['municipios_ms'] = round((microtime(true) - $municipiosStartedAt) * 1000, 1);
+
+        $dimensionColors = [];
+        $dimensions = [];
+        foreach ($data['configuraciones'] as $config) {
+            $dimension = $config->indicador?->tematica?->dimension;
+            if (!$dimension || isset($dimensions[$dimension->id])) {
+                continue;
+            }
+
+            $key = $this->dimensionKey($config);
+            $color = $dimension->color ?: '#861e34';
+            $dimensionColors[$key] = $color;
+            $dimensions[$dimension->id] = [
+                'id' => $dimension->id,
+                'key' => $key,
+                'nombre' => $dimension->nombre,
+                'color' => $color,
+            ];
+        }
+
+        $profile['composition_ms'] = 0.0;
+        $profile['configuration_count'] = count($data['configuraciones']);
+        $viewStartedAt = microtime(true);
+        $html = view('municipios.comparar', array_merge($data, [
+            'todosMunicipios' => $data['todosMunicipios'],
+            'dimensionColors' => $dimensionColors,
+            'dimensions' => array_values($dimensions),
+            'progressive' => true,
+        ]))->render();
+        $profile['view_ms'] = round((microtime(true) - $viewStartedAt) * 1000, 1);
+
+        return $html;
+    }
+
+    /**
+     * Renderiza una sola dimension cuando la persona llega a ella en pantalla.
+     */
+    public function compararDimension(Request $request, string $slug1, string $slug2, Dimension $dimension)
+    {
+        $profileToken = config('traffic.comparison_profile_token');
+        $profiling = is_string($profileToken) && $profileToken !== ''
+            && hash_equals($profileToken, (string) $request->header('X-Comparison-Profile'));
+        $profile = [
+            'slug_1' => $slug1,
+            'slug_2' => $slug2,
+            'dimension_id' => $dimension->getKey(),
+            'query_count' => 0,
+            'query_time_ms' => 0.0,
+        ];
+        $startedAt = microtime(true);
+
+        if ($profiling) {
+            DB::listen(function (QueryExecuted $query) use (&$profile) {
+                $profile['query_count']++;
+                $profile['query_time_ms'] += $query->time;
+            });
+        }
+
+        try {
+            $cache = app(ComparisonPageCacheService::class);
+            $html = $cache->rememberDimension(
+                $slug1,
+                $slug2,
+                $dimension->getKey(),
+                $cache->dataVersion(),
+                fn () => $this->renderComparacionDimension($slug1, $slug2, $dimension)
+            );
+
+            return response()->json(['html' => $html]);
+        } catch (LockTimeoutException) {
+            $profile['outcome'] = 'lock_timeout';
+
+            return $this->temporaryUnavailableResponse(
+                'Esta seccion se esta preparando. Intenta nuevamente en unos segundos.',
+                10
+            );
+        } finally {
+            if ($profiling) {
+                $profile['outcome'] = $profile['outcome'] ?? 'ok';
+                $profile['query_time_ms'] = round($profile['query_time_ms'], 1);
+                $profile['total_ms'] = round((microtime(true) - $startedAt) * 1000, 1);
+                Log::info('comparison.section.profile', $profile);
+            }
+        }
+    }
+
+    private function renderComparacionDimension(string $slug1, string $slug2, Dimension $dimension): string
+    {
+        $data = app(RankingService::class)->cargarComparativaDimension($slug1, $slug2, $dimension->getKey());
+        $composer = app(FichaComposerService::class);
+
+        foreach ($data['configuraciones'] as $config) {
+            $datos1 = $composer->obtenerDatosParaConfig($config, $data['municipio1'], $data['dataStore1']);
+            $datos2 = $composer->obtenerDatosParaConfig($config, $data['municipio2'], $data['dataStore2']);
+            $key = $this->dimensionKey($config);
+            $data['comparativa'][$key][] = [
+                'config' => $config,
+                'datos1' => $datos1,
+                'datos2' => $datos2,
+                'echarts_combinado' => $composer->combinarDatosParaECharts(
+                    $config, $datos1, $datos2, $data['municipio1'], $data['municipio2']
+                ),
+            ];
+        }
+
+        return view('municipios.partials.comparar-dimension', array_merge($data, [
+            'dimension' => $dimension,
+            'dimensionKey' => str_replace(' ', '_', strtolower($dimension->nombre)),
+            'dimensionAccent' => $dimension->color ?: '#861e34',
+        ]))->render();
+    }
+
+    /**
+     * Kept temporarily as the full-page rendering reference while individual
+     * sections are served progressively.
+     */
+    private function renderComparacionMunicipalLegacy(string $slug1, string $slug2, array &$profile = []): string
+    {
+        $rankingStartedAt = microtime(true);
         $data = app(RankingService::class)->cargarComparativa($slug1, $slug2);
         $profile['ranking_ms'] = round((microtime(true) - $rankingStartedAt) * 1000, 1);
 

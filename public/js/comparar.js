@@ -6,6 +6,9 @@
 document.addEventListener("DOMContentLoaded", function () {
     if (!window.ComparadorConfig) return;
 
+    // El selector no depende del mapa: debe estar disponible de inmediato.
+    initCockpitForm();
+
     if (window.ComparadorConfig.geojsonUrl) {
         fetch(window.ComparadorConfig.geojsonUrl)
             .then((response) => response.json())
@@ -21,42 +24,98 @@ document.addEventListener("DOMContentLoaded", function () {
                 echarts.registerMap("puebla", pueblaJson);
 
                 setupLazyCharts();
+                setupProgressiveSections();
                 setupScrollSpy();
                 initPopovers();
-                initCockpitForm();
             })
             .catch((err) => {
                 console.error("Error loading GeoJSON map:", err);
                 setupLazyCharts();
+                setupProgressiveSections();
                 setupScrollSpy();
                 initPopovers();
-                initCockpitForm();
             });
     } else {
         setupLazyCharts();
+        setupProgressiveSections();
         setupScrollSpy();
         initPopovers();
-        initCockpitForm();
     }
 });
 
 function initCockpitForm() {
     const form = document.getElementById("compare-selector-form");
-    if (form) {
-        form.addEventListener("submit", function (e) {
-            e.preventDefault();
-            const muni1 = document.getElementById("select-muni1").value;
-            const muni2 = document.getElementById("select-muni2").value;
-            if (muni1 && muni2) {
-                const template = window.ComparadorConfig.compararUrlTemplate;
-                if (template) {
-                    window.location.href = template
-                        .replace("__SLUG1__", encodeURIComponent(muni1))
-                        .replace("__SLUG2__", encodeURIComponent(muni2));
-                }
+    const select1 = document.getElementById("select-muni1");
+    const select2 = document.getElementById("select-muni2");
+    if (!form || !select1 || !select2 || form.dataset.comparisonInitialized) return;
+
+    form.dataset.comparisonInitialized = "true";
+    initMunicipalitySelects();
+
+    const clearValidation = () => {
+        select1.removeAttribute("aria-invalid");
+        select2.removeAttribute("aria-invalid");
+        select1.setCustomValidity("");
+        select2.setCustomValidity("");
+        setComparisonFeedback("");
+    };
+
+    select1.addEventListener("change", clearValidation);
+    select2.addEventListener("change", clearValidation);
+
+    form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const muni1 = select1.value;
+        const muni2 = select2.value;
+
+        if (muni1 && muni1 === muni2) {
+            const message = "Elige dos municipios distintos para hacer una comparación.";
+            select1.setAttribute("aria-invalid", "true");
+            select2.setAttribute("aria-invalid", "true");
+            select1.setCustomValidity(message);
+            select2.setCustomValidity(message);
+            setComparisonFeedback(message, "error");
+            select2.focus();
+            return;
+        }
+
+        clearValidation();
+
+        if (muni1 && muni2) {
+            const template = window.ComparadorConfig.compararUrlTemplate;
+            if (template) {
+                window.location.href = template
+                    .replace("__SLUG1__", encodeURIComponent(muni1))
+                    .replace("__SLUG2__", encodeURIComponent(muni2));
             }
+        }
+    });
+}
+
+function setComparisonFeedback(message, type = "") {
+    const feedback = document.getElementById("compare-selector-feedback");
+    if (!feedback) return;
+
+    feedback.textContent = message;
+    feedback.hidden = !message;
+    feedback.classList.toggle("comparison-selector-feedback--error", type === "error");
+}
+
+function initMunicipalitySelects() {
+    if (typeof TomSelect === "undefined") return;
+
+    ["select-muni1", "select-muni2"].forEach((id) => {
+        const select = document.getElementById(id);
+        if (!select || select.tomselect) return;
+
+        new TomSelect(select, {
+            allowEmptyOption: false,
+            create: false,
+            maxOptions: null,
+            placeholder: "Busca un municipio…",
+            sortField: { field: "text", direction: "asc" },
         });
-    }
+    });
 }
 
 const renderQueue = [];
@@ -98,9 +157,9 @@ function processNextInQueue() {
     }, 40);
 }
 
-function setupLazyCharts() {
+function setupLazyCharts(root = document) {
     // 1. Observer para gráficos combinados (Ambos municipios en el mismo lienzo)
-    const combinedCharts = document.querySelectorAll(".lazy-chart-combined");
+    const combinedCharts = root.querySelectorAll(".lazy-chart-combined");
     const combinedObserver = new IntersectionObserver(
         (entries, observer) => {
             entries.forEach((entry) => {
@@ -125,7 +184,7 @@ function setupLazyCharts() {
     combinedCharts.forEach((chart) => combinedObserver.observe(chart));
 
     // 2. Observer para gráficos separados (Lado a Lado)
-    const sepCharts = document.querySelectorAll(".lazy-chart-sep");
+    const sepCharts = root.querySelectorAll(".lazy-chart-sep");
     const sepObserver = new IntersectionObserver(
         (entries, observer) => {
             entries.forEach((entry) => {
@@ -151,7 +210,7 @@ function setupLazyCharts() {
     sepCharts.forEach((chart) => sepObserver.observe(chart));
 
     // 3. Observer para sparklines de comparación
-    const sparklines = document.querySelectorAll(".perfil-tarjeta__sparkline");
+    const sparklines = root.querySelectorAll(".perfil-tarjeta__sparkline");
     const sparkObserver = new IntersectionObserver(
         (entries, observer) => {
             entries.forEach((entry) => {
@@ -179,6 +238,119 @@ function setupLazyCharts() {
     );
 
     sparklines.forEach((spark) => sparkObserver.observe(spark));
+}
+
+const sectionQueue = [];
+let loadingSection = false;
+
+function setupProgressiveSections() {
+    if (!window.ComparadorConfig || !window.ComparadorConfig.progressive) return;
+
+    const sections = document.querySelectorAll(".comparison-section[data-section-url]");
+    if (!sections.length) return;
+
+    const observer = new IntersectionObserver((entries, currentObserver) => {
+        entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+
+            const section = entry.target;
+            if (!section.dataset.sectionQueued && !section.dataset.sectionLoaded) {
+                section.dataset.sectionQueued = "true";
+                sectionQueue.push(section);
+                loadNextSection();
+            }
+            currentObserver.unobserve(section);
+        });
+    }, { rootMargin: "800px 0px" });
+
+    sections.forEach((section) => observer.observe(section));
+}
+
+function loadNextSection() {
+    if (loadingSection || sectionQueue.length === 0) return;
+
+    loadingSection = true;
+    const section = sectionQueue.shift();
+    const loader = section.querySelector(".comparison-section-loader");
+    const url = section.dataset.sectionUrl;
+
+    fetch(url, {
+        headers: {
+            Accept: "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+        },
+    })
+        .then(async (response) => {
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || !payload.html) {
+                const error = new Error(payload.message || "No fue posible cargar esta sección.");
+                error.status = response.status;
+                throw error;
+            }
+            return payload;
+        })
+        .then((payload) => {
+            loader.innerHTML = payload.html;
+            mergeSectionChartData(loader);
+            section.dataset.sectionLoaded = "true";
+            loader.setAttribute("aria-busy", "false");
+            setupLazyCharts(loader);
+            initPopovers(loader);
+        })
+        .catch((error) => {
+            delete section.dataset.sectionQueued;
+            loader.setAttribute("aria-busy", "false");
+            loader.innerHTML = `
+                <div class="comparison-section__feedback" role="alert">
+                    <span class="comparison-section__feedback-icon" aria-hidden="true"><i class="fa-solid fa-clock-rotate-left"></i></span>
+                    <div>
+                        <h3 class="comparison-section__feedback-title">Aún no podemos mostrar esta dimensión</h3>
+                        <p class="comparison-section__feedback-message">${escapeHtml(sectionErrorMessage(error))}</p>
+                        <button type="button" class="comparison-section__retry comparison-section-retry">
+                            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Reintentar
+                        </button>
+                    </div>
+                </div>`;
+            loader.querySelector(".comparison-section-retry").addEventListener("click", () => {
+                section.dataset.sectionQueued = "true";
+                sectionQueue.push(section);
+                loadNextSection();
+            });
+        })
+        .finally(() => {
+            loadingSection = false;
+            loadNextSection();
+        });
+}
+
+function mergeSectionChartData(root) {
+    root.querySelectorAll(".comparison-section-data").forEach((node) => {
+        try {
+            const sectionData = JSON.parse(node.textContent);
+            Object.assign(window.ComparadorConfig.comparativaData, sectionData);
+        } catch (error) {
+            console.error("Could not read comparison section chart data:", error);
+        }
+        node.remove();
+    });
+}
+
+function escapeHtml(value) {
+    const element = document.createElement("div");
+    element.textContent = value || "No fue posible cargar esta sección.";
+    return element.innerHTML;
+}
+
+function sectionErrorMessage(error) {
+    if (error.status === 429) {
+        return "Hay varias consultas en curso. Espera un momento y vuelve a intentarlo.";
+    }
+
+    if (error.status === 503) {
+        return "El servidor está preparando otra comparativa. Esta sección estará disponible en unos segundos.";
+    }
+
+    return "Ocurrió un problema temporal al preparar los indicadores.";
 }
 
 function findChartDataById(id) {
@@ -632,12 +804,12 @@ function renderSparkline(sparkDom, trendData, muniNum) {
     window.addEventListener("resize", () => sparkChart.resize());
 }
 
-function initPopovers() {
+function initPopovers(root = document) {
     var popoverTriggerList = [].slice.call(
-        document.querySelectorAll('[data-bs-toggle="popover"]'),
+        root.querySelectorAll('[data-bs-toggle="popover"]'),
     );
     popoverTriggerList.map(function (popoverTriggerEl) {
-        return new bootstrap.Popover(popoverTriggerEl);
+        return bootstrap.Popover.getOrCreateInstance(popoverTriggerEl);
     });
 }
 

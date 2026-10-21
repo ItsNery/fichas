@@ -177,20 +177,14 @@ class RankingService
 
     public function cargarComparativa(string $slug1, string $slug2): array
     {
-        $municipio1 = Municipio::where('slug', $slug1)->firstOrFail();
-        $municipio2 = Municipio::where('slug', $slug2)->firstOrFail();
-
-        $municipio1->load('microrregion.macrorregion');
-        $municipio2->load('microrregion.macrorregion');
+        $municipios = $this->cargarMunicipiosComparativa($slug1, $slug2);
+        $municipio1 = $municipios['municipio1'];
+        $municipio2 = $municipios['municipio2'];
 
         $hero1 = app(FichaProfilerService::class)->getHeroStats($municipio1);
         $hero2 = app(FichaProfilerService::class)->getHeroStats($municipio2);
 
-        $configuraciones = ConfiguracionFicha::with(['indicador.variables', 'indicador.tematica.dimension', 'variables'])
-            ->visibleEnPerfilPublico()
-            ->orderBy('seccion')
-            ->orderBy('orden')
-            ->get();
+        $configuraciones = $this->configuracionesComparativa()->get();
 
         $allVariableIds = FichaDataStore::extractVariableIds($configuraciones);
         $globalData = DB::table('dato_historicos')
@@ -208,6 +202,75 @@ class RankingService
             'dataStore2' => new FichaDataStore($municipio2, $allVariableIds, $globalData),
             'comparativa' => [],
         ];
+    }
+
+    /**
+     * Datos necesarios para dibujar la cabecera y los placeholders de la
+     * comparativa. Deliberadamente no carga los historicos globales ni ejecuta
+     * el compositor de cada indicador.
+     */
+    public function cargarComparativaResumen(string $slug1, string $slug2): array
+    {
+        $municipios = $this->cargarMunicipiosComparativa($slug1, $slug2);
+        $configuraciones = $this->configuracionesComparativaResumen()->get();
+
+        return array_merge($municipios, [
+            'hero1' => app(FichaProfilerService::class)->getHeroStats($municipios['municipio1']),
+            'hero2' => app(FichaProfilerService::class)->getHeroStats($municipios['municipio2']),
+            'configuraciones' => $configuraciones,
+            'comparativa' => [],
+        ]);
+    }
+
+    /**
+     * Carga únicamente las configuraciones e historicos de una dimensión.
+     * Esto evita que una visita nueva componga toda la ficha de una sola vez.
+     */
+    public function cargarComparativaDimension(string $slug1, string $slug2, int $dimensionId): array
+    {
+        $municipios = $this->cargarMunicipiosComparativa($slug1, $slug2);
+        $configuraciones = $this->configuracionesComparativa()
+            ->whereHas('indicador.tematica', fn ($query) => $query->where('dimension_id', $dimensionId))
+            ->get();
+        $allVariableIds = FichaDataStore::extractVariableIds($configuraciones);
+        $globalData = DB::table('dato_historicos')
+            ->whereIn('variable_id', $allVariableIds)
+            ->select('municipio_id', 'variable_id', 'anio', 'valor')
+            ->get();
+
+        return array_merge($municipios, [
+            'configuraciones' => $configuraciones,
+            'dataStore1' => new FichaDataStore($municipios['municipio1'], $allVariableIds, $globalData),
+            'dataStore2' => new FichaDataStore($municipios['municipio2'], $allVariableIds, $globalData),
+            'comparativa' => [],
+        ]);
+    }
+
+    private function cargarMunicipiosComparativa(string $slug1, string $slug2): array
+    {
+        $municipio1 = Municipio::where('slug', $slug1)->firstOrFail();
+        $municipio2 = Municipio::where('slug', $slug2)->firstOrFail();
+
+        $municipio1->load('microrregion.macrorregion');
+        $municipio2->load('microrregion.macrorregion');
+
+        return compact('municipio1', 'municipio2');
+    }
+
+    private function configuracionesComparativa()
+    {
+        return ConfiguracionFicha::with(['indicador.variables', 'indicador.tematica.dimension', 'variables'])
+            ->visibleEnPerfilPublico()
+            ->orderBy('seccion')
+            ->orderBy('orden');
+    }
+
+    private function configuracionesComparativaResumen()
+    {
+        return ConfiguracionFicha::with(['indicador.tematica.dimension'])
+            ->visibleEnPerfilPublico()
+            ->orderBy('seccion')
+            ->orderBy('orden');
     }
 
     public function getSimilaresPorPoblacion(Municipio $municipio, float $poblacionTotal)

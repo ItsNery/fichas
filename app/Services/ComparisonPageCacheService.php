@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\DB;
 
 class ComparisonPageCacheService
 {
+    // Cambiar este prefijo invalida HTML construido con otra estrategia de
+    // renderizado sin tener que vaciar la cache completa de la aplicacion.
+    private const CACHE_FORMAT = 'v2';
     private const CACHE_SECONDS = 86400;
     private const LOCK_SECONDS = 90;
     private const LOCK_WAIT_SECONDS = 0;
@@ -49,7 +52,38 @@ class ComparisonPageCacheService
         ?Closure $onCacheStatus = null
     ): string
     {
-        $key = 'fichas:comparativa:'.hash('sha256', $dataVersion.'|'.$slug1.'|'.$slug2);
+        $key = 'fichas:comparativa:'.self::CACHE_FORMAT.':'.hash('sha256', $dataVersion.'|'.$slug1.'|'.$slug2);
+
+        return $this->rememberByKey($key, $renderer, $onCacheStatus);
+    }
+
+    /**
+     * Cachea el HTML de una sola dimensión de la comparativa. Mantiene el
+     * mismo candado global de construcción para que una carga progresiva no
+     * vuelva a saturar los workers cuando varias secciones entren a pantalla.
+     *
+     * @param Closure(): string $renderer
+     */
+    public function rememberDimension(
+        string $slug1,
+        string $slug2,
+        int $dimensionId,
+        string $dataVersion,
+        Closure $renderer
+    ): string {
+        $key = 'fichas:comparativa:dimension:'.self::CACHE_FORMAT.':'.hash(
+            'sha256',
+            $dataVersion.'|'.$slug1.'|'.$slug2.'|'.$dimensionId
+        );
+
+        return $this->rememberByKey($key, $renderer);
+    }
+
+    /**
+     * @param Closure(): string $renderer
+     */
+    private function rememberByKey(string $key, Closure $renderer, ?Closure $onCacheStatus = null): string
+    {
 
         if (Cache::has($key)) {
             if ($onCacheStatus) {

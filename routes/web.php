@@ -50,6 +50,9 @@ Route::prefix('ficha/municipio')->name('ficha-municipal.')->group(function () {
     Route::get('/comparar/{slug1}/{slug2}', [FichaController::class, 'compararMunicipal'])
         ->middleware('throttle:ficha-comparativa')
         ->name('comparar');
+    Route::get('/comparar/{slug1}/{slug2}/dimension/{dimension}', [FichaController::class, 'compararDimension'])
+        ->middleware('throttle:ficha-comparativa-seccion')
+        ->name('comparar.dimension');
     Route::get('/comparar/{slug1}/{slug2}/pdf', [FichaController::class, 'exportarComparativaPDF'])
         ->middleware('throttle:ficha-pdf')
         ->name('comparar.pdf');

@@ -2,14 +2,27 @@
 
 @section('title', 'Comparación: ' . $municipio1->nombre . ' vs ' . $municipio2->nombre)
 
+@section('page_css')
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
+@endsection
+
 @section('content')
     {{-- 1. COMPARATOR HERO --}}
     @php
         $heroAccent = $dimensionColors[array_key_first($dimensionColors)] ?? '#861e34';
+        $heroFallback = asset(config('regionalizacion.fallback_hero'));
+        $heroImage1 = $municipio1->banner_image_url ?: $heroFallback;
+        $heroImage2 = $municipio2->banner_image_url ?: $heroFallback;
     @endphp
     <section class="hero-comparar" style="--dimension-accent: {{ $heroAccent }};">
+        <div class="hero-comparar__media" aria-hidden="true">
+            <div class="hero-comparar__media-panel hero-comparar__media-panel--left"
+                style="background-image: url('{{ $heroImage1 }}');"></div>
+            <div class="hero-comparar__media-panel hero-comparar__media-panel--right"
+                style="background-image: url('{{ $heroImage2 }}');"></div>
+        </div>
         <div class="hero-comparar__gradient"
-            style="background: linear-gradient(135deg, {{ $heroAccent }} 0%, {{ $heroAccent }}dd 100%);"></div>
+            style="background: linear-gradient(90deg, {{ $heroAccent }}d9 0%, {{ $heroAccent }}b8 50%, #0c312dd9 100%);"></div>
         <div class="container hero-comparar__container text-white">
             <div class="row align-items-center mb-4">
                 <div class="col-md-8">
@@ -112,7 +125,7 @@
         <div class="container py-3">
             <form id="compare-selector-form" class="row align-items-center justify-content-center g-3">
                 <div class="col-md-4">
-                    <select id="select-muni1" class="form-select select-muni" required>
+                    <select id="select-muni1" class="form-select select-muni" aria-label="Primer municipio" required>
                         @foreach ($todosMunicipios as $m)
                             <option value="{{ $m->slug }}" {{ $m->id === $municipio1->id ? 'selected' : '' }}>
                                 {{ $m->nombre }}</option>
@@ -121,7 +134,7 @@
                 </div>
                 <div class="col-auto text-muted fw-bold">comparado frente a</div>
                 <div class="col-md-4">
-                    <select id="select-muni2" class="form-select select-muni" required>
+                    <select id="select-muni2" class="form-select select-muni" aria-label="Segundo municipio" required>
                         @foreach ($todosMunicipios as $m)
                             <option value="{{ $m->slug }}" {{ $m->id === $municipio2->id ? 'selected' : '' }}>
                                 {{ $m->nombre }}</option>
@@ -131,6 +144,10 @@
                 <div class="col-auto">
                     <button type="submit" class="btn btn-vino px-4">Comparar</button>
                 </div>
+                <div class="col-12">
+                    <p id="compare-selector-feedback" class="comparison-selector-feedback mb-0" role="status"
+                        aria-live="polite" hidden></p>
+                </div>
             </form>
         </div>
     </section>
@@ -139,17 +156,67 @@
     <div class="sticky-nav">
         <div class="container sticky-nav__contenedor">
             <ul class="nav justify-content-center sticky-nav__list">
-                @foreach ($comparativa as $seccion => $items)
-                    <li class="nav-item sticky-nav__item">
-                        <a href="#section-{{ Str::slug($seccion) }}"
-                            class="nav-link sticky-nav__link">{{ ucwords(str_replace('_', ' ', $seccion)) }}</a>
-                    </li>
-                @endforeach
+                @if ($progressive ?? false)
+                    @foreach ($dimensions as $dimension)
+                        <li class="nav-item sticky-nav__item">
+                            <a href="#section-{{ Str::slug($dimension['key']) }}"
+                                class="nav-link sticky-nav__link">{{ $dimension['nombre'] }}</a>
+                        </li>
+                    @endforeach
+                @else
+                    @foreach ($comparativa as $seccion => $items)
+                        <li class="nav-item sticky-nav__item">
+                            <a href="#section-{{ Str::slug($seccion) }}"
+                                class="nav-link sticky-nav__link">{{ ucwords(str_replace('_', ' ', $seccion)) }}</a>
+                        </li>
+                    @endforeach
+                @endif
             </ul>
         </div>
     </div>
 
     {{-- 4. COMPARATIVE CONTENT --}}
+    @if ($progressive ?? false)
+        <div class="container mt-5">
+            @foreach ($dimensions as $dimension)
+                @php
+                    $accentHex = ltrim($dimension['color'], '#');
+                    $accentText = '#fff';
+                    if (preg_match('/^[0-9a-fA-F]{6}$/', $accentHex)) {
+                        $brightness =
+                            (hexdec(substr($accentHex, 0, 2)) * 299 +
+                                hexdec(substr($accentHex, 2, 2)) * 587 +
+                                hexdec(substr($accentHex, 4, 2)) * 114) /
+                            1000;
+                        $accentText = $brightness > 160 ? '#262626' : '#fff';
+                    }
+                @endphp
+                <section id="section-{{ Str::slug($dimension['key']) }}" class="section-perfil mb-5 pb-5 comparison-section"
+                    data-section-url="{{ route('ficha-municipal.comparar.dimension', [$municipio1->slug, $municipio2->slug, $dimension['id']]) }}"
+                    style="--dimension-accent: {{ $dimension['color'] }};">
+                    <div class="dimension-header shadow-sm mb-4" style="background: {{ $dimension['color'] }};">
+                        <h2 class="display-5 fw-bold mb-0 text-center" style="color: {{ $accentText }};">
+                            {{ $dimension['nombre'] }}
+                        </h2>
+                    </div>
+                    <div class="comparison-section-loader" aria-live="polite" aria-busy="true">
+                        @for ($skeleton = 0; $skeleton < 3; $skeleton++)
+                            <div class="comparison-section__skeleton perfil-tarjeta mb-4" aria-hidden="true">
+                                <div class="comparison-section__skeleton-body">
+                                    <span class="comparison-section__skeleton-title"></span>
+                                    <span class="comparison-section__skeleton-chart"></span>
+                                </div>
+                            </div>
+                        @endfor
+                        <p class="comparison-section__status mb-0">
+                            <i class="fa-solid fa-chart-column" aria-hidden="true"></i>
+                            Preparando indicadores de esta dimensión…
+                        </p>
+                    </div>
+                </section>
+            @endforeach
+        </div>
+    @else
     <div class="container mt-5">
         @foreach ($comparativa as $seccion => $items)
             @php
@@ -445,6 +512,7 @@
             </section>
         @endforeach
     </div>
+    @endif
 @endsection
 
 @section('jss')
@@ -456,6 +524,7 @@
     @endphp
 
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <script>
         window.ComparadorConfig = {
             geojsonUrl: "{{ asset('geojson/municipios_puebla_slim.geojson ') }}",
@@ -470,7 +539,8 @@
                 cvegeo: "{{ $municipio2->cvegeo }}"
             },
             compararUrlTemplate: @json($compararUrlTemplate),
-            comparativaData: @json($comparativa)
+            comparativaData: @json($comparativa),
+            progressive: @json($progressive ?? false)
         };
     </script>
     <script src="{{ asset('js/comparar.js') }}?v={{ time() }}"></script>
