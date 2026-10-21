@@ -260,7 +260,7 @@ function loadNextProfileSection() {
         .then((payload) => {
             const parsed = new DOMParser().parseFromString(payload.html, "text/html");
             const renderedSection = parsed.getElementById(section.id);
-            const renderedGrid = renderedSection?.querySelector(".perfil-grid");
+            const renderedGrid = renderedSection?.querySelector(".perfil-grid, .profile-section__content");
             const dataNode = parsed.querySelector(".profile-section-data");
 
             if (!renderedGrid || !dataNode) {
@@ -274,6 +274,7 @@ function loadNextProfileSection() {
             setupLazyCharts(loader);
             initProfileMasonry(loader);
             initPopovers(loader);
+            setupStateRankings(loader);
         })
         .catch((error) => {
             delete section.dataset.sectionQueued;

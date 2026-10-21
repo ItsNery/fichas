@@ -77,11 +77,20 @@ Route::get('/datos-abiertos/exportar-indicadores-coyuntura', [HomeController::cl
 // --- Módulo 3: Perfiles Regionales ---
 Route::name('regiones.')->group(function () {
     Route::get('/perfiles-regionales', [RegionController::class, 'index'])->name('index');
+    Route::get('ficha/estatal/perfil/dimension/{dimension}', [RegionController::class, 'perfilEstatalDimension'])
+        ->middleware('throttle:ficha-perfil-seccion')
+        ->name('estatal.dimension');
     Route::get('ficha/estatal/perfil', [RegionController::class, 'perfilEstatal'])->name('estatal.perfil');
     Route::get('ficha/estatal/pdf', [RegionController::class, 'exportarEstatalPDF'])->name('estatal.pdf');
     Route::get('ficha/estatal/excel', [RegionController::class, 'exportarEstatalExcel'])->name('estatal.excel');
     Route::get('ficha/macrorregion/{macrorregion:slug}/perfil', [RegionController::class, 'perfilMacrorregion'])->name('macro.perfil');
     Route::get('ficha/microrregion/{microrregion:slug}/perfil', [RegionController::class, 'perfilMicrorregion'])->name('micro.perfil');
+    Route::get('ficha/macrorregion/{macrorregion:slug}/perfil/dimension/{dimension}', [RegionController::class, 'perfilMacrorregionDimension'])
+        ->middleware('throttle:ficha-perfil-seccion')
+        ->name('macro.dimension');
+    Route::get('ficha/microrregion/{microrregion:slug}/perfil/dimension/{dimension}', [RegionController::class, 'perfilMicrorregionDimension'])
+        ->middleware('throttle:ficha-perfil-seccion')
+        ->name('micro.dimension');
     Route::get('ficha/macrorregion/{macrorregion:slug}/pdf', [RegionController::class, 'exportarMacrorregionPDF'])->name('macro.pdf');
     Route::get('ficha/microrregion/{microrregion:slug}/pdf', [RegionController::class, 'exportarMicrorregionPDF'])->name('micro.pdf');
     Route::get('ficha/macrorregion/{macrorregion:slug}/excel', [RegionController::class, 'exportarMacrorregionExcel'])->name('macro.excel');

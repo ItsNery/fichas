@@ -198,11 +198,15 @@
     <div class="sticky-nav">
         <div class="container sticky-nav__contenedor">
             <ul class="nav justify-content-center sticky-nav__list">
-                @foreach ($perfil as $seccion => $items)
-                    @if ($seccion != 'general')
+                @foreach (($progressive ?? false) ? $dimensions : $perfil as $seccion => $items)
+                    @php
+                        $dimensionKey = ($progressive ?? false) ? $items['key'] : $seccion;
+                        $dimensionName = ($progressive ?? false) ? $items['name'] : ucwords(str_replace('_', ' ', $seccion));
+                    @endphp
+                    @if ($dimensionKey != 'general')
                         <li class="nav-item sticky-nav__item">
-                            <a href="#section-{{ Str::slug($seccion) }}"
-                                class="nav-link sticky-nav__link">{{ ucwords(str_replace('_', ' ', $seccion)) }}</a>
+                            <a href="#section-{{ Str::slug($dimensionKey) }}"
+                                class="nav-link sticky-nav__link">{{ $dimensionName }}</a>
                         </li>
                     @endif
                 @endforeach
@@ -220,6 +224,44 @@
                 'mode' => 'Valor más frecuente',
             ];
         @endphp
+        @if ($progressive ?? false)
+            @foreach ($dimensions as $dimension)
+                @php
+                    $accentHex = ltrim($dimension['color'], '#');
+                    $accentText = '#fff';
+                    if (preg_match('/^[0-9a-fA-F]{6}$/', $accentHex)) {
+                        $brightness =
+                            (hexdec(substr($accentHex, 0, 2)) * 299 +
+                                hexdec(substr($accentHex, 2, 2)) * 587 +
+                                hexdec(substr($accentHex, 4, 2)) * 114) /
+                            1000;
+                        $accentText = $brightness > 160 ? '#262626' : '#fff';
+                    }
+                    $sectionRoute = match ($tipoRegion) {
+                        'Estatal' => route('regiones.estatal.dimension', $dimension['id']),
+                        'Macrorregión' => route('regiones.macro.dimension', [$region->slug, $dimension['id']]),
+                        default => route('regiones.micro.dimension', [$region->slug, $dimension['id']]),
+                    };
+                @endphp
+                <section id="section-{{ Str::slug($dimension['key']) }}" class="section-perfil mb-5 pb-5 profile-section"
+                    data-section-url="{{ $sectionRoute }}"
+                    style="--dimension-accent: {{ $dimension['color'] }}; --dimension-accent-text: {{ $accentText }};">
+                    <div class="dimension-header shadow-sm">
+                        <h2 class="dimension-header__title display-4 fw-bold mb-0">{{ $dimension['name'] }}</h2>
+                    </div>
+                    <div class="profile-section-loader" aria-live="polite" aria-busy="true">
+                        @for ($skeleton = 0; $skeleton < 2; $skeleton++)
+                            <div class="comparison-section__skeleton perfil-tarjeta mb-4" aria-hidden="true">
+                                <div class="comparison-section__skeleton-body">
+                                    <span class="comparison-section__skeleton-title"></span>
+                                    <span class="comparison-section__skeleton-chart"></span>
+                                </div>
+                            </div>
+                        @endfor
+                    </div>
+                </section>
+            @endforeach
+        @else
         @foreach ($perfil as $seccion => $items)
             @if ($seccion != 'general')
                 @php
@@ -237,13 +279,14 @@
                         $dimensionAccentText = $brightness > 160 ? '#262626' : '#fff';
                     }
                 @endphp
-                <section id="section-{{ Str::slug($seccion) }}" class="section-perfil mb-5 pb-5"
+                <section id="section-{{ Str::slug($seccion) }}" class="section-perfil mb-5 pb-5 profile-section"
                     style="--dimension-accent: {{ $dimensionAccent }}; --dimension-accent-text: {{ $dimensionAccentText }};">
                     <div class="dimension-header shadow-sm">
                         <h2 class="dimension-header__title display-4 fw-bold mb-0">{{ str_replace('_', ' ', $seccion) }}
                         </h2>
                     </div>
 
+                    <div class="profile-section__content">
                     <div class="row g-4 align-items-stretch">
                         @foreach ($items as $item)
                             @php
@@ -421,9 +464,11 @@
                             </div>
                         @endforeach
                     </div>
+                    </div>
                 </section>
             @endif
         @endforeach
+        @endif
     </div>
 
 @endsection
@@ -443,11 +488,15 @@
             }
         }
     @endphp
+    @if ($sectionResponse ?? false)
+        <script type="application/json" class="profile-section-data">@json($perfilCharts)</script>
+    @endif
     <script>
         window.FichaConfig = {
             municipioNombre: "Regional",
             geojsonUrl: "{{ asset('geojson/municipios_puebla_slim.geojson') }}",
-            perfilData: @json($perfilCharts)
+            perfilData: @json($perfilCharts),
+            progressive: @json($progressive ?? false)
         };
     </script>
 @endsection

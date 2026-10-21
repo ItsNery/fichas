@@ -92,13 +92,47 @@ class RegionController extends Controller
         return view('regiones.perfil', $this->obtenerDatosPerfil('Estatal', $estado, $municipios, $municipiosIds));
     }
 
+    public function perfilMacrorregionDimension(Request $request, Macrorregion $macrorregion, Dimension $dimension)
+    {
+        $macrorregion->load('microrregiones.municipios');
+        $municipios = $macrorregion->microrregiones
+            ->flatMap(fn ($microrregion) => $microrregion->municipios)
+            ->unique('id')
+            ->sortBy('nombre')
+            ->values();
+
+        return $this->respuestaDimensionPerfil($request, 'Macrorregión', $macrorregion, $municipios, $municipios->pluck('id')->all(), $dimension);
+    }
+
+    public function perfilMicrorregionDimension(Request $request, Microrregion $microrregion, Dimension $dimension)
+    {
+        $microrregion->load('macrorregion', 'municipios');
+        $municipios = $microrregion->municipios()->orderBy('nombre')->get();
+
+        abort_if($municipios->count() < 2, 404);
+
+        return $this->respuestaDimensionPerfil($request, 'Microrregión', $microrregion, $municipios, $municipios->pluck('id')->all(), $dimension);
+    }
+
+    public function perfilEstatalDimension(Request $request, Dimension $dimension)
+    {
+        $municipios = Municipio::with('microrregion.macrorregion')->orderBy('nombre')->get();
+        $estado = (object) ['id' => null, 'slug' => 'estatal', 'nombre' => 'Estado de Puebla'];
+
+        return $this->respuestaDimensionPerfil($request, 'Estatal', $estado, $municipios, $municipios->pluck('id')->all(), $dimension);
+    }
+
     /**
      * Obtiene los datos del perfil regional agregando los datos
      */
-    private function obtenerDatosPerfil($tipoRegion, $region, $municipios, $municipiosIds): array
+    private function obtenerDatosPerfil($tipoRegion, $region, $municipios, $municipiosIds, ?int $dimensionId = null, bool $forzarComposicionCompleta = false): array
     {
+        if (!app()->environment('testing') && !$forzarComposicionCompleta && $dimensionId === null) {
+            return $this->datosInicialesPerfil($tipoRegion, $region, $municipios, $municipiosIds);
+        }
+
         if (app()->environment('testing')) {
-            return $this->construirDatosPerfil($tipoRegion, $region, $municipios, $municipiosIds);
+            return $this->construirDatosPerfil($tipoRegion, $region, $municipios, $municipiosIds, $dimensionId);
         }
 
         $municipiosIds = collect($municipiosIds)->map(fn ($id) => (int) $id)->unique()->sort()->values()->all();
@@ -109,14 +143,161 @@ class RegionController extends Controller
             Municipio::max('updated_at') ?? 'none',
         ]);
         $regionId = $region->id ?? 'estatal';
-        $cacheKey = 'region-profile:' . md5($tipoRegion . '|' . $regionId . '|' . implode(',', $municipiosIds) . '|' . $version);
+        $cacheKey = 'region-profile:' . md5($tipoRegion . '|' . $regionId . '|' . implode(',', $municipiosIds) . '|dimension:' . ($dimensionId ?? 'all') . '|' . $version);
 
         return Cache::remember($cacheKey, now()->addMinutes(30), fn () =>
-            $this->construirDatosPerfil($tipoRegion, $region, $municipios, $municipiosIds)
+            $this->construirDatosPerfil($tipoRegion, $region, $municipios, $municipiosIds, $dimensionId)
         );
     }
 
-    private function construirDatosPerfil($tipoRegion, $region, $municipios, $municipiosIds)
+    private function respuestaDimensionPerfil(Request $request, string $tipoRegion, $region, $municipios, array $municipiosIds, Dimension $dimension)
+    {
+        abort_unless($request->expectsJson(), 404);
+
+        $datos = $this->obtenerDatosPerfil($tipoRegion, $region, $municipios, $municipiosIds, $dimension->id, true);
+        $dimensionKey = $this->claveDimension($dimension->nombre);
+
+        abort_unless(isset($datos['perfil'][$dimensionKey]), 404);
+
+        $datos['perfil'] = ['general' => $datos['perfil']['general'] ?? [], $dimensionKey => $datos['perfil'][$dimensionKey]];
+        $datos['progressive'] = false;
+        $datos['sectionResponse'] = true;
+
+        return response()->json([
+            'html' => view('regiones.perfil', $datos)->render(),
+            'dimension_key' => $dimensionKey,
+        ]);
+    }
+
+    private function datosInicialesPerfil(string $tipoRegion, $region, $municipios, array $municipiosIds): array
+    {
+        $municipios = $municipios->unique('id')->values();
+        $municipiosIds = collect($municipiosIds)->map(fn ($id) => (int) $id)->unique()->values()->all();
+        $esEstatal = $tipoRegion === 'Estatal';
+
+        $varPobId = Variable::where('nombre_amigable', 'Población total')
+            ->whereHas('indicador', fn ($query) => $query->where('nombre_amigable', 'Población total según sexo'))
+            ->value('id');
+        $poblacionRows = $varPobId
+            ? DatoHistorico::whereIn('municipio_id', $municipiosIds)->where('variable_id', $varPobId)->get()
+                ->sortByDesc('anio')->unique('municipio_id')->values()
+            : collect();
+        $poblacionTotal = (float) $poblacionRows->sum('valor');
+        $poblacionAnio = $poblacionRows->mode('anio')[0] ?? $poblacionRows->max('anio');
+        $poblacionCobertura = [
+            'con_dato' => $poblacionRows->pluck('municipio_id')->unique()->count(),
+            'total' => count($municipiosIds),
+        ];
+
+        $marginacionVariableId = Variable::where('nombre_amigable', 'Grado de Marginación')->value('id');
+        $gradoMarginacion = $marginacionVariableId
+            ? DatoHistorico::with('motivoSinDato')->whereIn('municipio_id', $municipiosIds)
+                ->where('variable_id', $marginacionVariableId)->get()->sortByDesc('anio')
+                ->unique('municipio_id')->pluck('valor_display')->filter()->mode()[0] ?? 'N/D'
+            : 'N/D';
+
+        $configuraciones = ConfiguracionFicha::with(['indicador.tematica.dimension', 'variables', 'indicador.variables'])
+            ->visibleEnPerfilPublico()
+            ->orderBy('orden')
+            ->orderBy('id')
+            ->get()
+            ->filter(function ($config) {
+                $indicador = $config->indicador;
+                $variables = $config->variables->where('visible_en_ficha', true)->isNotEmpty()
+                    ? $config->variables->where('visible_en_ficha', true)
+                    : ($config->indicador?->variables->where('visible_en_ficha', true) ?? collect());
+                if (!$indicador || $variables->isEmpty() || $config->tipo_visualizacion === 'scatter') {
+                    return false;
+                }
+
+                $tipoDato = strtolower(trim((string) $indicador->tipo_dato));
+                $unidad = mb_strtolower((string) $variables->first()->unidad_medida, 'UTF-8');
+                $esCategorica = $variables->count() === 1 && $variables->first(
+                    fn ($variable) => $variable->tipo_valor === 'categorica' || !empty($variable->mapeo_valores)
+                );
+                $unidadNoAditiva = str_contains($unidad, 'por cada cien')
+                    || str_contains($unidad, 'promedio')
+                    || str_contains($unidad, 'índice')
+                    || str_contains($unidad, 'indice')
+                    || str_contains($unidad, 'grado');
+
+                return ($tipoDato === 'absoluto' || $esCategorica) && (!$unidadNoAditiva || $esCategorica);
+            })
+            ->unique('indicador_id')
+            ->values();
+
+        $dimensions = $configuraciones->map(fn ($config) => $config->indicador?->tematica?->dimension)
+            ->filter()
+            ->unique('id')
+            ->sortBy('orden')
+            ->map(fn ($dimension) => [
+                'id' => $dimension->id,
+                'key' => $this->claveDimension($dimension->nombre),
+                'name' => $dimension->nombre,
+                'color' => $dimension->color ?: '#861e34',
+            ])
+            ->values()
+            ->all();
+        $dimensionColors = collect($dimensions)->mapWithKeys(fn ($dimension) => [$dimension['key'] => $dimension['color']])->all();
+
+        $resumenTerritorial = [];
+        if ($esEstatal) {
+            $poblacionPorMunicipio = $poblacionRows->keyBy('municipio_id');
+            $resumenTerritorial = $municipios
+                ->groupBy(fn ($municipio) => $municipio->microrregion?->macrorregion?->id ?? 0)
+                ->map(function ($grupo) use ($poblacionPorMunicipio) {
+                    $macro = $grupo->first()->microrregion?->macrorregion;
+                    return [
+                        'id' => $macro?->id,
+                        'nombre' => $macro?->nombre ?? 'Sin macrorregión',
+                        'slug' => $macro?->slug,
+                        'municipios' => $grupo->count(),
+                        'microrregiones_representadas' => $grupo->pluck('microrregion_id')->filter()->unique()->count(),
+                        'poblacion' => (float) $grupo->sum(fn ($municipio) => (float) ($poblacionPorMunicipio->get($municipio->id)?->valor ?? 0)),
+                    ];
+                })
+                ->sortByDesc('poblacion')
+                ->values()
+                ->all();
+        }
+
+        $microrregionesRepresentadas = $municipios->pluck('microrregion_id')->filter()->unique()->count();
+        $macrorregionesRepresentadas = $esEstatal
+            ? collect($resumenTerritorial)->whereNotNull('id')->count()
+            : ($municipios->isNotEmpty() ? 1 : 0);
+
+        return [
+            'tipoRegion' => $tipoRegion,
+            'esEstatal' => $esEstatal,
+            'region' => $region,
+            'municipios' => $municipios,
+            'poblacionTotal' => $poblacionTotal,
+            'poblacionAnio' => $poblacionAnio,
+            'poblacionCobertura' => $poblacionCobertura,
+            'superficieTotal' => $municipios->sum(fn ($municipio) => (float) ($municipio->superficie ?? 0)),
+            'gradoMarginacion' => $gradoMarginacion,
+            'resumenTerritorial' => $resumenTerritorial,
+            'alcanceTerritorial' => [
+                'municipios_con_informacion' => $municipios->count(),
+                'macrorregiones_oficiales' => config('regionalizacion.macrorregiones'),
+                'microrregiones_oficiales' => config('regionalizacion.microrregiones'),
+                'macrorregiones_representadas' => $macrorregionesRepresentadas,
+                'microrregiones_representadas' => $microrregionesRepresentadas,
+                'fuente_url' => config('regionalizacion.url'),
+            ],
+            'perfil' => [],
+            'dimensions' => $dimensions,
+            'dimensionColors' => $dimensionColors,
+            'progressive' => true,
+        ];
+    }
+
+    private function claveDimension(string $nombre): string
+    {
+        return str_replace(' ', '_', strtolower($nombre));
+    }
+
+    private function construirDatosPerfil($tipoRegion, $region, $municipios, $municipiosIds, ?int $dimensionId = null)
     {
         $municipios = $municipios->unique('id')->values();
         $municipiosIds = collect($municipiosIds)->unique()->values()->all();
@@ -128,6 +309,12 @@ class RegionController extends Controller
             ->orderBy('orden')
             ->orderBy('id')
             ->get();
+
+        if ($dimensionId !== null) {
+            $configuraciones = $configuraciones->filter(
+                fn ($config) => (int) ($config->indicador?->tematica?->dimension_id ?? 0) === $dimensionId
+            )->values();
+        }
 
         $variablesVisibles = static function ($config) {
             return $config->variables->where('visible_en_ficha', true)->isNotEmpty()

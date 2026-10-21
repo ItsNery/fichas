@@ -43,32 +43,32 @@
 
             {{-- ENLACE 1: Inicio --}}
             <li>
-                <a href="{{ url('/') }}" class="{{ request()->is('/') ? 'active' : '' }}">
+                <a href="{{ route('inicio') }}" class="{{ request()->routeIs('inicio') ? 'active' : '' }}">
                     Inicio
                 </a>
             </li>
 
             {{-- ENLACE 2: Banco de Indicadores --}}
             <li>
-                <a href="{{ url('/banco-indicadores') }}"
-                    class="{{ request()->is('banco-indicadores*') ? 'active' : '' }}">
+                <a href="{{ route('banco-indicadores.index') }}"
+                    class="{{ request()->routeIs('banco-indicadores.*') ? 'active' : '' }}">
                     Banco de Indicadores
                 </a>
             </li>
 
             <li class="dropdown">
-                <a href="#" class="{{ request()->is('/perfiles*') || request()->is('ficha*') ? 'active' : '' }}">
+                <a href="#" class="{{ request()->routeIs('municipios.*', 'regiones.*') ? 'active' : '' }}">
                     Perfiles <span class="arrow">▾</span>
                 </a>
                 <ul class="dropdown-content">
-                    <li><a href="{{ route('municipios.index') }}">Municipales</a></li>
-                    <li><a href="{{ url('/perfiles-regionales') }}">Regionales</a></li>
+                    <li><a href="{{ route('municipios.index') }}" class="{{ request()->routeIs('municipios.*') ? 'active' : '' }}">Municipales</a></li>
+                    <li><a href="{{ route('regiones.index') }}" class="{{ request()->routeIs('regiones.*') ? 'active' : '' }}">Regionales</a></li>
                 </ul>
             </li>
 
             {{-- ENLACE 3: Datos Abiertos --}}
             <li>
-                <a href="{{ url('/datos-abiertos') }}" class="{{ request()->is('datos-abiertos*') ? 'active' : '' }}">
+                <a href="{{ route('datos-abiertos.index') }}" class="{{ request()->routeIs('datos-abiertos.*') ? 'active' : '' }}">
                     Datos abiertos
                 </a>
             </li>
