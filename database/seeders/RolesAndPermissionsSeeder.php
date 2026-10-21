@@ -22,7 +22,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'usuarios.ver', 'usuarios.crear', 'usuarios.editar', 'usuarios.eliminar', 'usuarios.asignar-roles',
             'roles.ver', 'roles.crear', 'roles.editar', 'roles.eliminar', 'roles.asignar-permisos',
             'permisos.ver', 'permisos.crear', 'permisos.editar', 'permisos.eliminar',
-            'auditoria.ver', 'dashboard.ejecutivo', 'salud-datos.ver',
+            'auditoria.ver', 'trafico.ver', 'trafico.ip.ver', 'dashboard.ejecutivo', 'salud-datos.ver',
             'diccionario.ver', 'diccionario.editar',
         ];
 
@@ -44,7 +44,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'permissions' => [
                     'dashboard.ejecutivo', 'salud-datos.ver', 'catalogos.ver', 'datos.ver', 'datos.aprobar',
                     'configuracion-fichas.ver', 'municipios.ver', 'instrumentos.ver',
-                    'auditoria.ver', 'diccionario.ver', 'diccionario.editar',
+                    'auditoria.ver', 'trafico.ver', 'diccionario.ver', 'diccionario.editar',
                 ],
                 'is_system' => false,
             ],

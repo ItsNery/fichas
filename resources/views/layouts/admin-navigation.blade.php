@@ -48,6 +48,11 @@
                     href="{{ route('admin.auditoria.index') }}" title="Auditoría"><i
                         class="fas fa-clipboard-list"></i><span>Auditoría</span></a></li>
         @endcan
+        @can('trafico.ver')
+            <li class="sidebar-item"><a class="sidebar-link {{ request()->routeIs('admin.trafico.*') ? 'active' : '' }}"
+                    href="{{ route('admin.trafico.index') }}" title="Tráfico"><i
+                        class="fas fa-chart-line"></i><span>Tráfico</span></a></li>
+        @endcan
         @can('diccionario.ver')
             <li class="sidebar-item"><a
                     class="sidebar-link {{ request()->routeIs('admin.diccionario.*') ? 'active' : '' }}"

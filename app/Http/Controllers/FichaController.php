@@ -24,6 +24,9 @@ use App\Services\MapDataService;
 use App\Services\MunicipalityMapImageService;
 use App\Services\RankingService;
 use App\Services\FichaComposerService;
+use App\Services\CachedPdfService;
+use App\Services\ComparisonPageCacheService;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 
 /**
  * Clase FichaController
@@ -362,10 +365,7 @@ class FichaController extends Controller
         ])->render();
 
         $fileName = 'perfil-' . str($municipio->nombre)->slug() . '.pdf';
-        return app(ExportV3Service::class)->exportPanoramaPDF(
-            $html,
-            $fileName
-        );
+        return $this->downloadCachedPdf('perfil/'.$municipio->getKey(), $html, $fileName);
     }
 
 
@@ -727,10 +727,31 @@ class FichaController extends Controller
         );
         $html = view('municipios.panorama_pdf', $data)->render();
 
-        return app(ExportV3Service::class)->exportPanoramaPDF(
+        return $this->downloadCachedPdf(
+            'panorama/'.$municipio->getKey(),
             $html,
             'panorama-'.str($municipio->nombre)->slug().'.pdf'
         );
+    }
+
+    private function downloadCachedPdf(string $cacheKey, string $html, string $fileName)
+    {
+        try {
+            $pdf = app(CachedPdfService::class)->remember(
+                $cacheKey,
+                $html,
+                fn () => app(ExportV3Service::class)->renderPanoramaPDF($html)
+            );
+        } catch (LockTimeoutException) {
+            return response()->json([
+                'message' => 'El PDF se está generando. Intenta descargarlo nuevamente en unos segundos.',
+            ], 503, ['Retry-After' => 10]);
+        }
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
+        ]);
     }
 
     private function panoramaData(Municipio $municipio): array
@@ -1017,6 +1038,25 @@ class FichaController extends Controller
 
     public function compararMunicipal($slug1, $slug2)
     {
+        try {
+            $cache = app(ComparisonPageCacheService::class);
+            $html = $cache->remember(
+                $slug1,
+                $slug2,
+                $cache->dataVersion(),
+                fn () => $this->renderComparacionMunicipal($slug1, $slug2)
+            );
+        } catch (LockTimeoutException) {
+            return response()->json([
+                'message' => 'La comparativa se está preparando. Intenta nuevamente en unos segundos.',
+            ], 503, ['Retry-After' => 10]);
+        }
+
+        return response($html);
+    }
+
+    private function renderComparacionMunicipal(string $slug1, string $slug2): string
+    {
         $data = app(RankingService::class)->cargarComparativa($slug1, $slug2);
         $data['todosMunicipios'] = Municipio::orderBy('nombre', 'asc')->get();
 
@@ -1050,7 +1090,7 @@ class FichaController extends Controller
         return view('municipios.comparar', array_merge($data, [
             'todosMunicipios' => $data['todosMunicipios'],
             'dimensionColors' => $dimensionColors,
-        ]));
+        ]))->render();
     }
 
     /**

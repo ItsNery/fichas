@@ -27,3 +27,4 @@ fix.bat
 scripts/*
 /docs/*
 !/docs/manual-de-usuario.md
+incidente-saturacion-apache-sei.md

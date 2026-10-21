@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\MunicipioController as AdminMunicipioController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\TrafficAnalyticsController;
 use App\Http\Controllers\FichaController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MunicipioController;
@@ -46,8 +47,12 @@ Route::prefix('banco-indicadores')->name('banco-indicadores.')->group(function (
 // --- Módulo 2: Fichas Municipales ---
 Route::prefix('ficha/municipio')->name('ficha-municipal.')->group(function () {
     Route::get('/', [FichaController::class, 'directorioVisual'])->name('index');
-    Route::get('/comparar/{slug1}/{slug2}', [FichaController::class, 'compararMunicipal'])->name('comparar');
-    Route::get('/comparar/{slug1}/{slug2}/pdf', [FichaController::class, 'exportarComparativaPDF'])->name('comparar.pdf');
+    Route::get('/comparar/{slug1}/{slug2}', [FichaController::class, 'compararMunicipal'])
+        ->middleware('throttle:ficha-comparativa')
+        ->name('comparar');
+    Route::get('/comparar/{slug1}/{slug2}/pdf', [FichaController::class, 'exportarComparativaPDF'])
+        ->middleware('throttle:ficha-pdf')
+        ->name('comparar.pdf');
     Route::get('/api/similitud-indicador/{municipio}/{config}', [FichaController::class, 'getSimilitudIndicador'])->name('api.indicador.similitud');
     Route::get('/api/grafico-datos/{municipio:slug}/{config}/{anio}', [FichaController::class, 'getGraficoDatosApi'])->name('api.grafico.data');
     Route::get('/{municipio:slug}', [FichaController::class, 'resumenMunicipalV3'])->name('show');
@@ -55,12 +60,20 @@ Route::prefix('ficha/municipio')->name('ficha-municipal.')->group(function () {
     Route::get('/{municipio:slug}/test', [FichaController::class, 'resumenMunicipalTest'])->name('test');
     Route::get('/{municipio:slug}/v3', [FichaController::class, 'resumenMunicipalV3'])->name('v3');
     Route::get('/{municipio:slug}/perfil', [FichaController::class, 'perfilMunicipal'])->name('perfil');
-    Route::get('/{municipio:slug}/v3/pdf', [FichaController::class, 'exportarResumenV3PDF'])->name('v3.pdf');
-    Route::get('/{municipio:slug}/perfil/pdf', [FichaController::class, 'exportarPerfilPDF'])->name('perfil.pdf');
+    Route::get('/{municipio:slug}/v3/pdf', [FichaController::class, 'exportarResumenV3PDF'])
+        ->middleware('throttle:ficha-pdf')
+        ->name('v3.pdf');
+    Route::get('/{municipio:slug}/perfil/pdf', [FichaController::class, 'exportarPerfilPDF'])
+        ->middleware('throttle:ficha-pdf')
+        ->name('perfil.pdf');
     Route::get('/{municipio:slug}/panorama', [FichaController::class, 'panoramaMunicipal'])->name('panorama');
     Route::get('/{municipio:slug}/panorama/map.png', [FichaController::class, 'panoramaMap'])->name('panorama.map');
-    Route::get('/{municipio:slug}/panorama/pdf', [FichaController::class, 'exportarPanoramaPDF'])->name('panorama.pdf');
-    Route::get('/{municipio:slug}/pdf', [FichaController::class, 'exportarResumenPDF'])->name('pdf');
+    Route::get('/{municipio:slug}/panorama/pdf', [FichaController::class, 'exportarPanoramaPDF'])
+        ->middleware('throttle:ficha-pdf')
+        ->name('panorama.pdf');
+    Route::get('/{municipio:slug}/pdf', [FichaController::class, 'exportarResumenPDF'])
+        ->middleware('throttle:ficha-pdf')
+        ->name('pdf');
 });
 
 Route::get('/datos-abiertos', [HomeController::class, 'datosAbiertos'])->name('datos-abiertos.index');
@@ -213,6 +226,7 @@ Route::prefix('admin')->middleware(['auth'])->name('admin.')->group(function () 
     });
 
     Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
+    Route::get('/trafico', [TrafficAnalyticsController::class, 'index'])->name('trafico.index');
     Route::get('/lotes-datos', [LoteDatosController::class, 'index'])->name('lotes-datos.index');
     Route::get('/lotes-datos/{lote}', [LoteDatosController::class, 'show'])->name('lotes-datos.show');
     Route::post('/lotes-datos/{lote}/aprobar', [LoteDatosController::class, 'aprobar'])->name('lotes-datos.aprobar');
