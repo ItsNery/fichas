@@ -1,4 +1,5 @@
 <x-guest-layout>
+ @section('robots', 'noindex, nofollow')
  @section('title', 'Iniciar sesión')
     <section class="login">
         <div class="contenedor">
@@ -56,4 +57,32 @@
             {{ session('status') }}
         </div>
     @endif
+    <script>
+        const password = document.querySelector('input[name="password"]');
+
+        if (password) {
+            const field = password.closest('.mb-3');
+            const toggle = document.createElement('button');
+
+            field.classList.add('password-field');
+            password.id = 'password';
+            toggle.type = 'button';
+            toggle.className = 'password-toggle';
+            toggle.setAttribute('aria-controls', 'password');
+            toggle.setAttribute('aria-label', 'Mostrar contraseña');
+            toggle.setAttribute('aria-pressed', 'false');
+            toggle.textContent = 'Mostrar';
+
+            toggle.addEventListener('click', function() {
+                const isHidden = password.type === 'password';
+
+                password.type = isHidden ? 'text' : 'password';
+                this.textContent = isHidden ? 'Ocultar' : 'Mostrar';
+                this.setAttribute('aria-label', isHidden ? 'Ocultar contraseña' : 'Mostrar contraseña');
+                this.setAttribute('aria-pressed', String(isHidden));
+            });
+
+            password.insertAdjacentElement('afterend', toggle);
+        }
+    </script>
 </x-guest-layout>

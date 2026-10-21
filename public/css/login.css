@@ -198,6 +198,36 @@ body {
         box-sizing: border-box;
     }
 
+    .password-field {
+        position: relative;
+    }
+
+    .login-form .password-field input {
+        margin-bottom: 0;
+        padding-right: 5.75rem;
+    }
+
+    .login-form .password-toggle {
+        position: absolute;
+        top: 50%;
+        right: 0.5rem;
+        width: auto;
+        padding: 0.25rem 0.5rem;
+        transform: translateY(-50%);
+        border: 0;
+        border-radius: 0.25rem;
+        background: transparent;
+        color: #4a4a4a;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .login-form .password-toggle:hover,
+    .login-form .password-toggle:focus-visible {
+        background: #e9ecef;
+        color: #1f2428;
+    }
+
     .login-form button {
         width: 100%;
         padding: 10px;
