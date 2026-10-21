@@ -62,13 +62,19 @@ class RouteServiceProvider extends ServiceProvider
 
         // Las comparativas cargan datos de todos los municipios y son costosas.
         RateLimiter::for('ficha-comparativa', function (Request $request) {
-            return Limit::perMinute(10)->by('ficha-comparativa:'.$request->ip());
+            return [
+                Limit::perMinute(5)->by('ficha-comparativa:'.$request->ip()),
+                Limit::perHour(30)->by('ficha-comparativa:global'),
+            ];
         });
 
         // La generación de PDF puede iniciar procesos de navegador; se limita
         // como un recurso compartido entre todos los PDF municipales.
         RateLimiter::for('ficha-pdf', function (Request $request) {
-            return Limit::perMinute(3)->by('ficha-pdf:'.$request->ip());
+            return [
+                Limit::perMinute(2)->by('ficha-pdf:'.$request->ip()),
+                Limit::perHour(30)->by('ficha-pdf:global'),
+            ];
         });
     }
 }

@@ -11,7 +11,9 @@ class CachedPdfService
     private const DIRECTORY = 'fichas-pdf';
     private const VERSION = 'v1';
     private const LOCK_SECONDS = 660;
-    private const LOCK_WAIT_SECONDS = 5;
+    // Una solicitud que ya está generando el mismo PDF no debe retener un
+    // worker web: el cliente recibirá 503 y podrá reintentar después.
+    private const LOCK_WAIT_SECONDS = 0;
     private const RENDERER_LOCK = 'fichas-pdf:renderer';
 
     /**
