@@ -187,7 +187,7 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-3">
-                                    <a href="{{ route('ficha-municipal.show', ['municipio' => 'ID_PLACEHOLDER']) }}"
+                                    <a href="{{ route('municipios.show', ['municipio' => 'ID_PLACEHOLDER']) }}"
                                         id="resumen-btn" class="btn btn-link btn-sm p-0 disabled"
                                         style="display: none; text-decoration: none;">
                                         <i class="fa-solid fa-circle-info me-1"></i>

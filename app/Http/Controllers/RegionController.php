@@ -66,7 +66,7 @@ class RegionController extends Controller
         $municipiosCount = $microrregion->municipios->count();
         if ($municipiosCount === 1) {
             $municipio = $microrregion->municipios->first();
-            return redirect()->route('ficha-municipal.perfil', $municipio->slug)
+            return redirect()->route('municipios.show', $municipio->slug)
                 ->with('info', "Esta microrregión no tiene información municipal desagregable en el sistema. Te hemos redirigido a la ficha de {$municipio->nombre}, donde se encuentra la información disponible.");
         } elseif ($municipiosCount === 0) {
             if ($microrregion->macrorregion) {
@@ -802,7 +802,7 @@ class RegionController extends Controller
         $municipiosCount = $microrregion->municipios->count();
         if ($municipiosCount === 1) {
             $municipio = $microrregion->municipios->first();
-            return redirect()->route('ficha-municipal.perfil.pdf', $municipio->slug)
+            return redirect()->route('municipios.perfil.pdf', $municipio->slug)
                 ->with('info', "Esta microrregión no tiene información municipal desagregable en el sistema. Te hemos redirigido a la ficha de {$municipio->nombre}.");
         } elseif ($municipiosCount === 0) {
             return redirect()->back()->with('error', 'Microrregión sin datos.');
@@ -871,7 +871,7 @@ class RegionController extends Controller
         $municipiosCount = $microrregion->municipios->count();
         if ($municipiosCount === 1) {
             $municipio = $microrregion->municipios->first();
-            return redirect()->route('ficha-municipal.perfil', $municipio->slug)
+            return redirect()->route('municipios.show', $municipio->slug)
                 ->with('info', "Esta microrregión no tiene información municipal desagregable en el sistema. Te hemos redirigido a la ficha de {$municipio->nombre}.");
         } elseif ($municipiosCount === 0) {
             return redirect()->back()->with('error', 'Microrregión sin datos.');

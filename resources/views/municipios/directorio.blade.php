@@ -77,7 +77,7 @@
                         <span class="tarjeta-municipio__region">{{ $macro?->nombre ?? 'Sin macrorregión' }}</span>
                         <h3 class="tarjeta-municipio__nombre">{{ $mun->nombre }}</h3>
                         <p class="tarjeta-municipio__info">Microrregión: {{ $micro?->nombre ?? 'Sin asignar' }}</p>
-                        <a href="{{ route('ficha-municipal.perfil', $mun) }}" class="tarjeta-municipio__boton">Ver ficha</a>
+                        <a href="{{ route('municipios.show', $mun) }}" class="tarjeta-municipio__boton">Ver ficha</a>
                     </div>
                 </article>
             </div>

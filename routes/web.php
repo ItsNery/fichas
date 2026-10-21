@@ -44,39 +44,29 @@ Route::prefix('banco-indicadores')->name('banco-indicadores.')->group(function (
     Route::get('/api/indicador-anios/{indicador}', [FichaController::class, 'getIndicatorYears'])->name('api.indicador.anios');
 });
 
-// --- Módulo 2: Fichas Municipales ---
-Route::prefix('ficha/municipio')->name('ficha-municipal.')->group(function () {
+// --- Módulo 2: Municipios ---
+Route::prefix('municipios')->name('municipios.')->group(function () {
     Route::get('/', [FichaController::class, 'directorioVisual'])->name('index');
-    Route::get('/comparar/{slug1}/{slug2}', [FichaController::class, 'compararMunicipal'])
+    Route::get('/comparar/{slug1}/con/{slug2}', [FichaController::class, 'compararMunicipal'])
         ->middleware('throttle:ficha-comparativa')
         ->name('comparar');
-    Route::get('/comparar/{slug1}/{slug2}/dimension/{dimension}', [FichaController::class, 'compararDimension'])
+    Route::get('/comparar/{slug1}/con/{slug2}/dimension/{dimension}', [FichaController::class, 'compararDimension'])
         ->middleware('throttle:ficha-comparativa-seccion')
         ->name('comparar.dimension');
-    Route::get('/comparar/{slug1}/{slug2}/pdf', [FichaController::class, 'exportarComparativaPDF'])
-        ->middleware('throttle:ficha-pdf')
-        ->name('comparar.pdf');
     Route::get('/api/similitud-indicador/{municipio}/{config}', [FichaController::class, 'getSimilitudIndicador'])->name('api.indicador.similitud');
     Route::get('/api/grafico-datos/{municipio:slug}/{config}/{anio}', [FichaController::class, 'getGraficoDatosApi'])->name('api.grafico.data');
-    Route::get('/{municipio:slug}', [FichaController::class, 'resumenMunicipalV3'])->name('show');
-    Route::get('/{municipio:slug}/v1', [FichaController::class, 'resumenMunicipal'])->name('v1');
-    Route::get('/{municipio:slug}/test', [FichaController::class, 'resumenMunicipalTest'])->name('test');
-    Route::get('/{municipio:slug}/v3', [FichaController::class, 'resumenMunicipalV3'])->name('v3');
-    Route::get('/{municipio:slug}/perfil', [FichaController::class, 'perfilMunicipal'])->name('perfil');
-    Route::get('/{municipio:slug}/v3/pdf', [FichaController::class, 'exportarResumenV3PDF'])
-        ->middleware('throttle:ficha-pdf')
-        ->name('v3.pdf');
-    Route::get('/{municipio:slug}/perfil/pdf', [FichaController::class, 'exportarPerfilPDF'])
+    Route::get('/{municipio:slug}/dimension/{dimension}', [FichaController::class, 'perfilDimension'])
+        ->middleware('throttle:ficha-perfil-seccion')
+        ->name('dimension');
+    Route::get('/{municipio:slug}', [FichaController::class, 'perfilMunicipal'])->name('show');
+    Route::get('/{municipio:slug}/perfil.pdf', [FichaController::class, 'exportarPerfilPDF'])
         ->middleware('throttle:ficha-pdf')
         ->name('perfil.pdf');
     Route::get('/{municipio:slug}/panorama', [FichaController::class, 'panoramaMunicipal'])->name('panorama');
-    Route::get('/{municipio:slug}/panorama/map.png', [FichaController::class, 'panoramaMap'])->name('panorama.map');
-    Route::get('/{municipio:slug}/panorama/pdf', [FichaController::class, 'exportarPanoramaPDF'])
+    Route::get('/{municipio:slug}/panorama/mapa.png', [FichaController::class, 'panoramaMap'])->name('panorama.map');
+    Route::get('/{municipio:slug}/panorama.pdf', [FichaController::class, 'exportarPanoramaPDF'])
         ->middleware('throttle:ficha-pdf')
         ->name('panorama.pdf');
-    Route::get('/{municipio:slug}/pdf', [FichaController::class, 'exportarResumenPDF'])
-        ->middleware('throttle:ficha-pdf')
-        ->name('pdf');
 });
 
 Route::get('/datos-abiertos', [HomeController::class, 'datosAbiertos'])->name('datos-abiertos.index');

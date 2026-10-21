@@ -17,7 +17,7 @@
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-4">
                             <li class="breadcrumb-item"><a href="{{ url('/') }}" class="text-white-50">Inicio</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('ficha-municipal.index') }}"
+                            <li class="breadcrumb-item"><a href="{{ route('municipios.index') }}"
                                     class="text-white-50">Directorio</a></li>
                             <li class="breadcrumb-item active text-white" aria-current="page">{{ $municipio->nombre }}</li>
                         </ol>
@@ -31,13 +31,13 @@
                             <i class="fa-solid fa-scale-balanced hero-ficha__action-icon"></i>
                             <span class="hero-ficha__action-label">Comparar</span>
                         </button>
-                        <a href="{{ route('ficha-municipal.perfil.pdf', $municipio->slug) }}"
+                        <a href="{{ route('municipios.perfil.pdf', $municipio->slug) }}"
                             class="hero-ficha__action btn btn-outline-light btn-sm fw-bold px-3 py-1 rounded-pill" target="_blank"
                             data-pdf-link aria-label="Abrir ficha en PDF" title="Abrir ficha en PDF">
                             <i class="fa-solid fa-file-pdf hero-ficha__action-icon"></i>
                             <span class="hero-ficha__action-label">PDF</span>
                         </a>
-                        <a href="{{ route('ficha-municipal.panorama.pdf', $municipio->slug) }}"
+                        <a href="{{ route('municipios.panorama.pdf', $municipio->slug) }}"
                             class="hero-ficha__action btn btn-outline-light btn-sm fw-bold px-3 py-1 rounded-pill" target="_blank"
                             aria-label="Abrir panorama en PDF" title="Abrir panorama en PDF">
                             <i class="fa-solid fa-chart-pie hero-ficha__action-icon"></i>
@@ -197,13 +197,11 @@
     <div class="sticky-nav">
         <div class="container sticky-nav__contenedor">
             <ul class="nav justify-content-center sticky-nav__list">
-                @foreach ($perfil as $seccion => $items)
-                    @if ($seccion != 'general')
-                        <li class="nav-item sticky-nav__item">
-                            <a href="#section-{{ Str::slug($seccion) }}"
-                                class="nav-link sticky-nav__link">{{ ucwords(str_replace('_', ' ', $seccion)) }}</a>
-                        </li>
-                    @endif
+                @foreach ($dimensions ?? collect() as $dimension)
+                    <li class="nav-item sticky-nav__item">
+                        <a href="#section-{{ Str::slug($dimension['key']) }}"
+                            class="nav-link sticky-nav__link">{{ $dimension['nombre'] }}</a>
+                    </li>
                 @endforeach
             </ul>
         </div>
@@ -211,6 +209,44 @@
 
     {{-- 4. CONTENIDO EDITORIAL --}}
     <div class="container mt-4">
+        @if ($progressive ?? false)
+            @foreach ($dimensions as $dimension)
+                @php
+                    $accentHex = ltrim($dimension['color'], '#');
+                    $accentText = '#fff';
+                    if (preg_match('/^[0-9a-fA-F]{6}$/', $accentHex)) {
+                        $brightness =
+                            (hexdec(substr($accentHex, 0, 2)) * 299 +
+                                hexdec(substr($accentHex, 2, 2)) * 587 +
+                                hexdec(substr($accentHex, 4, 2)) * 114) /
+                            1000;
+                        $accentText = $brightness > 160 ? '#262626' : '#fff';
+                    }
+                @endphp
+                <section id="section-{{ Str::slug($dimension['key']) }}" class="section-perfil mb-5 pb-2 profile-section"
+                    data-section-url="{{ route('municipios.dimension', [$municipio->slug, $dimension['id']]) }}"
+                    style="--dimension-accent: {{ $dimension['color'] }}; --dimension-accent-text: {{ $accentText }};">
+                    <div class="dimension-header">
+                        <h2 class="dimension-header__title mb-0">{{ $dimension['nombre'] }}</h2>
+                    </div>
+                    <div class="profile-section-loader" aria-live="polite" aria-busy="true">
+                        @for ($skeleton = 0; $skeleton < 3; $skeleton++)
+                            <div class="comparison-section__skeleton perfil-tarjeta mb-4" aria-hidden="true">
+                                <div class="comparison-section__skeleton-body">
+                                    <span class="comparison-section__skeleton-title"></span>
+                                    <span class="comparison-section__skeleton-chart"></span>
+                                </div>
+                            </div>
+                        @endfor
+                        <p class="comparison-section__status mb-0">
+                            <i class="fa-solid fa-chart-column" aria-hidden="true"></i>
+                            Preparando indicadores de esta dimensión…
+                        </p>
+                    </div>
+                </section>
+            @endforeach
+        @else
+            <script type="application/json" class="profile-section-data">@json($perfil)</script>
         @foreach ($perfil as $seccion => $items)
             @if ($seccion != 'general')
                 @php
@@ -634,9 +670,11 @@
                 </section>
             @endif
         @endforeach
+        @endif
     </div>
 
     {{-- 5. SECCIÓN DE MUNICIPIOS SIMILARES --}}
+    @unless ($sectionResponse ?? false)
     <section class="similares-seccion py-4 bg-light border-top">
         <div class="container">
             <div class="row align-items-center mb-4">
@@ -671,9 +709,9 @@
                                             </p>
                                         </div>
                                         <div class="d-flex gap-2">
-                                            <a href="{{ route('ficha-municipal.perfil', $sim->slug) }}"
+                                            <a href="{{ route('municipios.show', $sim->slug) }}"
                                                 class="btn btn-outline-secondary btn-sm px-3 rounded-pill">Ver Perfil</a>
-                                            <a href="{{ route('ficha-municipal.comparar', [$municipio->slug, $sim->slug]) }}"
+                                            <a href="{{ route('municipios.comparar', [$municipio->slug, $sim->slug]) }}"
                                                 class="btn btn-vino btn-sm px-3 text-white rounded-pill">
                                                 <i class="fa-solid fa-scale-balanced me-1"></i> Comparar
                                             </a>
@@ -706,9 +744,9 @@
                                             </p>
                                         </div>
                                         <div class="d-flex gap-2">
-                                            <a href="{{ route('ficha-municipal.perfil', $sim->slug) }}"
+                                            <a href="{{ route('municipios.show', $sim->slug) }}"
                                                 class="btn btn-outline-secondary btn-sm px-3 rounded-pill">Ver Perfil</a>
-                                            <a href="{{ route('ficha-municipal.comparar', [$municipio->slug, $sim->slug]) }}"
+                                            <a href="{{ route('municipios.comparar', [$municipio->slug, $sim->slug]) }}"
                                                 class="btn btn-vino btn-sm px-3 text-white rounded-pill">
                                                 <i class="fa-solid fa-scale-balanced me-1"></i> Comparar
                                             </a>
@@ -757,22 +795,23 @@
             </div>
         </div>
     </div>
+    @endunless
 @endsection
 
 @section('jss')
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <script src="{{ asset('js/mapa-inset.js') }}?v={{ time() }}"></script>
     @php
-        $similitudUrl = route('ficha-municipal.api.indicador.similitud', [
+        $similitudUrl = route('municipios.api.indicador.similitud', [
             'municipio' => $municipio->id,
             'config' => '__CONFIG__',
         ]);
-        $perfilUrlTemplate = route('ficha-municipal.perfil', '__SLUG__');
-        $compararUrlTemplate = route('ficha-municipal.comparar', [
+        $perfilUrlTemplate = route('municipios.show', '__SLUG__');
+        $compararUrlTemplate = route('municipios.comparar', [
             'slug1' => $municipio->slug,
             'slug2' => '__SLUG__',
         ]);
-        $graficoDatosUrlTemplate = route('ficha-municipal.api.grafico.data', [
+        $graficoDatosUrlTemplate = route('municipios.api.grafico.data', [
             'municipio' => '__MUNICIPIO__',
             'config' => '__CONFIG__',
             'anio' => '__ANIO__',
@@ -788,7 +827,8 @@
             perfilUrlTemplate: @json($perfilUrlTemplate),
             compararUrlTemplate: @json($compararUrlTemplate),
             graficoDatosUrlTemplate: @json($graficoDatosUrlTemplate),
-            perfilData: @json($perfil)
+            perfilData: @json($perfil),
+            progressive: @json($progressive ?? false)
         };
     </script>
     <script src="{{ asset('js/perfil.js') }}?v={{ time() }}"></script>

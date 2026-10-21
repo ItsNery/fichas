@@ -98,7 +98,7 @@ class PanoramaPdfExportTest extends TestCase
         $this->app->instance(MunicipalityMapImageService::class, $map);
 
         $mapDataUri = 'data:image/png;base64,'.base64_encode('png-contents');
-        $mapUrl = route('ficha-municipal.panorama.map', $municipio);
+        $mapUrl = route('municipios.panorama.map', $municipio);
         $exporter = Mockery::mock(ExportV3Service::class);
         $exporter->shouldReceive('exportPanoramaPDF')
             ->once()
@@ -112,6 +112,6 @@ class PanoramaPdfExportTest extends TestCase
             ->andReturn(response('pdf'));
         $this->app->instance(ExportV3Service::class, $exporter);
 
-        $this->get(route('ficha-municipal.panorama.pdf', $municipio))->assertOk();
+        $this->get(route('municipios.panorama.pdf', $municipio))->assertOk();
     }
 }

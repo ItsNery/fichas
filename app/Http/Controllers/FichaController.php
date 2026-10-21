@@ -650,24 +650,96 @@ class FichaController extends Controller
         $municipio->load('microrregion.macrorregion');
 
         $hero = $this->getHeroStats($municipio);
+        $configuraciones = $this->configuracionesPerfilPublico();
+        $dimensiones = $this->dimensionesPerfil($configuraciones);
 
-        $configuraciones = ConfiguracionFicha::with(['indicador.variables', 'indicador.tematica.dimension', 'variables'])
+        return view('municipios.perfil', array_merge($hero, [
+            'municipio' => $municipio,
+            'perfil' => [],
+            'dimensions' => $dimensiones,
+            'dimensionColors' => $dimensiones->pluck('color', 'key')->all(),
+            'progressive' => true,
+            'similaresPoblacion' => app(RankingService::class)->getSimilaresPorPoblacion($municipio, $hero['poblacionTotal']),
+            'similaresRegion' => app(RankingService::class)->getSimilaresPorRegion($municipio),
+        ]));
+    }
+
+    public function perfilDimension(Request $request, Municipio $municipio, Dimension $dimension)
+    {
+        abort_unless($request->expectsJson(), 404);
+
+        $municipio->load('microrregion.macrorregion');
+        $configuraciones = $this->configuracionesPerfilPublico($dimension->id);
+        abort_if($configuraciones->isEmpty(), 404);
+
+        $perfil = $this->componerPerfil($municipio, $configuraciones);
+        $dimensionKey = $this->dimensionKey($configuraciones->first());
+        $hero = $this->getHeroStats($municipio);
+
+        return response()->json([
+            'html' => view('municipios.perfil', array_merge($hero, [
+                'municipio' => $municipio,
+                'perfil' => $perfil,
+                'dimensions' => collect(),
+                'dimensionColors' => $this->dimensionesPerfil($configuraciones)->pluck('color', 'key')->all(),
+                'progressive' => false,
+                'sectionResponse' => true,
+                'similaresPoblacion' => collect(),
+                'similaresRegion' => collect(),
+            ]))->render(),
+            'dimension_key' => $dimensionKey,
+        ]);
+    }
+
+    private function configuracionesPerfilPublico(?int $dimensionId = null)
+    {
+        $query = ConfiguracionFicha::with(['indicador.variables', 'indicador.tematica.dimension', 'variables'])
             ->visibleEnPerfilPublico()
             ->orderBy('orden')
-            ->orderBy('id')
-            ->get();
+            ->orderBy('id');
 
+        if ($dimensionId !== null) {
+            $query->whereHas('indicador.tematica', function ($query) use ($dimensionId) {
+                $query->where('dimension_id', $dimensionId);
+            });
+        }
+
+        return $query->get();
+    }
+
+    private function dimensionesPerfil($configuraciones)
+    {
+        return $configuraciones
+            ->map(function ($config) {
+                $dimension = $config->indicador?->tematica?->dimension;
+                if (! $dimension || Str::lower($dimension->nombre) === 'general') {
+                    return null;
+                }
+
+                return [
+                    'id' => $dimension->id,
+                    'key' => $this->dimensionKey($config),
+                    'nombre' => $dimension->nombre,
+                    'color' => $dimension->color ?: '#861e34',
+                    'orden' => (int) ($dimension->orden ?? 0),
+                ];
+            })
+            ->filter()
+            ->unique('id')
+            ->sortBy(fn (array $dimension) => sprintf('%05d-%s', $dimension['orden'], $dimension['nombre']))
+            ->values();
+    }
+
+    private function componerPerfil(Municipio $municipio, $configuraciones): array
+    {
         $allVariableIds = FichaDataStore::extractVariableIds($configuraciones);
         $dataStore = new FichaDataStore($municipio, $allVariableIds);
-
         $perfil = [];
-        $dimensionColors = [];
 
         foreach ($configuraciones as $config) {
             $datos = app(FichaComposerService::class)->obtenerDatosParaConfig($config, $municipio, $dataStore);
 
             $dimensionKey = $this->dimensionKey($config);
-            $dimensionColors[$dimensionKey] ??= $config->indicador?->tematica?->dimension?->color ?: '#861e34';
             $perfil[$dimensionKey][] = [
                 'config' => $config,
                 'datos' => $datos,
@@ -680,39 +752,7 @@ class FichaController extends Controller
             $perfil[$dimension] = $layout->compose($items);
         }
 
-        // Ordenar secciones del perfil por orden de dimensión
-        $dimensionOrden = [];
-        foreach ($configuraciones as $config) {
-            $dim = $config->indicador?->tematica?->dimension;
-            if ($dim && !isset($dimensionOrden[$dim->nombre])) {
-                $dimensionOrden[$dim->nombre] = (int) ($dim->orden ?? 0);
-            }
-        }
-
-        $general = $perfil['general'] ?? [];
-        unset($perfil['general']);
-
-        $clavesOrdenadas = [];
-        foreach ($dimensionOrden as $nombre => $orden) {
-            $key = str_replace(' ', '_', strtolower($nombre));
-            if (isset($perfil[$key])) {
-                $clavesOrdenadas[$key] = $perfil[$key];
-                unset($perfil[$key]);
-            }
-        }
-        foreach ($perfil as $key => $items) {
-            $clavesOrdenadas[$key] = $items;
-        }
-
-        $perfil = ['general' => $general] + $clavesOrdenadas;
-
-        return view('municipios.perfil', array_merge($hero, [
-            'municipio' => $municipio,
-            'perfil' => $perfil,
-            'dimensionColors' => $dimensionColors,
-            'similaresPoblacion' => app(RankingService::class)->getSimilaresPorPoblacion($municipio, $hero['poblacionTotal']),
-            'similaresRegion' => app(RankingService::class)->getSimilaresPorRegion($municipio),
-        ]));
+        return $perfil;
     }
 
     public function panoramaMunicipal(Municipio $municipio)

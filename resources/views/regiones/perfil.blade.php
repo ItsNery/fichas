@@ -15,7 +15,7 @@
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb mb-4">
                             <li class="breadcrumb-item"><a href="{{ url('/') }}" class="text-white-50">Inicio</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('ficha-municipal.index') }}"
+                            <li class="breadcrumb-item"><a href="{{ route('municipios.index') }}"
                                     class="text-white-50">Directorio</a></li>
                             <li class="breadcrumb-item active text-white" aria-current="page">{{ $region->nombre }}</li>
                         </ol>
@@ -104,7 +104,7 @@
                                 <div class="d-flex flex-wrap gap-2 hero-ficha__region-list"
                                     style="max-height: 200px; overflow-y: auto; scrollbar-width: thin;">
                                     @foreach ($municipios as $muni)
-                                        <a href="{{ route('ficha-municipal.perfil', $muni->slug) }}"
+                                        <a href="{{ route('municipios.show', $muni->slug) }}"
                                             class="badge bg-white bg-opacity-10 text-white text-decoration-none border border-white border-opacity-25"
                                             style="transition: all 0.2s;" title="Ver ficha de {{ $muni->nombre }}">
                                             {{ $muni->nombre }}
@@ -382,7 +382,7 @@
                                                                         data-ranking-name="{{ Str::ascii(mb_strtolower($ranking['name'], 'UTF-8')) }}">
                                                                         <td>{{ $posicion + 1 }}</td>
                                                                         <td><a
-                                                                                href="{{ route('ficha-municipal.perfil', $municipios->firstWhere('id', $ranking['id'])?->slug ?? '#') }}">{{ $ranking['name'] }}</a>
+                                                                                href="{{ route('municipios.show', $municipios->firstWhere('id', $ranking['id'])?->slug ?? '#') }}">{{ $ranking['name'] }}</a>
                                                                         </td>
                                                                         <td class="text-end">
                                                                             {{ number_format($ranking['orderValue'], 2) }}

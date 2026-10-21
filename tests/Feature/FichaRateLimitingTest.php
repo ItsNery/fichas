@@ -20,14 +20,12 @@ class FichaRateLimitingTest extends TestCase
     {
         $routes = Route::getRoutes();
 
-        $this->assertContains('throttle:ficha-comparativa', $routes->getByName('ficha-municipal.comparar')->gatherMiddleware());
+        $this->assertContains('throttle:ficha-comparativa', $routes->getByName('municipios.comparar')->gatherMiddleware());
+        $this->assertContains('throttle:ficha-perfil-seccion', $routes->getByName('municipios.dimension')->gatherMiddleware());
 
         foreach ([
-            'ficha-municipal.comparar.pdf',
-            'ficha-municipal.v3.pdf',
-            'ficha-municipal.perfil.pdf',
-            'ficha-municipal.panorama.pdf',
-            'ficha-municipal.pdf',
+            'municipios.perfil.pdf',
+            'municipios.panorama.pdf',
         ] as $routeName) {
             $this->assertContains('throttle:ficha-pdf', $routes->getByName($routeName)->gatherMiddleware());
         }

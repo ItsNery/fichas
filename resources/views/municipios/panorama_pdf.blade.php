@@ -173,7 +173,7 @@
     @php($dimensionAccent = $dimensionColors[$page['dimension']] ?? '#872341')
     <section class="sheet" style="--dimension-accent: {{ $dimensionAccent }};">
         <header class="identity">
-            <div class="map"><div class="municipality-map"><img src="{{ $mapImageDataUri ?? route('ficha-municipal.panorama.map', $municipio) }}" alt="Ubicación de {{ $municipio->nombre }} en Puebla"></div><span class="map-label">Ubicación en Puebla</span></div>
+            <div class="map"><div class="municipality-map"><img src="{{ $mapImageDataUri ?? route('municipios.panorama.map', $municipio) }}" alt="Ubicación de {{ $municipio->nombre }} en Puebla"></div><span class="map-label">Ubicación en Puebla</span></div>
             <div class="identity-copy">
                 <h1 class="municipality">{{ $municipio->nombre }}</h1>
                 <p class="regionalization"><span class="regionalization-label">Regionalización:</span> {{ $municipio->microrregion?->macrorregion?->nombre ?? 'Puebla' }} · {{ $municipio->microrregion?->nombre ?? 'Sin región' }}</p>

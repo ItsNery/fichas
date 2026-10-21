@@ -55,7 +55,7 @@
     <section class="editorial-links-section">
         <div class="container">
             <nav class="editorial-links" aria-label="Explora el portal">
-                <a href="{{ route('ficha-municipal.index') }}"><i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                <a href="{{ route('municipios.index') }}"><i class="fas fa-map-marker-alt" aria-hidden="true"></i>
                     Municipios</a>
                 <a href="{{ route('banco-indicadores.index') }}"><i class="fas fa-chart-line" aria-hidden="true"></i>
                     Indicadores</a>
@@ -115,7 +115,7 @@
                 </div>
                 <div class="col-lg-7">
                     <div class="row g-3">
-                        <div class="col-md-6"><a href="{{ route('ficha-municipal.index') }}"
+                        <div class="col-md-6"><a href="{{ route('municipios.index') }}"
                                 class="editorial-guide-link"><i class="fas fa-city"
                                     aria-hidden="true"></i><span><strong>Perfiles municipales</strong>Conoce cada
                                     municipio</span><i class="fas fa-arrow-right" aria-hidden="true"></i></a></div>
@@ -148,7 +148,7 @@
                     </a>
                 </div>
                 <div class="col-sm-6 col-lg-3">
-                    <a href="{{ route('ficha-municipal.index') }}" class="territory-card">
+                    <a href="{{ route('municipios.index') }}" class="territory-card">
                         <span class="territory-card__number">02</span>
                         <strong>Municipios</strong>
                         <span>Consulta cada uno de los 217 </span>
@@ -187,7 +187,7 @@
                     <div class="analysis-list">
                         <a href="{{ route('banco-indicadores.index') }}"><span>01</span><strong>Mapas temáticos</strong><small>Visualiza indicadores sobre el territorio.</small><i class="fas fa-arrow-right" aria-hidden="true"></i></a>
                         <a href="{{ route('banco-indicadores.index') }}"><span>02</span><strong>Series históricas</strong><small>Identifica cambios a través del tiempo.</small><i class="fas fa-arrow-right" aria-hidden="true"></i></a>
-                        <a href="{{ route('ficha-municipal.index') }}"><span>03</span><strong>Comparación territorial</strong><small>Consulta perfiles y contextos municipales.</small><i class="fas fa-arrow-right" aria-hidden="true"></i></a>
+                        <a href="{{ route('municipios.index') }}"><span>03</span><strong>Comparación territorial</strong><small>Consulta perfiles y contextos municipales.</small><i class="fas fa-arrow-right" aria-hidden="true"></i></a>
                         <a href="{{ route('datos-abiertos.index') }}"><span>04</span><strong>Exportación de datos</strong><small>Reutiliza información para tus análisis.</small><i class="fas fa-arrow-right" aria-hidden="true"></i></a>
                     </div>
                 </div>

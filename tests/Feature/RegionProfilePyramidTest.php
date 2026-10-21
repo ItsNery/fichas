@@ -36,7 +36,7 @@ class RegionProfilePyramidTest extends TestCase
             'microrregion_id' => $micro->id,
         ]);
 
-        $response = $this->get(route('ficha-municipal.panorama.map', $municipio));
+        $response = $this->get(route('municipios.panorama.map', $municipio));
 
         $response->assertOk()->assertHeader('Content-Type', 'image/png');
         $this->assertStringStartsWith("\x89PNG\r\n\x1a\n", $response->getContent());
@@ -84,7 +84,7 @@ class RegionProfilePyramidTest extends TestCase
         DatoHistorico::create(['municipio_id' => $municipio->id, 'variable_id' => $hombres->id, 'anio' => 2025, 'valor' => 100]);
         DatoHistorico::create(['municipio_id' => $municipio->id, 'variable_id' => $mujeres->id, 'anio' => 2025, 'valor' => 110]);
 
-        $response = $this->get(route('ficha-municipal.panorama', $municipio));
+        $response = $this->get(route('municipios.panorama', $municipio));
 
         $response->assertOk()
             ->assertSee('card--rows-2 card--pyramid', false)
@@ -235,14 +235,19 @@ class RegionProfilePyramidTest extends TestCase
             'activo' => true,
         ]);
 
-        $this->get(route('ficha-municipal.perfil', $municipio))
+        $this->get(route('municipios.show', $municipio))
             ->assertOk()
-            ->assertSee('Sin dato disponible')
-            ->assertViewHas('perfil', fn ($perfil) => collect($perfil)->flatten(1)
-                ->pluck('config.id')
-                ->all() === [$visible->id]);
+            ->assertSee('Preparando indicadores de esta dimensión')
+            ->assertViewHas('perfil', []);
 
-        $this->get(route('ficha-municipal.perfil.pdf', [$municipio, 'preview' => true]))
+        $sectionResponse = $this->getJson(route('municipios.dimension', [$municipio, $dimension]))
+            ->assertOk()
+            ->assertJsonPath('dimension_key', 'dimensión_perfil');
+
+        $this->assertStringContainsString('Indicador público', $sectionResponse->json('html'));
+        $this->assertStringNotContainsString('Dispersión no pública', $sectionResponse->json('html'));
+
+        $this->get(route('municipios.perfil.pdf', [$municipio, 'preview' => true]))
             ->assertOk()
             ->assertViewHas('perfil', fn ($perfil) => collect($perfil)->flatten(2)
                 ->pluck('config.id')
@@ -387,7 +392,7 @@ class RegionProfilePyramidTest extends TestCase
 
         $response = $this->get(route('regiones.micro.perfil', $micro->slug));
 
-        $response->assertRedirect(route('ficha-municipal.perfil', $municipio->slug));
+        $response->assertRedirect(route('municipios.show', $municipio->slug));
         $response->assertSessionHas('info', "Esta microrregión no tiene información municipal desagregable en el sistema. Te hemos redirigido a la ficha de Puebla, donde se encuentra la información disponible.");
     }
 

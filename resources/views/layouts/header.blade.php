@@ -61,7 +61,7 @@
                     Perfiles <span class="arrow">▾</span>
                 </a>
                 <ul class="dropdown-content">
-                    <li><a href="{{ route('ficha-municipal.index') }}">Municipales</a></li>
+                    <li><a href="{{ route('municipios.index') }}">Municipales</a></li>
                     <li><a href="{{ url('/perfiles-regionales') }}">Regionales</a></li>
                 </ul>
             </li>

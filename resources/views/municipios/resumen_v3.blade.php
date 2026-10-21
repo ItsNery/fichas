@@ -41,7 +41,7 @@
                     <span class="hero-ficha__etiqueta badge mb-3 px-3 py-2 text-uppercase ">
                         Ficha Municipal
                     </span>
-                    <a href="{{ route('ficha-municipal.v3.pdf', $municipio->slug) }}"
+                    <a href="{{ route('municipios.perfil.pdf', $municipio->slug) }}"
                        class="btn btn-outline-light btn-sm fw-bold px-3 py-1 rounded-pill ms-2"
                        target="_blank">
                         <i class="fa-solid fa-file-pdf me-1"></i> PDF

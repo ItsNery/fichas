@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", function () {
             initHeroMap();
             setupLazyCharts();
             initProfileMasonry();
+            setupProgressiveProfileSections();
             setupScrollSpy();
             initPopovers();
         });
@@ -124,11 +125,11 @@ function processNextInQueue() {
     }, 40);
 }
 
-function setupLazyCharts() {
+function setupLazyCharts(root = document) {
     if (!window.FichaConfig || !window.FichaConfig.perfilData) return;
 
     // 1. Gráficos principales
-    const lazyCharts = document.querySelectorAll(".lazy-chart");
+    const lazyCharts = root.querySelectorAll(".lazy-chart");
 
     if (window.isPdfExport) {
         lazyCharts.forEach((chartElement) => {
@@ -169,7 +170,7 @@ function setupLazyCharts() {
     }
 
     // 2. Micrográficas (Sparklines)
-    const lazySparklines = document.querySelectorAll(".perfil-tarjeta__sparkline");
+    const lazySparklines = root.querySelectorAll(".perfil-tarjeta__sparkline");
 
     if (window.isPdfExport) {
         lazySparklines.forEach((sparkElement) => {
@@ -205,7 +206,127 @@ function setupLazyCharts() {
         lazySparklines.forEach((spark) => sparkObserver.observe(spark));
     }
 
-    setupStateRankings();
+    setupStateRankings(root);
+}
+
+const profileSectionQueue = [];
+let loadingProfileSection = false;
+
+function setupProgressiveProfileSections() {
+    if (!window.FichaConfig?.progressive) return;
+
+    const sections = document.querySelectorAll(".profile-section[data-section-url]");
+    if (!sections.length) return;
+
+    const observer = new IntersectionObserver((entries, currentObserver) => {
+        entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+
+            const section = entry.target;
+            if (!section.dataset.sectionQueued && !section.dataset.sectionLoaded) {
+                section.dataset.sectionQueued = "true";
+                profileSectionQueue.push(section);
+                loadNextProfileSection();
+            }
+            currentObserver.unobserve(section);
+        });
+    }, { rootMargin: "700px 0px" });
+
+    sections.forEach((section) => observer.observe(section));
+}
+
+function loadNextProfileSection() {
+    if (loadingProfileSection || profileSectionQueue.length === 0) return;
+
+    loadingProfileSection = true;
+    const section = profileSectionQueue.shift();
+    const loader = section.querySelector(".profile-section-loader");
+
+    fetch(section.dataset.sectionUrl, {
+        headers: {
+            Accept: "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+        },
+    })
+        .then(async (response) => {
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || !payload.html) {
+                const error = new Error(payload.message || "No fue posible cargar esta dimensión.");
+                error.status = response.status;
+                throw error;
+            }
+            return payload;
+        })
+        .then((payload) => {
+            const parsed = new DOMParser().parseFromString(payload.html, "text/html");
+            const renderedSection = parsed.getElementById(section.id);
+            const renderedGrid = renderedSection?.querySelector(".perfil-grid");
+            const dataNode = parsed.querySelector(".profile-section-data");
+
+            if (!renderedGrid || !dataNode) {
+                throw new Error("La dimensión no pudo prepararse.");
+            }
+
+            mergeProfileSectionData(dataNode.textContent);
+            loader.innerHTML = renderedGrid.outerHTML;
+            section.dataset.sectionLoaded = "true";
+            loader.setAttribute("aria-busy", "false");
+            setupLazyCharts(loader);
+            initProfileMasonry(loader);
+            initPopovers(loader);
+        })
+        .catch((error) => {
+            delete section.dataset.sectionQueued;
+            loader.setAttribute("aria-busy", "false");
+            loader.innerHTML = `
+                <div class="comparison-section__feedback" role="alert">
+                    <span class="comparison-section__feedback-icon" aria-hidden="true"><i class="fa-solid fa-clock-rotate-left"></i></span>
+                    <div>
+                        <h3 class="comparison-section__feedback-title">Aún no podemos mostrar esta dimensión</h3>
+                        <p class="comparison-section__feedback-message">${escapeProfileHtml(profileSectionErrorMessage(error))}</p>
+                        <button type="button" class="comparison-section__retry profile-section-retry">
+                            <i class="fa-solid fa-rotate-right" aria-hidden="true"></i> Reintentar
+                        </button>
+                    </div>
+                </div>`;
+            loader.querySelector(".profile-section-retry").addEventListener("click", () => {
+                section.dataset.sectionQueued = "true";
+                profileSectionQueue.push(section);
+                loadNextProfileSection();
+            });
+        })
+        .finally(() => {
+            loadingProfileSection = false;
+            loadNextProfileSection();
+        });
+}
+
+function mergeProfileSectionData(rawData) {
+    try {
+        const sectionData = JSON.parse(rawData);
+        Object.assign(window.FichaConfig.perfilData, sectionData);
+    } catch (error) {
+        console.error("No fue posible leer los datos de la dimensión:", error);
+        throw error;
+    }
+}
+
+function escapeProfileHtml(value) {
+    const element = document.createElement("div");
+    element.textContent = value || "No fue posible cargar esta dimensión.";
+    return element.innerHTML;
+}
+
+function profileSectionErrorMessage(error) {
+    if (error.status === 429) {
+        return "Hay varias consultas en curso. Espera un momento y vuelve a intentarlo.";
+    }
+
+    if (error.status === 503) {
+        return "El servidor está preparando otra ficha. Esta dimensión estará disponible en unos segundos.";
+    }
+
+    return "Ocurrió un problema temporal al preparar los indicadores.";
 }
 
 /**
@@ -213,10 +334,10 @@ function setupLazyCharts() {
  * fila a la tarjeta más alta; este cálculo usa la altura disponible de cada
  * columna para que los módulos bajos ocupen los huecos reales.
  */
-function initProfileMasonry() {
+function initProfileMasonry(root = document) {
     if (window.isPdfExport) return;
 
-    const grids = Array.from(document.querySelectorAll(".perfil-grid"));
+    const grids = Array.from(root.querySelectorAll(".perfil-grid"));
     if (!grids.length || !window.ResizeObserver) return;
 
     let frameId = null;
@@ -309,8 +430,8 @@ function normalizeSearchText(value) {
         .trim();
 }
 
-function setupStateRankings() {
-    document.querySelectorAll(".state-ranking-search").forEach((input) => {
+function setupStateRankings(root = document) {
+    root.querySelectorAll(".state-ranking-search").forEach((input) => {
         input.addEventListener("input", () => {
             const table = document.getElementById(input.dataset.rankingTarget);
             if (!table) return;
@@ -852,11 +973,16 @@ function renderSparkline(itemData) {
     window.addEventListener("resize", () => sparkChart.resize());
 }
 
-function initPopovers() {
+function initPopovers(root = document) {
     var popoverTriggerList = [].slice.call(
-        document.querySelectorAll('[data-bs-toggle="popover"]'),
+        root.querySelectorAll('[data-bs-toggle="popover"]'),
     );
     var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+        if (popoverTriggerEl.dataset.profilePopoverInitialized) {
+            return bootstrap.Popover.getInstance(popoverTriggerEl);
+        }
+
+        popoverTriggerEl.dataset.profilePopoverInitialized = "true";
         if (popoverTriggerEl.classList.contains("similarity-popover-trigger")) {
             const popover = new bootstrap.Popover(popoverTriggerEl, {
                 sanitize: false,
@@ -942,16 +1068,23 @@ function initPopovers() {
         }
     });
 
+    if (window.profilePopoverListenersBound) return;
+    window.profilePopoverListenersBound = true;
+
     document.addEventListener("click", function (event) {
         if (event.target.closest(".similarity-popover-trigger, .popover")) return;
 
-        popoverList.forEach((popover) => popover.hide());
+        document.querySelectorAll('[data-bs-toggle="popover"]').forEach((trigger) => {
+            bootstrap.Popover.getInstance(trigger)?.hide();
+        });
     });
 
     document.addEventListener("keydown", function (event) {
         if (event.key !== "Escape") return;
 
-        popoverList.forEach((popover) => popover.hide());
+        document.querySelectorAll('[data-bs-toggle="popover"]').forEach((trigger) => {
+            bootstrap.Popover.getInstance(trigger)?.hide();
+        });
     });
 }
 

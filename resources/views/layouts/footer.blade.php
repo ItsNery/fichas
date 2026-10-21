@@ -73,7 +73,7 @@
                     </a>
                     <ul class="list-unstyled ps-4 mb-2" id="footer-perfiles-submenu" style="display: none;">
                         <li><a class="text-white-50 text-decoration-none"
-                                href="{{ route('ficha-municipal.index') }}">Municipales</a></li>
+                                href="{{ route('municipios.index') }}">Municipales</a></li>
                         <li><a class="text-white-50 text-decoration-none"
                                 href="{{ route('regiones.index') }}">Regionales</a></li>
                     </ul>

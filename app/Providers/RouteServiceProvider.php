@@ -93,6 +93,20 @@ class RouteServiceProvider extends ServiceProvider
             ];
         });
 
+        // Las dimensiones de una ficha se componen bajo demanda. El límite
+        // conserva una visita normal fluida sin permitir que se dispare el
+        // trabajo de todas las secciones en paralelo.
+        RateLimiter::for('ficha-perfil-seccion', function (Request $request) {
+            $visitorKey = $request->hasSession()
+                ? $request->session()->getId()
+                : $request->ip();
+
+            return [
+                Limit::perMinute(12)->by('ficha-perfil-seccion:'.$visitorKey),
+                Limit::perHour(360)->by('ficha-perfil-seccion:global'),
+            ];
+        });
+
         // La generación de PDF puede iniciar procesos de navegador; se limita
         // como un recurso compartido entre todos los PDF municipales.
         RateLimiter::for('ficha-pdf', function (Request $request) {

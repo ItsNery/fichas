@@ -51,7 +51,7 @@
                         <a href="{{ url()->previous() }}" class="btn btn-outline-secondary mb-2">
                             <i class="fas fa-arrow-left me-1"></i> Regresar
                         </a>
-                        <a href="{{ route('ficha-municipal.pdf', $municipio) }}" class="btn btn-danger mb-2" target="_blank">
+                        <a href="{{ route('municipios.perfil.pdf', $municipio) }}" class="btn btn-danger mb-2" target="_blank">
                             <i class="fas fa-file-pdf me-2"></i> Descargar PDF
                         </a>
                     </div>

@@ -29,7 +29,7 @@
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="{{ url('/') }}" class="text-white-50">Inicio</a></li>
-                            <li class="breadcrumb-item"><a href="{{ route('ficha-municipal.index') }}"
+                            <li class="breadcrumb-item"><a href="{{ route('municipios.index') }}"
                                     class="text-white-50">Directorio</a></li>
                             <li class="breadcrumb-item active text-white" aria-current="page">Comparar Municipios</li>
                         </ol>
@@ -37,12 +37,6 @@
                     <h1 class="display-4 fw-bold mb-2">Comparador Municipal</h1>
                     <p class="lead opacity-75">Análisis comparativo directo entre dos municipios</p>
                 </div>
-                {{-- <div class="col-md-4 text-md-end">
-                    <a href="{{ route('ficha-municipal.comparar.pdf', [$municipio1->slug, $municipio2->slug]) }}"
-                        class="badge bg-gold px-4 py-2 fw-bold text-uppercase shadow-sm">
-                        <i class="fa-solid fa-file-pdf me-2"></i> Exportar Reporte PDF
-                    </a>
-                </div> --}}
             </div>
 
             <div class="row g-4 align-items-stretch">
@@ -51,7 +45,7 @@
                     <div class="hero-comparar__card hero-comparar__card--left text-start p-4">
                         <span class="badge bg-gold mb-2 text-uppercase">Municipio 1</span>
                         <h2 class="display-5 fw-bold mb-1">
-                            <a href="{{ route('ficha-municipal.perfil', $municipio1->slug) }}"
+                            <a href="{{ route('municipios.show', $municipio1->slug) }}"
                                 class="text-white">{{ $municipio1->nombre }}</a>
                         </h2>
                         <p class="text-white-50 small mb-4">
@@ -90,7 +84,7 @@
                     <div class="hero-comparar__card hero-comparar__card--right text-start p-4">
                         <span class="badge bg-gold mb-2 text-uppercase">Municipio 2</span>
                         <h2 class="display-5 fw-bold mb-1">
-                            <a href="{{ route('ficha-municipal.perfil', $municipio2->slug) }}"
+                            <a href="{{ route('municipios.show', $municipio2->slug) }}"
                                 class="text-white">{{ $municipio2->nombre }}</a>
                         </h2>
                         <p class="text-white-50 small mb-4">
@@ -192,7 +186,7 @@
                     }
                 @endphp
                 <section id="section-{{ Str::slug($dimension['key']) }}" class="section-perfil mb-5 pb-5 comparison-section"
-                    data-section-url="{{ route('ficha-municipal.comparar.dimension', [$municipio1->slug, $municipio2->slug, $dimension['id']]) }}"
+                    data-section-url="{{ route('municipios.comparar.dimension', [$municipio1->slug, $municipio2->slug, $dimension['id']]) }}"
                     style="--dimension-accent: {{ $dimension['color'] }};">
                     <div class="dimension-header shadow-sm mb-4" style="background: {{ $dimension['color'] }};">
                         <h2 class="display-5 fw-bold mb-0 text-center" style="color: {{ $accentText }};">
@@ -517,7 +511,7 @@
 
 @section('jss')
     @php
-        $compararUrlTemplate = route('ficha-municipal.comparar', [
+        $compararUrlTemplate = route('municipios.comparar', [
             'slug1' => '__SLUG1__',
             'slug2' => '__SLUG2__',
         ]);
