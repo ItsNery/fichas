@@ -827,7 +827,8 @@
                     const selectedMuni = document.getElementById("modal-select-muni").value;
                     if (selectedMuni) {
                         window.location.href =
-                            `/ficha/municipio/comparar/{{ $municipio->slug }}/${selectedMuni}`;
+                            window.FichaConfig.compararUrlTemplate
+                                .replace('__SLUG__', encodeURIComponent(selectedMuni));
                     }
                 });
             }

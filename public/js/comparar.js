@@ -48,7 +48,12 @@ function initCockpitForm() {
             const muni1 = document.getElementById("select-muni1").value;
             const muni2 = document.getElementById("select-muni2").value;
             if (muni1 && muni2) {
-                window.location.href = `/ficha/municipio/comparar/${muni1}/${muni2}`;
+                const template = window.ComparadorConfig.compararUrlTemplate;
+                if (template) {
+                    window.location.href = template
+                        .replace("__SLUG1__", encodeURIComponent(muni1))
+                        .replace("__SLUG2__", encodeURIComponent(muni2));
+                }
             }
         });
     }

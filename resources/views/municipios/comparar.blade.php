@@ -461,6 +461,10 @@
                 slug: "{{ $municipio2->slug }}",
                 cvegeo: "{{ $municipio2->cvegeo }}"
             },
+            compararUrlTemplate: @json(route('ficha-municipal.comparar', [
+                'slug1' => '__SLUG1__',
+                'slug2' => '__SLUG2__',
+            ])),
             comparativaData: @json($comparativa)
         };
     </script>
