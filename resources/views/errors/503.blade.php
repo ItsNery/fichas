@@ -4,6 +4,7 @@
     $pageTitle = '503 - Servicio no disponible';
     $pageDescription = 'Estamos realizando labores de mantenimiento o mejoras en la plataforma. Volveremos a estar en línea muy pronto.';
     $currentUrl = url()->current();
+    $detailMessage = $message ?? (isset($exception) && filled($exception->getMessage()) ? $exception->getMessage() : null);
 @endphp
 
 @section('title', $pageTitle)
@@ -39,9 +40,9 @@
                     Estamos realizando tareas de mantenimiento y actualización en la plataforma.
                 </p>
 
-                @if (isset($exception) && filled($exception->getMessage()))
+                @if (filled($detailMessage))
                     <div class="alert alert-warning border-0 shadow-sm py-2 px-3 mb-3">
-                        <i class="fas fa-info-circle me-1"></i> {{ $exception->getMessage() }}
+                        <i class="fas fa-info-circle me-1"></i> {{ $detailMessage }}
                     </div>
                 @else
                     <p>

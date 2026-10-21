@@ -753,20 +753,33 @@ class FichaController extends Controller
                 $generator
             );
         } catch (LockTimeoutException) {
-            return response()->json([
-                'message' => 'El PDF se está generando. Intenta descargarlo nuevamente en unos segundos.',
-            ], 503, ['Retry-After' => 10]);
+            return $this->temporaryUnavailableResponse(
+                'El PDF se está generando. Intenta descargarlo nuevamente en unos segundos.',
+                10
+            );
         } catch (ProcessFailedException $exception) {
             report($exception);
 
-            return response()->json([
-                'message' => 'El servicio de PDF no está disponible temporalmente. Intenta nuevamente en unos segundos.',
-            ], 503, ['Retry-After' => 30]);
+            return $this->temporaryUnavailableResponse(
+                'El servicio de PDF no está disponible temporalmente. Intenta nuevamente en unos segundos.',
+                30
+            );
         }
 
         return response($pdf, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
+        ]);
+    }
+
+    private function temporaryUnavailableResponse(string $message, int $retryAfter)
+    {
+        if (request()->expectsJson()) {
+            return response()->json(['message' => $message], 503, ['Retry-After' => $retryAfter]);
+        }
+
+        return response()->view('errors.503', ['message' => $message], 503, [
+            'Retry-After' => $retryAfter,
         ]);
     }
 
@@ -1092,9 +1105,10 @@ class FichaController extends Controller
         } catch (LockTimeoutException) {
             $profile['outcome'] = 'lock_timeout';
 
-            return response()->json([
-                'message' => 'La comparativa se está preparando. Intenta nuevamente en unos segundos.',
-            ], 503, ['Retry-After' => 10]);
+            return $this->temporaryUnavailableResponse(
+                'La comparativa se está preparando. Intenta nuevamente en unos segundos.',
+                10
+            );
         } finally {
             if ($profiling) {
                 $profile['total_ms'] = round((microtime(true) - $requestStartedAt) * 1000, 1);

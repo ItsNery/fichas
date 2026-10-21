@@ -62,6 +62,15 @@ class RouteServiceProvider extends ServiceProvider
 
         // Las comparativas cargan datos de todos los municipios y son costosas.
         RateLimiter::for('ficha-comparativa', function (Request $request) {
+            // El perfilado se autoriza con un secreto de servidor enviado en
+            // encabezado; permite una medición puntual aun cuando el límite
+            // global esté lleno, sin exponer una ruta alternativa pública.
+            $profileToken = config('traffic.comparison_profile_token');
+            if (is_string($profileToken) && $profileToken !== ''
+                && hash_equals($profileToken, (string) $request->header('X-Comparison-Profile'))) {
+                return Limit::none();
+            }
+
             return [
                 Limit::perMinute(5)->by('ficha-comparativa:'.$request->ip()),
                 Limit::perHour(30)->by('ficha-comparativa:global'),
