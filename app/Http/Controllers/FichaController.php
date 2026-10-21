@@ -27,6 +27,7 @@ use App\Services\FichaComposerService;
 use App\Services\CachedPdfService;
 use App\Services\ComparisonPageCacheService;
 use Illuminate\Contracts\Cache\LockTimeoutException;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 
 /**
  * Clase FichaController
@@ -365,7 +366,12 @@ class FichaController extends Controller
         ])->render();
 
         $fileName = 'perfil-' . str($municipio->nombre)->slug() . '.pdf';
-        return $this->downloadCachedPdf('perfil/'.$municipio->getKey(), $html, $fileName);
+        return $this->downloadCachedPdf(
+            'perfil/'.$municipio->getKey(),
+            $html,
+            $fileName,
+            fn () => app(ExportV3Service::class)->renderPerfilPDF($html)
+        );
     }
 
 
@@ -730,22 +736,29 @@ class FichaController extends Controller
         return $this->downloadCachedPdf(
             'panorama/'.$municipio->getKey(),
             $html,
-            'panorama-'.str($municipio->nombre)->slug().'.pdf'
+            'panorama-'.str($municipio->nombre)->slug().'.pdf',
+            fn () => app(ExportV3Service::class)->renderPanoramaPDF($html)
         );
     }
 
-    private function downloadCachedPdf(string $cacheKey, string $html, string $fileName)
+    private function downloadCachedPdf(string $cacheKey, string $html, string $fileName, \Closure $generator)
     {
         try {
             $pdf = app(CachedPdfService::class)->remember(
                 $cacheKey,
                 $html,
-                fn () => app(ExportV3Service::class)->renderPanoramaPDF($html)
+                $generator
             );
         } catch (LockTimeoutException) {
             return response()->json([
                 'message' => 'El PDF se está generando. Intenta descargarlo nuevamente en unos segundos.',
             ], 503, ['Retry-After' => 10]);
+        } catch (ProcessFailedException $exception) {
+            report($exception);
+
+            return response()->json([
+                'message' => 'El servicio de PDF no está disponible temporalmente. Intenta nuevamente en unos segundos.',
+            ], 503, ['Retry-After' => 30]);
         }
 
         return response($pdf, 200, [

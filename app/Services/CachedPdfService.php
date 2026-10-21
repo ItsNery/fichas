@@ -12,6 +12,7 @@ class CachedPdfService
     private const VERSION = 'v1';
     private const LOCK_SECONDS = 660;
     private const LOCK_WAIT_SECONDS = 5;
+    private const RENDERER_LOCK = 'fichas-pdf:renderer';
 
     /**
      * Reutiliza el PDF si el HTML que lo origina no ha cambiado.
@@ -34,7 +35,10 @@ class CachedPdfService
                 return $pdf;
             }
 
-            $pdf = $generator();
+            // Chromium consume bastante memoria. PDFs de municipios distintos
+            // comparten este candado para evitar varios navegadores simultáneos.
+            $rendererLock = Cache::lock(self::RENDERER_LOCK, self::LOCK_SECONDS);
+            $pdf = $rendererLock->block(0, $generator);
             $storage = Storage::disk('local');
             $storage->put($paths['pdf'], $pdf);
             $storage->put($paths['fingerprint'], $fingerprint);

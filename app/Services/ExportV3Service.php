@@ -8,6 +8,22 @@ class ExportV3Service
 {
     public function captureHtml(string $html, string $fileName, bool $waitForPdfReady = false, array $extraWaitFunctions = [])
     {
+        $pdf = $this->renderHtmlPdf($html, $waitForPdfReady, $extraWaitFunctions);
+
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf;
+        }, $fileName, [
+            'Content-Type' => 'application/pdf',
+        ]);
+    }
+
+    public function renderPerfilPDF(string $html): string
+    {
+        return $this->renderHtmlPdf($html, true);
+    }
+
+    private function renderHtmlPdf(string $html, bool $waitForPdfReady = false, array $extraWaitFunctions = []): string
+    {
         $shot = Browsershot::html($html)
             ->format('A4')
             ->margins(12, 10, 12, 10)
@@ -19,7 +35,12 @@ class ExportV3Service
                 'height'            => 1754,
                 'deviceScaleFactor' => 2,
             ])
-            ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox', '--font-render-hinting=none']);
+            ->setOption('args', [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--font-render-hinting=none',
+            ]);
 
         if ($waitForPdfReady) {
             $shot->waitForFunction('window.__pdfReady', null, 110000);
@@ -29,13 +50,7 @@ class ExportV3Service
             $shot->waitForFunction($fn);
         }
 
-        $pdf = $shot->pdf();
-
-        return response()->streamDownload(function () use ($pdf) {
-            echo $pdf;
-        }, $fileName, [
-            'Content-Type' => 'application/pdf',
-        ]);
+        return $shot->pdf();
     }
 
     public function exportResumenV3PDF(string $html, string $fileName = 'resumen-municipal.pdf')
@@ -71,7 +86,12 @@ class ExportV3Service
                 'height' => 1240,
                 'deviceScaleFactor' => 1,
             ])
-            ->setOption('args', ['--no-sandbox', '--disable-setuid-sandbox', '--font-render-hinting=none'])
+            ->setOption('args', [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--font-render-hinting=none',
+            ])
             ->waitForFunction('window.__pdfReady', null, 110000)
             ->pdf();
     }
