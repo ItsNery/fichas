@@ -55,10 +55,11 @@ jobs:
           rm -f fichas_municipales.rar
           test -f public/img/fondos/Fondo-hero.webp
           mkdir -p storage/framework/views
-          mkdir -p storage/framework/cache
+          mkdir -p storage/framework/cache/data
           mkdir -p storage/framework/sessions
           sudo chown -R user_planeacion:www-data storage bootstrap/cache
-          sudo chmod -R 775 storage bootstrap/cache
+          sudo find storage bootstrap/cache -type d -exec chmod 2775 {} +
+          sudo find storage bootstrap/cache -type f -exec chmod 0664 {} +
 
           npm ci
           npm run build
@@ -125,9 +126,12 @@ jobs:
           done
           rm -f fichas_municipales.rar
           test -f public/img/fondos/Fondo-hero.webp
+          mkdir -p storage/framework/views
+          mkdir -p storage/framework/cache/data
+          mkdir -p storage/framework/sessions
           sudo chown -R user_planeacion:www-data storage bootstrap/cache
-          sudo chmod -R 775 storage bootstrap/cache
-          sudo chmod -R g+s storage bootstrap/cache
+          sudo find storage bootstrap/cache -type d -exec chmod 2775 {} +
+          sudo find storage bootstrap/cache -type f -exec chmod 0664 {} +
           npm ci
           npm run build
 
