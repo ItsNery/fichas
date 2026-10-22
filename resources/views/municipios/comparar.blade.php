@@ -37,6 +37,12 @@
                     <h1 class="display-4 fw-bold mb-2">Comparador Municipal</h1>
                     <p class="lead opacity-75">Análisis comparativo directo entre dos municipios</p>
                 </div>
+                <div class="col-md-4 text-md-end">
+                    <a href="{{ route('municipios.comparar.pdf', [$municipio1->slug, $municipio2->slug]) }}"
+                        class="btn btn-outline-light btn-sm fw-bold px-3 py-2 rounded-pill" target="_blank">
+                        <i class="fa-solid fa-file-pdf me-2" aria-hidden="true"></i>Exportar PDF
+                    </a>
+                </div>
             </div>
 
             <div class="row g-4 align-items-stretch">

@@ -204,22 +204,30 @@ body {
 
     .login-form .password-field input {
         margin-bottom: 0;
-        padding-right: 5.75rem;
+        padding-right: 3.5rem;
     }
 
     .login-form .password-toggle {
         position: absolute;
         top: 50%;
         right: 0.5rem;
-        width: auto;
-        padding: 0.25rem 0.5rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        padding: 0;
         transform: translateY(-50%);
         border: 0;
         border-radius: 0.25rem;
         background: transparent;
         color: #4a4a4a;
-        font-size: 0.875rem;
-        font-weight: 600;
+    }
+
+    .login-form .password-toggle svg {
+        width: 1.15rem;
+        height: 1.15rem;
+        stroke-width: 2;
     }
 
     .login-form .password-toggle:hover,

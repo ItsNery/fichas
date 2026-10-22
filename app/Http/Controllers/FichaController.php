@@ -26,6 +26,7 @@ use App\Services\RankingService;
 use App\Services\FichaComposerService;
 use App\Services\CachedPdfService;
 use App\Services\ComparisonPageCacheService;
+use App\Services\ComparisonPdfDataService;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Facades\DB;
@@ -655,6 +656,10 @@ class FichaController extends Controller
 
         return view('municipios.perfil', array_merge($hero, [
             'municipio' => $municipio,
+            'municipiosParaComparar' => Municipio::query()
+                ->where('id', '!=', $municipio->getKey())
+                ->orderBy('nombre')
+                ->get(['id', 'nombre', 'slug']),
             'perfil' => [],
             'dimensions' => $dimensiones,
             'dimensionColors' => $dimensiones->pluck('color', 'key')->all(),
@@ -679,6 +684,7 @@ class FichaController extends Controller
         return response()->json([
             'html' => view('municipios.perfil', array_merge($hero, [
                 'municipio' => $municipio,
+                'municipiosParaComparar' => collect(),
                 'perfil' => $perfil,
                 'dimensions' => collect(),
                 'dimensionColors' => $this->dimensionesPerfil($configuraciones)->pluck('color', 'key')->all(),
@@ -1359,25 +1365,14 @@ class FichaController extends Controller
      */
     public function exportarComparativaPDF($slug1, $slug2)
     {
-        $data = app(RankingService::class)->cargarComparativa($slug1, $slug2);
+        $data = app(ComparisonPdfDataService::class)->build($slug1, $slug2);
+        $html = view('municipios.comparar_pdf_lite', $data)->render();
 
-        foreach ($data['configuraciones'] as $config) {
-            $datos1 = app(FichaComposerService::class)->obtenerDatosParaConfig($config, $data['municipio1'], $data['dataStore1']);
-            $datos2 = app(FichaComposerService::class)->obtenerDatosParaConfig($config, $data['municipio2'], $data['dataStore2']);
-
-            $dimensionKey = $this->dimensionKey($config);
-            $data['comparativa'][$dimensionKey][] = [
-                'config' => $config,
-                'datos1' => $datos1,
-                'datos2' => $datos2,
-            ];
-        }
-
-        return app(ExportService::class)->exportComparativaPDF(
-            $data['municipio1'], $data['municipio2'],
-            $data['hero1'], $data['hero2'],
-            $data['configuraciones'],
-            $data['comparativa']
+        return $this->downloadCachedPdf(
+            'comparativa/'.$data['municipio1']->getKey().'-'.$data['municipio2']->getKey(),
+            $html,
+            'comparativa-'.str($data['municipio1']->nombre)->slug().'-vs-'.str($data['municipio2']->nombre)->slug().'.pdf',
+            fn () => app(ExportV3Service::class)->renderComparativaPDF($html)
         );
     }
 

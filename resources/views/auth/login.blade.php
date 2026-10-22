@@ -63,23 +63,27 @@
         if (password) {
             const field = password.closest('.mb-3');
             const toggle = document.createElement('button');
+            const eyeIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+            const eyeOffIcon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><path d="m3 3 18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 4.2A10.9 10.9 0 0 1 12 4c6.5 0 10 8 10 8a18.5 18.5 0 0 1-3 4.2M6.6 6.6C3.7 8.5 2 12 2 12s3.5 7 10 7c1.2 0 2.3-.2 3.3-.6"/></svg>`;
 
             field.classList.add('password-field');
             password.id = 'password';
             toggle.type = 'button';
             toggle.className = 'password-toggle';
             toggle.setAttribute('aria-controls', 'password');
-            toggle.setAttribute('aria-label', 'Mostrar contraseña');
-            toggle.setAttribute('aria-pressed', 'false');
-            toggle.textContent = 'Mostrar';
+
+            const setPasswordVisibility = (isVisible) => {
+                password.type = isVisible ? 'text' : 'password';
+                toggle.innerHTML = isVisible ? eyeOffIcon : eyeIcon;
+                toggle.setAttribute('aria-label', isVisible ? 'Ocultar contraseña' : 'Mostrar contraseña');
+                toggle.setAttribute('title', isVisible ? 'Ocultar contraseña' : 'Mostrar contraseña');
+                toggle.setAttribute('aria-pressed', String(isVisible));
+            };
+
+            setPasswordVisibility(false);
 
             toggle.addEventListener('click', function() {
-                const isHidden = password.type === 'password';
-
-                password.type = isHidden ? 'text' : 'password';
-                this.textContent = isHidden ? 'Ocultar' : 'Mostrar';
-                this.setAttribute('aria-label', isHidden ? 'Ocultar contraseña' : 'Mostrar contraseña');
-                this.setAttribute('aria-pressed', String(isHidden));
+                setPasswordVisibility(password.type === 'password');
             });
 
             password.insertAdjacentElement('afterend', toggle);

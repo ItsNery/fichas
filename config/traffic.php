@@ -9,11 +9,11 @@ return [
     'comparison_profile_token' => env('COMPARISON_PROFILE_TOKEN'),
 
     'routes' => [
-        'ficha-municipal.comparar',
-        'ficha-municipal.comparar.pdf',
-        'ficha-municipal.v3.pdf',
-        'ficha-municipal.perfil.pdf',
-        'ficha-municipal.panorama.pdf',
-        'ficha-municipal.pdf',
+        'municipios.comparar',
+        'municipios.comparar.dimension',
+        'municipios.comparar.pdf',
+        'municipios.dimension',
+        'municipios.perfil.pdf',
+        'municipios.panorama.pdf',
     ],
 ];

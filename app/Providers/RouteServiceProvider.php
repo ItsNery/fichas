@@ -73,7 +73,7 @@ class RouteServiceProvider extends ServiceProvider
 
             return [
                 Limit::perMinute(5)->by('ficha-comparativa:'.$request->ip()),
-                Limit::perHour(30)->by('ficha-comparativa:global'),
+                Limit::perHour(60)->by('ficha-comparativa:global'),
             ];
         });
 
@@ -89,7 +89,7 @@ class RouteServiceProvider extends ServiceProvider
 
             return [
                 Limit::perMinute(12)->by('ficha-comparativa-seccion:'.$request->ip()),
-                Limit::perHour(30)->by('ficha-comparativa:global'),
+                Limit::perHour(60)->by('ficha-comparativa:global'),
             ];
         });
 

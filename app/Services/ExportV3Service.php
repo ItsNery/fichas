@@ -95,4 +95,27 @@ class ExportV3Service
             ->waitForFunction('window.__pdfReady', null, 110000)
             ->pdf();
     }
+
+    public function renderComparativaPDF(string $html): string
+    {
+        return Browsershot::html($html)
+            ->format('A4')
+            ->landscape()
+            ->margins(8, 8, 8, 8)
+            ->timeout(120)
+            ->showBackground()
+            ->protocolTimeout(120)
+            ->setOption('viewport', [
+                'width' => 1600,
+                'height' => 1100,
+                'deviceScaleFactor' => 1,
+            ])
+            ->setOption('args', [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--font-render-hinting=none',
+            ])
+            ->pdf();
+    }
 }

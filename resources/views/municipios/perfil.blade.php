@@ -3,6 +3,7 @@
 @section('title', 'Ficha del municipio de ' . $municipio->nombre)
 
 @section('css')
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
 @endsection
 
 @section('content')
@@ -781,7 +782,7 @@
                                 comparar</label>
                             <select id="modal-select-muni" class="form-select select-muni" required>
                                 <option value="">Buscar municipio...</option>
-                                @foreach (\App\Models\Municipio::where('id', '!=', $municipio->id)->orderBy('nombre', 'asc')->get() as $m)
+                                @foreach ($municipiosParaComparar as $m)
                                     <option value="{{ $m->slug }}">{{ $m->nombre }}</option>
                                 @endforeach
                             </select>
@@ -800,6 +801,7 @@
 
 @section('jss')
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
     <script src="{{ asset('js/mapa-inset.js') }}?v={{ time() }}"></script>
     @php
         $similitudUrl = route('municipios.api.indicador.similitud', [
@@ -834,6 +836,23 @@
     <script src="{{ asset('js/perfil.js') }}?v={{ time() }}"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            const compareSelect = document.getElementById("modal-select-muni");
+            const compareModal = document.getElementById("compararModal");
+            let compareTomSelect;
+
+            if (compareSelect && typeof TomSelect !== 'undefined') {
+                compareTomSelect = new TomSelect(compareSelect, {
+                    create: false,
+                    maxOptions: null,
+                    placeholder: 'Buscar municipio...',
+                    allowEmptyOption: true,
+                });
+
+                compareModal?.addEventListener('shown.bs.modal', function() {
+                    compareTomSelect.focus();
+                });
+            }
+
             const pdfLink = document.querySelector('[data-pdf-link]');
 
             if (pdfLink) {

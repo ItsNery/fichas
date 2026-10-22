@@ -53,6 +53,9 @@ Route::prefix('municipios')->name('municipios.')->group(function () {
     Route::get('/comparar/{slug1}/con/{slug2}/dimension/{dimension}', [FichaController::class, 'compararDimension'])
         ->middleware('throttle:ficha-comparativa-seccion')
         ->name('comparar.dimension');
+    Route::get('/comparar/{slug1}/con/{slug2}/pdf', [FichaController::class, 'exportarComparativaPDF'])
+        ->middleware('throttle:ficha-pdf')
+        ->name('comparar.pdf');
     Route::get('/api/similitud-indicador/{municipio}/{config}', [FichaController::class, 'getSimilitudIndicador'])->name('api.indicador.similitud');
     Route::get('/api/grafico-datos/{municipio:slug}/{config}/{anio}', [FichaController::class, 'getGraficoDatosApi'])->name('api.grafico.data');
     Route::get('/{municipio:slug}/dimension/{dimension}', [FichaController::class, 'perfilDimension'])
