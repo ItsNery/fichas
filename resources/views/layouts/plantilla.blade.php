@@ -211,20 +211,6 @@
             const scrollTopBtn = document.getElementById('scrollTopBtn');
             const loaderSection = document.querySelector('.loader-section');
 
-            // Hide loader when page is loaded
-            window.addEventListener('load', function() {
-                if (loaderSection) {
-                    loaderSection.style.display = 'none';
-                }
-            });
-
-            // Fallback to hide loader after 3 seconds
-            setTimeout(() => {
-                if (loaderSection && loaderSection.style.display !== 'none') {
-                    loaderSection.style.display = 'none';
-                }
-            }, 3000);
-
             // Scroll to top functionality
             if (scrollTopBtn) {
                 window.addEventListener('scroll', function() {

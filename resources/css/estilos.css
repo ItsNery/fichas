@@ -180,11 +180,24 @@ p {
     z-index: 9999;
     transition: all 1s 1s ease-out;
     opacity: 1;
+    /* Última barrera: un loader nunca debe bloquear una página indefinidamente. */
+    animation: loader-failsafe 0s linear 6s forwards;
 }
 
-.loaded {
+.loader-section.loaded {
     opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
     z-index: -1;
+}
+
+@keyframes loader-failsafe {
+    to {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        z-index: -1;
+    }
 }
 
 .loader {
