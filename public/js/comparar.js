@@ -6,7 +6,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     if (!window.ComparadorConfig) return;
 
-    window.SeiTraffic?.event("municipal_comparison_opened", {
+    window.SeiTraffic?.event?.("municipal_comparison_opened", {
         municipality_1: window.ComparadorConfig.municipio1.slug,
         municipality_2: window.ComparadorConfig.municipio2.slug,
     });
@@ -348,7 +348,7 @@ function escapeHtml(value) {
 
 function sectionErrorMessage(error) {
     if (error.status === 429) {
-        window.SeiTraffic?.event("municipal_comparison_rate_limited", { scope: "section" });
+        window.SeiTraffic?.event?.("municipal_comparison_rate_limited", { scope: "section" });
         return "Hay varias consultas en curso. Espera un momento y vuelve a intentarlo.";
     }
 
