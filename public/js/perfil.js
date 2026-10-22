@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", function () {
             initProfileMasonry();
             setupProgressiveProfileSections();
             setupScrollSpy();
+            initTooltips();
             initPopovers();
         });
     };
@@ -273,6 +274,7 @@ function loadNextProfileSection() {
             loader.setAttribute("aria-busy", "false");
             setupLazyCharts(loader);
             initProfileMasonry(loader);
+            initTooltips(loader);
             initPopovers(loader);
             setupStateRankings(loader);
         })
@@ -316,6 +318,14 @@ function escapeProfileHtml(value) {
     const element = document.createElement("div");
     element.textContent = value || "No fue posible cargar esta dimensión.";
     return element.innerHTML;
+}
+
+function initTooltips(root = document) {
+    if (!window.bootstrap?.Tooltip) return;
+
+    root.querySelectorAll('[data-bs-toggle="tooltip"]').forEach((trigger) => {
+        bootstrap.Tooltip.getOrCreateInstance(trigger);
+    });
 }
 
 function profileSectionErrorMessage(error) {

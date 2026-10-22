@@ -18,7 +18,9 @@ class TrafficRequestEvent extends Model
         'status',
         'duration_ms',
         'client_ip',
+        'session_hash',
         'user_agent_hash',
+        'referer_hash',
         'user_id',
     ];
 
@@ -37,5 +39,10 @@ class TrafficRequestEvent extends Model
         }
 
         return 'No disponible';
+    }
+
+    public function shortFingerprint(?string $fingerprint): string
+    {
+        return $fingerprint ? substr($fingerprint, 0, 10) : 'No disponible';
     }
 }

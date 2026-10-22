@@ -72,13 +72,18 @@
     <div class="card-panel mt-4"><div class="card-body p-4">
         <h5 class="mb-3">Eventos recientes</h5>
         <div class="table-responsive"><table class="table table-custom align-middle">
-            <thead><tr><th>Fecha</th><th>Ruta</th><th>Estado</th><th>Duración</th><th>IP</th></tr></thead>
+            <thead><tr><th>Fecha</th><th>Ruta</th><th>Estado</th><th>Duración</th><th>IP</th><th>Huella de visita</th></tr></thead>
             <tbody>@forelse($recentEvents as $event)<tr>
                 <td>{{ $event->occurred_at->format('d/m/Y H:i:s') }}</td><td><code>{{ $event->route_name }}</code></td>
                 <td><span class="badge {{ $event->status === 429 ? 'bg-warning text-dark' : ($event->status >= 500 ? 'bg-danger' : 'bg-success') }}">{{ $event->status }}</span></td>
                 <td>{{ number_format($event->duration_ms) }} ms</td>
                 <td>@can('trafico.ip.ver')<code>{{ $event->client_ip }}</code>@else<code>{{ $event->maskedIp() }}</code>@endcan</td>
-            </tr>@empty<tr><td colspan="5" class="text-muted text-center py-4">Aún no hay eventos registrados.</td></tr>@endforelse</tbody>
+                <td class="small text-nowrap">
+                    <div><span class="text-muted">Sesión:</span> <code>{{ $event->shortFingerprint($event->session_hash) }}</code></div>
+                    <div><span class="text-muted">Navegador:</span> <code>{{ $event->shortFingerprint($event->user_agent_hash) }}</code></div>
+                    <div><span class="text-muted">Origen:</span> <code>{{ $event->shortFingerprint($event->referer_hash) }}</code></div>
+                </td>
+            </tr>@empty<tr><td colspan="6" class="text-muted text-center py-4">Aún no hay eventos registrados.</td></tr>@endforelse</tbody>
         </table></div>
         <div class="mt-3">{{ $recentEvents->links() }}</div>
     </div></div>

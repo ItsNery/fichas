@@ -34,8 +34,21 @@ class RecordCostlyTraffic
             'status' => $response->getStatusCode(),
             'duration_ms' => $durationMs,
             'client_ip' => $request->ip(),
-            'user_agent_hash' => hash('sha256', (string) $request->userAgent()),
+            'session_hash' => $this->fingerprint($request->hasSession() ? $request->session()->getId() : null),
+            'user_agent_hash' => $this->fingerprint($request->userAgent()),
+            'referer_hash' => $this->fingerprint($request->headers->get('referer')),
             'user_id' => optional($request->user())->getAuthIdentifier(),
         ]);
+    }
+
+    private function fingerprint(?string $value): ?string
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        return hash_hmac('sha256', $value, (string) config('app.key'));
     }
 }
