@@ -4,23 +4,6 @@
 // El loader no debe depender de que terminen de descargar recursos externos.
 // Si algo falla (por ejemplo, durante una página 429), el contenido debe
 // seguir siendo accesible.
-function dismissGlobalLoader() {
-    const loaderSection = document.querySelector(".loader-section");
-
-    if (!loaderSection) return;
-
-    loaderSection.classList.add("loaded");
-    loaderSection.setAttribute("aria-hidden", "true");
-}
-
-if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", dismissGlobalLoader, { once: true });
-} else {
-    dismissGlobalLoader();
-}
-
-window.addEventListener("load", dismissGlobalLoader, { once: true });
-
 document.addEventListener("DOMContentLoaded", function () {
     
     // =========================================================

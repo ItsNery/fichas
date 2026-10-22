@@ -121,11 +121,6 @@
 </head>
 
 <body>
-    <!-- Loader -->
-    <div class="loader-section" role="status" aria-label="Cargando">
-        <span class="loader"></span>
-    </div>
-
     <!-- Navigation -->
     @auth
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm" aria-label="Navegación principal">
@@ -209,7 +204,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const scrollTopBtn = document.getElementById('scrollTopBtn');
-            const loaderSection = document.querySelector('.loader-section');
 
             // Scroll to top functionality
             if (scrollTopBtn) {

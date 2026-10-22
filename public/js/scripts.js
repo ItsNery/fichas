@@ -1,13 +1,6 @@
 // =========================================================
 // 1. LOADER (Igual que tu original)
 // =========================================================
-window.onload = function () {
-    let loaderSection = document.querySelector(".loader-section");
-    if (loaderSection) {
-        loaderSection.classList.add("loaded");
-    }
-};
-
 document.addEventListener("DOMContentLoaded", function () {
     
     // =========================================================
