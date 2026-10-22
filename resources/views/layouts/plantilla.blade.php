@@ -111,6 +111,12 @@
 
         gtag('config', 'G-VVG6J4JHT5');
     </script>
+    <script>
+        window.TrafficVisitorConfig = {
+            cookieName: @json(config('traffic.visitor_cookie')),
+        };
+    </script>
+    <script src="{{ asset('js/traffic-visitor.js') }}"></script>
 
 </head>
 

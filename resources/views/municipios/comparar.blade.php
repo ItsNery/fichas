@@ -39,7 +39,8 @@
                 </div>
                 <div class="col-md-4 text-md-end">
                     <a href="{{ route('municipios.comparar.pdf', [$municipio1->slug, $municipio2->slug]) }}"
-                        class="btn btn-outline-light btn-sm fw-bold px-3 py-2 rounded-pill" target="_blank">
+                        class="btn btn-outline-light btn-sm fw-bold px-3 py-2 rounded-pill" target="_blank"
+                        data-traffic-event="municipal_comparison_pdf_requested">
                         <i class="fa-solid fa-file-pdf me-2" aria-hidden="true"></i>Exportar PDF
                     </a>
                 </div>

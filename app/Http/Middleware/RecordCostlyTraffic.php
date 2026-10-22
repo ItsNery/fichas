@@ -34,6 +34,7 @@ class RecordCostlyTraffic
             'status' => $response->getStatusCode(),
             'duration_ms' => $durationMs,
             'client_ip' => $request->ip(),
+            'visitor_hash' => $this->fingerprint($request->cookie((string) config('traffic.visitor_cookie'))),
             'session_hash' => $this->fingerprint($request->hasSession() ? $request->session()->getId() : null),
             'user_agent_hash' => $this->fingerprint($request->userAgent()),
             'referer_hash' => $this->fingerprint($request->headers->get('referer')),

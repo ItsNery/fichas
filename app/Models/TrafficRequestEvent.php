@@ -18,6 +18,7 @@ class TrafficRequestEvent extends Model
         'status',
         'duration_ms',
         'client_ip',
+        'visitor_hash',
         'session_hash',
         'user_agent_hash',
         'referer_hash',

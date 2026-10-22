@@ -6,6 +6,11 @@
 document.addEventListener("DOMContentLoaded", function () {
     if (!window.ComparadorConfig) return;
 
+    window.SeiTraffic?.event("municipal_comparison_opened", {
+        municipality_1: window.ComparadorConfig.municipio1.slug,
+        municipality_2: window.ComparadorConfig.municipio2.slug,
+    });
+
     // El selector no depende del mapa: debe estar disponible de inmediato.
     initCockpitForm();
 
@@ -343,6 +348,7 @@ function escapeHtml(value) {
 
 function sectionErrorMessage(error) {
     if (error.status === 429) {
+        window.SeiTraffic?.event("municipal_comparison_rate_limited", { scope: "section" });
         return "Hay varias consultas en curso. Espera un momento y vuelve a intentarlo.";
     }
 

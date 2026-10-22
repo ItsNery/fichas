@@ -79,6 +79,7 @@
                 <td>{{ number_format($event->duration_ms) }} ms</td>
                 <td>@can('trafico.ip.ver')<code>{{ $event->client_ip }}</code>@else<code>{{ $event->maskedIp() }}</code>@endcan</td>
                 <td class="small text-nowrap">
+                    <div><span class="text-muted">Visitante:</span> <code>{{ $event->shortFingerprint($event->visitor_hash) }}</code></div>
                     <div><span class="text-muted">Sesión:</span> <code>{{ $event->shortFingerprint($event->session_hash) }}</code></div>
                     <div><span class="text-muted">Navegador:</span> <code>{{ $event->shortFingerprint($event->user_agent_hash) }}</code></div>
                     <div><span class="text-muted">Origen:</span> <code>{{ $event->shortFingerprint($event->referer_hash) }}</code></div>
