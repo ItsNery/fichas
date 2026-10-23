@@ -58,7 +58,7 @@ Route::prefix('municipios')->name('municipios.')->group(function () {
         ->middleware(['turnstile', 'throttle:ficha-comparativa'])
         ->name('comparar');
     Route::get('/comparar/{slug1}/con/{slug2}/dimension/{dimension}', [FichaController::class, 'compararDimension'])
-        ->middleware('throttle:ficha-comparativa-seccion')
+        ->middleware(['turnstile', 'throttle:ficha-comparativa-seccion'])
         ->name('comparar.dimension');
     Route::get('/comparar/{slug1}/con/{slug2}/pdf', [FichaController::class, 'exportarComparativaPDF'])
         ->middleware(['turnstile', 'throttle:ficha-pdf'])

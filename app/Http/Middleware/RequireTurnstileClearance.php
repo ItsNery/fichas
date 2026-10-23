@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Response;
 
 class RequireTurnstileClearance
@@ -20,12 +21,22 @@ class RequireTurnstileClearance
         }
 
         return redirect()->route('turnstile.challenge', [
-            'redirect' => $request->fullUrl(),
+            'redirect' => $request->getRequestUri(),
         ]);
     }
 
-    public static function cookie()
+    public static function cookie(Request $request): Cookie
     {
-        return cookie(self::COOKIE, (string) (time() + self::MINUTES * 60), self::MINUTES);
+        return cookie(
+            self::COOKIE,
+            (string) (time() + self::MINUTES * 60),
+            self::MINUTES,
+            '/',
+            null,
+            (bool) (config('session.secure') || $request->isSecure()),
+            true,
+            false,
+            'lax',
+        );
     }
 }
