@@ -22,7 +22,7 @@ class TurnstileController extends Controller
         ]);
     }
 
-    public function verify(Request $request): RedirectResponse
+    public function verify(Request $request): Response|RedirectResponse
     {
         $datos = $request->validate([
             'cf-turnstile-response' => ['required', 'string'],
@@ -52,9 +52,16 @@ class TurnstileController extends Controller
             'user_agent_hash' => $this->fingerprint($request->userAgent()),
         ]);
 
-        return redirect()
-            ->to($this->safeRedirectValue($datos['redirect'] ?? null))
-            ->withCookie(RequireTurnstileClearance::cookie($request));
+        $redirect = $this->safeRedirectValue($datos['redirect'] ?? null);
+        $cookie = RequireTurnstileClearance::cookie($request);
+
+        if ($this->isPdfDownload($redirect)) {
+            return response()
+                ->view('turnstile.download', ['downloadUrl' => $redirect])
+                ->withCookie($cookie);
+        }
+
+        return redirect()->to($redirect)->withCookie($cookie);
     }
 
     private function safeRedirect(Request $request): string
@@ -100,5 +107,10 @@ class TurnstileController extends Controller
         $value = trim((string) $value);
 
         return $value === '' ? null : hash_hmac('sha256', $value, (string) config('app.key'));
+    }
+
+    private function isPdfDownload(string $url): bool
+    {
+        return str_ends_with(strtolower((string) parse_url($url, PHP_URL_PATH)), '.pdf');
     }
 }

@@ -1,100 +1,62 @@
-<!DOCTYPE html>
-<html lang="es">
+@extends('layouts.plantilla')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
-    <title>Verificación de seguridad</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-        }
+@section('title', 'Verificación de seguridad')
+@section('robots', 'noindex, nofollow')
 
-        .caja {
-            background: #fff;
-            border-top: 5px solid #861e34;
-            border-radius: 8px;
-            padding: 2.5rem;
-            max-width: 420px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 4px 18px rgba(0, 0, 0, .08);
-        }
+@section('content')
+    <section class="turnstile turnstile--challenge" aria-labelledby="titulo-verificacion">
+        <div class="container">
+            <div class="turnstile__panel">
+                <svg class="turnstile__mark" viewBox="0 0 48 48" fill="none" aria-hidden="true" focusable="false">
+                    <path d="M24 4 39 10v11c0 10.2-6.4 18.8-15 23-8.6-4.2-15-12.8-15-23V10L24 4Z" stroke="currentColor" stroke-width="2.5"/>
+                    <path d="m17 24 4.5 4.5L31 19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <h1 class="turnstile__title" id="titulo-verificacion">Verificación de seguridad</h1>
+                <p class="turnstile__lead">Completa esta verificación para continuar con tu consulta. Ayuda a mantener disponibles las consultas y descargas del portal.</p>
 
-        .caja h1 {
-            font-size: 1.3rem;
-            color: #246257;
-            margin-top: 0;
-        }
+                <form class="turnstile__form" method="POST" action="{{ route('turnstile.verify') }}" id="form-challenge">
+                    @csrf
+                    <input type="hidden" name="redirect" value="{{ $redirect }}">
+                    <div class="turnstile__challenge-frame">
+                        <div class="cf-turnstile" data-sitekey="{{ $siteKey }}" data-callback="liberarBoton" data-error-callback="falloCaptcha" data-theme="light"></div>
+                    </div>
+                    @error('cf-turnstile-response')
+                        <p class="turnstile__error" id="error-token" role="alert">{{ $message }}</p>
+                    @enderror
+                    <p class="turnstile__error" id="error-captcha" role="alert" hidden></p>
+                    <p class="turnstile__status" id="estado-verificacion" aria-live="polite">Completa la verificación para habilitar la continuación.</p>
+                    <button class="turnstile__button" type="submit" id="btn-enviar" disabled>Continuar</button>
+                </form>
+            </div>
+        </div>
+    </section>
+@endsection
 
-        .caja p {
-            color: #555;
-            font-size: .95rem;
-        }
-
-        .error {
-            color: #861e34;
-            font-size: .9rem;
-            margin-top: .75rem;
-        }
-
-        button {
-            margin-top: 1rem;
-            background: #861e34;
-            color: #fff;
-            border: 0;
-            border-radius: 6px;
-            padding: .7rem 1.6rem;
-            font-size: 1rem;
-            cursor: pointer;
-        }
-
-        button:disabled {
-            opacity: .5;
-            cursor: wait;
-        }
-    </style>
-</head>
-
-<body>
-    <div class="caja">
-        <h1>Verificación de seguridad</h1>
-        <p>Completa esta verificación para continuar. Nos ayuda a proteger el portal contra
-            consultas automatizadas.</p>
-
-        <form method="POST" action="{{ route('turnstile.verify') }}" id="form-challenge">
-            @csrf
-            <input type="hidden" name="redirect" value="{{ $redirect }}">
-            <div class="cf-turnstile" data-sitekey="{{ $siteKey }}" data-callback="liberarBoton"
-                data-error-callback="falloCaptcha" data-theme="light"></div>
-            @error('cf-turnstile-response')
-                <p class="error" id="error-token">{{ $message }}</p>
-            @enderror
-            <p class="error" id="error-captcha" hidden></p>
-            <button type="submit" id="btn-enviar" disabled>Continuar</button>
-        </form>
-    </div>
-
+@push('scripts')
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <script>
+        const form = document.getElementById('form-challenge');
+        const button = document.getElementById('btn-enviar');
+        const status = document.getElementById('estado-verificacion');
+        const error = document.getElementById('error-captcha');
+
         function liberarBoton() {
-            document.getElementById('btn-enviar').disabled = false;
-            document.getElementById('error-captcha').hidden = true;
+            button.disabled = false;
+            status.textContent = 'Verificación completada. Ya puedes continuar.';
+            error.hidden = true;
         }
 
         function falloCaptcha() {
-            var e = document.getElementById('error-captcha');
-            e.textContent = 'El captcha falló, recarga la página e intenta de nuevo.';
-            e.hidden = false;
+            button.disabled = true;
+            status.textContent = 'La verificación no se completó.';
+            error.textContent = 'Recarga la página e intenta de nuevo.';
+            error.hidden = false;
         }
-    </script>
-</body>
 
-</html>
+        form.addEventListener('submit', function () {
+            button.disabled = true;
+            button.textContent = 'Verificando…';
+            status.textContent = 'Estamos confirmando la verificación.';
+        });
+    </script>
+@endpush

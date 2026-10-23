@@ -5114,3 +5114,142 @@ footer {
 .text-corra-medium {
     font-family: "Corra-Montserra-Medium", sans-serif !important;
 }
+
+/* ===========================================================================
+   TURNSTILE: VERIFICACIÓN Y DESCARGA
+   ========================================================================== */
+.turnstile {
+    --turnstile-vino: var(--color2);
+    --turnstile-verde: var(--color6);
+    --turnstile-oro: var(--color4);
+    --turnstile-tinta: var(--text-color);
+    --turnstile-suave: #61706d;
+    --turnstile-linea: #d9ddd7;
+
+    min-height: clamp(430px, 58vh, 620px);
+    padding: clamp(48px, 8vw, 88px) 0;
+    background: #fbfaf7;
+}
+
+.turnstile__panel {
+    width: min(100%, 530px);
+    margin: 0 auto;
+    padding-top: 28px;
+    border-top: 4px solid var(--turnstile-vino);
+    color: var(--turnstile-tinta);
+}
+
+.turnstile__mark {
+    display: block;
+    width: 46px;
+    height: 46px;
+    margin-bottom: 22px;
+    color: var(--turnstile-verde);
+}
+
+.turnstile__title {
+    max-width: 14ch;
+    margin: 0;
+    color: var(--turnstile-verde);
+    font-family: var(--fontFamilyBold);
+    font-size: clamp(2.15rem, 5vw, 3.15rem);
+    line-height: .98;
+    letter-spacing: -.025em;
+    text-wrap: balance;
+}
+
+.turnstile__lead {
+    max-width: 54ch;
+    margin: 20px 0 0;
+    color: var(--turnstile-suave);
+    font-family: var(--fontFamlyText);
+}
+
+.turnstile__form {
+    margin-top: 34px;
+}
+
+.turnstile__challenge-frame {
+    min-height: 65px;
+    padding: 16px 0;
+    border-top: 1px solid var(--turnstile-linea);
+    border-bottom: 1px solid var(--turnstile-linea);
+}
+
+.turnstile__error {
+    margin: 14px 0 0;
+    color: var(--turnstile-vino);
+    font-size: .92rem;
+}
+
+.turnstile__status {
+    min-height: 1.5em;
+    margin: 16px 0 0;
+    color: var(--turnstile-suave);
+    font-size: .94rem;
+}
+
+.turnstile__button {
+    min-height: 46px;
+    margin-top: 20px;
+    padding: 0 22px;
+    border: 1px solid var(--turnstile-vino);
+    border-radius: 0;
+    color: #fff;
+    background: var(--turnstile-vino);
+    font-family: var(--fontFamilyBold);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 160ms ease-out, border-color 160ms ease-out, transform 160ms ease-out;
+}
+
+.turnstile__button:hover:not(:disabled) {
+    border-color: #681526;
+    background: #681526;
+    transform: translateY(-1px);
+}
+
+.turnstile__button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.turnstile__button:disabled {
+    border-color: #d7d9d5;
+    color: #7d8580;
+    background: #e5e6e1;
+    cursor: not-allowed;
+}
+
+.turnstile__button:focus-visible {
+    outline: 3px solid var(--turnstile-oro);
+    outline-offset: 3px;
+}
+
+.turnstile__download-frame {
+    position: fixed;
+    width: 1px;
+    height: 1px;
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+@media (max-width: 560px) {
+    .turnstile {
+        min-height: 390px;
+        padding: 44px 0;
+    }
+
+    .turnstile__mark {
+        width: 42px;
+        height: 42px;
+        margin-bottom: 18px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .turnstile__button {
+        transition-duration: .01ms;
+    }
+}
