@@ -74,7 +74,7 @@
             <input type="hidden" name="redirect" value="{{ $redirect }}">
             <div class="cf-turnstile" data-sitekey="{{ $siteKey }}" data-callback="liberarBoton"
                 data-error-callback="falloCaptcha" data-theme="light"></div>
-            @error('token')
+            @error('cf-turnstile-response')
                 <p class="error" id="error-token">{{ $message }}</p>
             @enderror
             <p class="error" id="error-captcha" hidden></p>

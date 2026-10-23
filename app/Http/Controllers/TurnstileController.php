@@ -24,19 +24,19 @@ class TurnstileController extends Controller
     public function verify(Request $request): RedirectResponse
     {
         $datos = $request->validate([
-            'token' => ['required', 'string'],
+            'cf-turnstile-response' => ['required', 'string'],
             'redirect' => ['nullable', 'string'],
         ]);
 
         $respuesta = Http::asForm()->timeout(5)->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
             'secret' => (string) config('services.turnstile.secret'),
-            'response' => $datos['token'],
+            'response' => $datos['cf-turnstile-response'],
             'remoteip' => $request->ip(),
         ])->json();
 
         if (empty($respuesta['success'])) {
             throw ValidationException::withMessages([
-                'token' => 'No se pudo verificar el captcha, intenta de nuevo.',
+                'cf-turnstile-response' => 'No se pudo verificar el captcha, intenta de nuevo.',
             ]);
         }
 
