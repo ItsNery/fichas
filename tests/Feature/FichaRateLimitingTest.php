@@ -44,24 +44,24 @@ class FichaRateLimitingTest extends TestCase
         }
     }
 
-    public function test_comparison_requests_are_rejected_after_five_requests_per_minute(): void
+    public function test_comparison_requests_are_rejected_after_thirty_requests_per_minute(): void
     {
         Route::get('/__test/ficha-comparativa', fn () => response()->noContent())
             ->middleware('throttle:ficha-comparativa');
 
-        for ($attempt = 0; $attempt < 5; $attempt++) {
+        for ($attempt = 0; $attempt < 30; $attempt++) {
             $this->get('/__test/ficha-comparativa')->assertNoContent();
         }
 
         $this->get('/__test/ficha-comparativa')->assertTooManyRequests();
     }
 
-    public function test_pdf_requests_are_rejected_after_two_requests_per_minute(): void
+    public function test_pdf_requests_are_rejected_after_six_requests_per_minute(): void
     {
         Route::get('/__test/ficha-pdf', fn () => response()->noContent())
             ->middleware('throttle:ficha-pdf');
 
-        for ($attempt = 0; $attempt < 2; $attempt++) {
+        for ($attempt = 0; $attempt < 6; $attempt++) {
             $this->get('/__test/ficha-pdf')->assertNoContent();
         }
 

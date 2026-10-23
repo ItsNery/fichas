@@ -61,7 +61,10 @@ class TurnstileController extends Controller
                 ->withCookie($cookie);
         }
 
-        return redirect()->to($redirect)->withCookie($cookie);
+        // $redirect puede incluir el prefijo público de la aplicación (por
+        // ejemplo, /fichas). `to()` lo volvería a anteponer desde APP_URL.
+        // La ruta ya fue validada como interna en safeRedirectValue().
+        return redirect()->away($redirect)->withCookie($cookie);
     }
 
     private function safeRedirect(Request $request): string
