@@ -72,8 +72,8 @@ class RouteServiceProvider extends ServiceProvider
             }
 
             return [
-                Limit::perMinute(10)->by('ficha-comparativa:'.$this->visitorKey($request)),
-                Limit::perHour(300)->by('ficha-comparativa:global'),
+                Limit::perMinute(30)->by('ficha-comparativa:'.$this->visitorKey($request)),
+                Limit::perHour(900)->by('ficha-comparativa:global'),
             ];
         });
 
@@ -88,8 +88,8 @@ class RouteServiceProvider extends ServiceProvider
             }
 
             return [
-                Limit::perMinute(12)->by('ficha-comparativa-seccion:'.$this->visitorKey($request)),
-                Limit::perHour(300)->by('ficha-comparativa-seccion:global'),
+                Limit::perMinute(30)->by('ficha-comparativa-seccion:'.$this->visitorKey($request)),
+                Limit::perHour(900)->by('ficha-comparativa-seccion:global'),
             ];
         });
 
@@ -112,9 +112,9 @@ class RouteServiceProvider extends ServiceProvider
         // del balanceador, que es la misma para todos.
         RateLimiter::for('ficha-pdf', function (Request $request) {
             return [
-                Limit::perMinute(4)->by('ficha-pdf:'.$this->visitorKey($request)),
+                Limit::perMinute(6)->by('ficha-pdf:'.$this->visitorKey($request)),
                 Limit::perHour(60)->by('ficha-pdf:'.$this->visitorKey($request)),
-                Limit::perHour(600)->by('ficha-pdf:global'),
+                Limit::perHour(900)->by('ficha-pdf:global'),
             ];
         });
     }
