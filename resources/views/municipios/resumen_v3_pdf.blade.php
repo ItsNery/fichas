@@ -241,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 (function () {
                     var el = document.getElementById('chart-{{ Str::slug($tematica) }}');
                     if (!el) return;
-                    var historyData = {!! $mainKpi['historial'] !!};
+                    var historyData = {{ Illuminate\Support\Js::from(json_decode($mainKpi['historial'], true) ?? []) }};
                     var xData = historyData.map(function (d) { return d.anio; });
                     var yData = historyData.map(function (d) { return parseFloat(d.valor); });
                     var chart = echarts.init(el, null, { renderer: 'svg' });

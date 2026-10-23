@@ -292,7 +292,7 @@
 
                 // Elegir un KPI para la gráfica principal o usar datos agregados
                 // prettier-ignore
-                var kpi = {!!json_encode($kpis[0] ?? null) !!};
+                var kpi = {{ Illuminate\Support\Js::from($kpis[0] ?? null) }};
                 if (!kpi || !kpi.historial) return;
 
                 var historyData = JSON.parse(kpi.historial);

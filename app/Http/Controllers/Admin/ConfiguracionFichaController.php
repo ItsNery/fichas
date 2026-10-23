@@ -10,6 +10,7 @@ use App\Models\Indicador;
 use App\Models\Variable;
 use App\Models\DatoHistorico;
 use App\Services\CorrelationService;
+use App\Support\NarrativeHtmlSanitizer;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -95,6 +96,10 @@ class ConfiguracionFichaController extends Controller
 
         $this->validateScatterVariables($request);
 
+        $validated['plantilla_narrativa'] = NarrativeHtmlSanitizer::sanitize(
+            $validated['plantilla_narrativa'] ?? null,
+        );
+
         $validated['mostrar_comparativa'] = $request->has('mostrar_comparativa');
         $validated['activo'] = $request->has('activo');
         
@@ -154,6 +159,10 @@ class ConfiguracionFichaController extends Controller
         ]);
 
         $this->validateScatterVariables($request);
+
+        $validated['plantilla_narrativa'] = NarrativeHtmlSanitizer::sanitize(
+            $validated['plantilla_narrativa'] ?? null,
+        );
 
         $validated['mostrar_comparativa'] = $request->has('mostrar_comparativa');
         $validated['activo'] = $request->has('activo');

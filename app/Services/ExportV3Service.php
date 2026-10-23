@@ -35,12 +35,7 @@ class ExportV3Service
                 'height'            => 1754,
                 'deviceScaleFactor' => 2,
             ])
-            ->setOption('args', [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--font-render-hinting=none',
-            ]);
+            ->setOption('args', $this->chromiumArguments());
 
         if ($waitForPdfReady) {
             $shot->waitForFunction('window.__pdfReady', null, 110000);
@@ -86,12 +81,7 @@ class ExportV3Service
                 'height' => 1240,
                 'deviceScaleFactor' => 1,
             ])
-            ->setOption('args', [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--font-render-hinting=none',
-            ])
+            ->setOption('args', $this->chromiumArguments())
             ->waitForFunction('window.__pdfReady', null, 110000)
             ->pdf();
     }
@@ -110,12 +100,15 @@ class ExportV3Service
                 'height' => 1100,
                 'deviceScaleFactor' => 1,
             ])
-            ->setOption('args', [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--font-render-hinting=none',
-            ])
+            ->setOption('args', $this->chromiumArguments())
             ->pdf();
+    }
+
+    private function chromiumArguments(): array
+    {
+        return [
+            '--disable-dev-shm-usage',
+            '--font-render-hinting=none',
+        ];
     }
 }

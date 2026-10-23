@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Municipio;
+use App\Support\NarrativeHtmlSanitizer;
 
 class FichaNarratorService
 {
@@ -22,7 +23,9 @@ class FichaNarratorService
 
         if (!$datos) {
             // Reemplazos mínimos de seguridad si no hay datos históricos
-            return str_replace('{municipio}', $municipio->nombre, $plantilla);
+            return NarrativeHtmlSanitizer::sanitize(
+                str_replace('{municipio}', $municipio->nombre, $plantilla),
+            );
         }
 
         $polaridad = self::normalizarPolaridad($datos['polaridad'] ?? 'neutro');
@@ -64,7 +67,9 @@ class FichaNarratorService
             }
         }
 
-        return str_replace(array_keys($reemplazos), array_values($reemplazos), $plantilla);
+        return NarrativeHtmlSanitizer::sanitize(
+            str_replace(array_keys($reemplazos), array_values($reemplazos), $plantilla),
+        );
     }
 
     private static function normalizarPolaridad(string $polaridad): string

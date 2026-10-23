@@ -72,8 +72,8 @@ class RouteServiceProvider extends ServiceProvider
             }
 
             return [
-                Limit::perMinute(5)->by('ficha-comparativa:'.$request->ip()),
-                Limit::perHour(60)->by('ficha-comparativa:global'),
+                Limit::perMinute(10)->by('ficha-comparativa:'.$this->visitorKey($request)),
+                Limit::perHour(300)->by('ficha-comparativa:global'),
             ];
         });
 
@@ -88,8 +88,8 @@ class RouteServiceProvider extends ServiceProvider
             }
 
             return [
-                Limit::perMinute(12)->by('ficha-comparativa-seccion:'.$request->ip()),
-                Limit::perHour(60)->by('ficha-comparativa:global'),
+                Limit::perMinute(12)->by('ficha-comparativa-seccion:'.$this->visitorKey($request)),
+                Limit::perHour(300)->by('ficha-comparativa-seccion:global'),
             ];
         });
 
@@ -108,12 +108,37 @@ class RouteServiceProvider extends ServiceProvider
         });
 
         // La generación de PDF puede iniciar procesos de navegador; se limita
-        // como un recurso compartido entre todos los PDF municipales.
+        // por visitante para que la cuota compartida no se agote por la IP
+        // del balanceador, que es la misma para todos.
         RateLimiter::for('ficha-pdf', function (Request $request) {
             return [
-                Limit::perMinute(2)->by('ficha-pdf:'.$request->ip()),
-                Limit::perHour(30)->by('ficha-pdf:global'),
+                Limit::perMinute(4)->by('ficha-pdf:'.$this->visitorKey($request)),
+                Limit::perHour(60)->by('ficha-pdf:'.$this->visitorKey($request)),
+                Limit::perHour(600)->by('ficha-pdf:global'),
             ];
         });
+    }
+
+    /**
+     * Identidad propia del visitante: la sesión (o la cookie de huella)
+     * evita que todos los usuarios detrás del WAF compartan una sola cuota.
+     * La IP sólo queda como último recurso.
+     */
+    protected function visitorKey(Request $request): string
+    {
+        // Sólo si la petición trajo la cookie de sesión: un cliente sin
+        // cookies recibiría una sesión nueva en cada request y quedaría
+        // siempre fuera de límite.
+        if ($request->hasSession() && $request->cookies->has(config('session.cookie'))) {
+            return 'sess:'.substr($request->session()->getId(), 0, 40);
+        }
+
+        $cookie = $request->cookie((string) config('traffic.visitor_cookie'));
+
+        if (is_string($cookie) && $cookie !== '') {
+            return 'visitor:'.substr(hash('sha256', $cookie), 0, 40);
+        }
+
+        return 'ip:'.$request->ip();
     }
 }

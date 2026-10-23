@@ -522,7 +522,7 @@ class RegionController extends Controller
                         'variables' => [['unidad' => $variables->first()->unidad_medida ?? '']],
                         'echarts' => ['type' => 'categorical', 'series' => []],
                     ],
-                    'narrativa' => "La categoría predominante de <strong>{$indicador->nombre_amigable}</strong> en esta región es: <strong>{$valorRegional}</strong>.",
+                    'narrativa' => 'La categoría predominante de <strong>'.e($indicador->nombre_amigable).'</strong> en esta región es: <strong>'.e($valorRegional).'</strong>.',
                 ];
                 continue;
             }
@@ -553,8 +553,8 @@ class RegionController extends Controller
                 $perfil[$dimensionKey][] = [
                     'config' => $config,
                     'datos' => $datosPiramide,
-                    'narrativa' => "La pirámide agrega la estructura por edad y sexo de los "
-                        . count($municipiosIds) . " municipios que integran {$region->nombre}.",
+                    'narrativa' => 'La pirámide agrega la estructura por edad y sexo de los '
+                        . count($municipiosIds) . ' municipios que integran '.e($region->nombre).'.',
                 ];
                 continue;
             }
@@ -598,9 +598,9 @@ class RegionController extends Controller
                             ]],
                         ],
                     ],
-                    'narrativa' => "La población de {$region->nombre} se compone de "
-                        . number_format($hombres) . " hombres (" . number_format($sexoData[0]['percent'], 2) . "%) y "
-                        . number_format($mujeres) . " mujeres (" . number_format($sexoData[1]['percent'], 2) . "%).",
+                    'narrativa' => 'La población de '.e($region->nombre).' se compone de '
+                        . number_format($hombres) . ' hombres (' . number_format($sexoData[0]['percent'], 2) . '%) y '
+                        . number_format($mujeres) . ' mujeres (' . number_format($sexoData[1]['percent'], 2) . '%).',
                 ];
                 continue;
             }
@@ -948,7 +948,7 @@ class RegionController extends Controller
     private function generarNarrativaRegional($config, $region, $valorDisplay, $municipiosRanking, $esPorcentaje, $esPromedio, $esCategorica)
     {
         if ($esCategorica || empty($municipiosRanking)) {
-            return "El indicador de <strong>{$config->indicador->nombre_amigable}</strong> para esta región es predominantemente: <strong>{$valorDisplay}</strong>.";
+            return 'El indicador de <strong>'.e($config->indicador->nombre_amigable).'</strong> para esta región es predominantemente: <strong>'.e($valorDisplay).'</strong>.';
         }
 
         $primero = $municipiosRanking[0];
@@ -956,9 +956,9 @@ class RegionController extends Controller
         
         $tipo = $esPorcentaje ? 'la mayor aportación' : ($esPromedio ? 'el valor más alto' : 'el total acumulado');
 
-        return "Para la región <strong>{$region->nombre}</strong>, el valor regional es <strong>{$valorDisplay}</strong>. " .
-               "El municipio que encabeza la métrica es <strong>{$primero['name']}</strong> con " . number_format($primero['orderValue'], 2) . ", " .
-               "mientras que <strong>{$ultimo['name']}</strong> registra " . number_format($ultimo['orderValue'], 2) . ".";
+        return 'Para la región <strong>'.e($region->nombre).'</strong>, el valor regional es <strong>'.e($valorDisplay).'</strong>. '
+            .'El municipio que encabeza la métrica es <strong>'.e($primero['name']).'</strong> con '.number_format($primero['orderValue'], 2).', '
+            .'mientras que <strong>'.e($ultimo['name']).'</strong> registra '.number_format($ultimo['orderValue'], 2).'.';
     }
 
     public function exportarMacrorregionPDF(Macrorregion $macrorregion)

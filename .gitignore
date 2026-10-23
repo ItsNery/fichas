@@ -5,6 +5,17 @@
 /vendor
 .env
 .env.backup
+# Backups and private certificate artifacts
+*.sql
+*.sql.gz
+*.dump
+*.zip
+*.rar
+*.bak
+*.pem
+*.key
+*.p12
+*.pfx
 .phpunit.result.cache
 docker-compose.override.yml
 Homestead.json

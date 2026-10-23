@@ -35,6 +35,13 @@ Route::get('/api/municipios/search', [MunicipioController::class, 'search'])->na
 Route::get('/api/omnisearch', [OmnisearchController::class, 'search'])->name('api.omnisearch');
 Route::view('/demo/mapa-inset', 'demo.mapa-inset')->name('demo.mapa-inset');
 
+Route::get('/challenge', [App\Http\Controllers\TurnstileController::class, 'challenge'])
+    ->middleware('throttle:20,1')
+    ->name('turnstile.challenge');
+Route::post('/challenge', [App\Http\Controllers\TurnstileController::class, 'verify'])
+    ->middleware('throttle:20,1')
+    ->name('turnstile.verify');
+
 // --- Módulo 1: Banco de Indicadores ---
 Route::prefix('banco-indicadores')->name('banco-indicadores.')->group(function () {
     Route::get('/', [FichaController::class, 'index'])->name('index');
@@ -48,13 +55,13 @@ Route::prefix('banco-indicadores')->name('banco-indicadores.')->group(function (
 Route::prefix('municipios')->name('municipios.')->group(function () {
     Route::get('/', [FichaController::class, 'directorioVisual'])->name('index');
     Route::get('/comparar/{slug1}/con/{slug2}', [FichaController::class, 'compararMunicipal'])
-        ->middleware('throttle:ficha-comparativa')
+        ->middleware(['turnstile', 'throttle:ficha-comparativa'])
         ->name('comparar');
     Route::get('/comparar/{slug1}/con/{slug2}/dimension/{dimension}', [FichaController::class, 'compararDimension'])
         ->middleware('throttle:ficha-comparativa-seccion')
         ->name('comparar.dimension');
     Route::get('/comparar/{slug1}/con/{slug2}/pdf', [FichaController::class, 'exportarComparativaPDF'])
-        ->middleware('throttle:ficha-pdf')
+        ->middleware(['turnstile', 'throttle:ficha-pdf'])
         ->name('comparar.pdf');
     Route::get('/api/similitud-indicador/{municipio}/{config}', [FichaController::class, 'getSimilitudIndicador'])->name('api.indicador.similitud');
     Route::get('/api/grafico-datos/{municipio:slug}/{config}/{anio}', [FichaController::class, 'getGraficoDatosApi'])->name('api.grafico.data');
@@ -63,12 +70,12 @@ Route::prefix('municipios')->name('municipios.')->group(function () {
         ->name('dimension');
     Route::get('/{municipio:slug}', [FichaController::class, 'perfilMunicipal'])->name('show');
     Route::get('/{municipio:slug}/perfil.pdf', [FichaController::class, 'exportarPerfilPDF'])
-        ->middleware('throttle:ficha-pdf')
+        ->middleware(['turnstile', 'throttle:ficha-pdf'])
         ->name('perfil.pdf');
     Route::get('/{municipio:slug}/panorama', [FichaController::class, 'panoramaMunicipal'])->name('panorama');
     Route::get('/{municipio:slug}/panorama/mapa.png', [FichaController::class, 'panoramaMap'])->name('panorama.map');
     Route::get('/{municipio:slug}/panorama.pdf', [FichaController::class, 'exportarPanoramaPDF'])
-        ->middleware('throttle:ficha-pdf')
+        ->middleware(['turnstile', 'throttle:ficha-pdf'])
         ->name('panorama.pdf');
 });
 
