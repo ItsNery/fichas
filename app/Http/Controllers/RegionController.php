@@ -25,12 +25,32 @@ class RegionController extends Controller
     {
         $macrorregiones = Macrorregion::with([
             'microrregiones' => fn ($query) => $query
+                ->with(['municipios' => fn ($municipios) => $municipios->orderBy('nombre')])
                 ->withCount('municipios')
                 ->orderBy('nombre'),
         ])
             ->withCount('microrregiones')
             ->orderBy('id')
             ->get();
+
+        $microrregiones = $macrorregiones->flatMap->microrregiones;
+        $nombresDuplicados = $microrregiones
+            ->countBy('nombre')
+            ->filter(fn ($total) => $total > 1)
+            ->keys();
+        $municipiosPorNombre = Municipio::whereIn('nombre', $nombresDuplicados)
+            ->pluck('slug', 'nombre');
+
+        $microrregiones->each(function (Microrregion $microrregion) use ($municipiosPorNombre) {
+            $municipio = $microrregion->municipios_count === 1
+                ? $microrregion->municipios->first()
+                : null;
+            $slugMunicipioPartido = $municipiosPorNombre->get($microrregion->nombre);
+
+            $microrregion->perfil_url = $municipio || $slugMunicipioPartido
+                ? route('municipios.show', $municipio?->slug ?? $slugMunicipioPartido)
+                : route('regiones.micro.perfil', $microrregion);
+        });
 
         return view('regiones.index', compact('macrorregiones'));
     }
@@ -68,6 +88,9 @@ class RegionController extends Controller
             $municipio = $microrregion->municipios->first();
             return redirect()->route('municipios.show', $municipio->slug)
                 ->with('info', "Esta microrregión no tiene información municipal desagregable en el sistema. Te hemos redirigido a la ficha de {$municipio->nombre}, donde se encuentra la información disponible.");
+        } elseif ($municipio = $this->municipioDeMicrorregionPartida($microrregion)) {
+            return redirect()->route('municipios.show', $municipio->slug)
+                ->with('info', "Esta microrregiÃ³n corresponde a una parte territorial de {$municipio->nombre}. Como no hay informaciÃ³n municipal desagregada para esa particiÃ³n, te hemos redirigido a la ficha municipal disponible.");
         } elseif ($municipiosCount === 0) {
             if ($microrregion->macrorregion) {
                     return redirect()->route('regiones.macro.perfil', $microrregion->macrorregion->slug)
@@ -81,6 +104,24 @@ class RegionController extends Controller
 
         $datos = $this->obtenerDatosPerfil('Microrregión', $microrregion, $municipios, $municipiosIds);
         return view('regiones.perfil', $datos);
+    }
+
+    /**
+     * Detecta microrregiones homÃ³nimas que representan partes territoriales
+     * de un municipio y no cuentan con informaciÃ³n desagregable propia.
+     */
+    private function municipioDeMicrorregionPartida(Microrregion $microrregion): ?Municipio
+    {
+        $hayOtraMicrorregionConElMismoNombre = Microrregion::query()
+            ->where('nombre', $microrregion->nombre)
+            ->where($microrregion->getKeyName(), '!=', $microrregion->getKey())
+            ->exists();
+
+        if (! $hayOtraMicrorregionConElMismoNombre) {
+            return null;
+        }
+
+        return Municipio::where('nombre', $microrregion->nombre)->first();
     }
 
     public function perfilEstatal()

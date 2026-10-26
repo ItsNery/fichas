@@ -135,7 +135,7 @@
                             <h3>{{ $microrregion->nombre }}</h3>
                             <p>{{ $microrregion->municipios_count }} {{ Str::plural('municipio', $microrregion->municipios_count) }}</p>
                             @if ($microrregion->slug)
-                                <a href="{{ route('regiones.micro.perfil', $microrregion) }}" class="regional-card__link">
+                                <a href="{{ $microrregion->perfil_url }}" class="regional-card__link">
                                     Ver perfil <i class="fas fa-arrow-right ms-1" aria-hidden="true"></i>
                                 </a>
                             @else
