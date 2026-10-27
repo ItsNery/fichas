@@ -168,7 +168,7 @@ class CatalogoIndicadorVisibilityTest extends TestCase
             'tematica_id' => $tematica->id,
             'nombre_amigable' => 'Tasa de crecimiento INEGI 2025',
             'nombre_tecnico' => 'tasa_crecimiento_inegi_2025',
-            'tipo_dato' => 'tasa',
+            'tipo_dato' => 'absoluto',
         ]);
         $variable = Variable::create([
             'indicador_id' => $indicador->id,
@@ -199,6 +199,7 @@ class CatalogoIndicadorVisibilityTest extends TestCase
 
         $variable->refresh();
 
+        $this->assertSame('tasa', $indicador->fresh()->tipo_dato);
         $this->assertTrue((bool) $variable->es_construida);
         $this->assertSame('tasa_crecimiento_inegi_2025', $variable->formula_tipo);
         $this->assertSame($poblacion->id, $variable->formula_config['variable_id']);
