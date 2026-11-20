@@ -22,7 +22,7 @@ class NarrativeHtmlSanitizer
 
         try {
             $document->loadHTML(
-                '<!DOCTYPE html><html><body><div id="narrativa">'.$html.'</div></body></html>',
+                '<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><div id="narrativa">'.$html.'</div></body></html>',
                 LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD,
             );
 
