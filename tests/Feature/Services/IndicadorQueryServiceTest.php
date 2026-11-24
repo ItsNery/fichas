@@ -442,4 +442,16 @@ class IndicadorQueryServiceTest extends TestCase
             ->assertSee('Estado de Puebla')
             ->assertDontSee('id="estatal-btn"', false);
     }
+
+    public function test_indicator_bank_excludes_tehuacan_and_puebla_from_microregion_selector(): void
+    {
+        $macro = new Macrorregion(); $macro->nombre = 'Región'; $macro->save();
+        foreach (['Tehuacán', 'Tehuacán', 'Puebla', 'Puebla', 'Atlixco'] as $nombre) {
+            $micro = new Microrregion(); $micro->nombre = $nombre; $micro->macrorregion_id = $macro->id; $micro->save();
+        }
+
+        $this->get(route('banco-indicadores.index'))
+            ->assertOk()
+            ->assertViewHas('microrregiones', fn ($regiones) => $regiones->pluck('nombre')->all() === ['Atlixco']);
+    }
 }
