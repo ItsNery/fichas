@@ -80,7 +80,7 @@ class FichaController extends Controller
 
         // Obtenemos los catálogos geográficos
         $municipios     = Municipio::orderBy('nombre', 'asc')->get();
-        $microrregiones = Microrregion::whereNotIn('nombre', ['Tehuacán', 'Puebla'])->orderBy('nombre', 'asc')->get();
+        $microrregiones = Microrregion::orderBy('nombre', 'asc')->get();
         $macrorregiones = Macrorregion::orderBy('nombre', 'asc')->get();
 
         return view('fichas', [

@@ -476,7 +476,7 @@ $currentUrl = url()->current();
                                                 <label class="bi-section-label bi-filter-label d-block mb-1" for="microrregion-selector">Territorio</label>
                                                 <select id="microrregion-selector" class="form-control-sm">
                                                     @foreach ($microrregiones as $region)
-                                                    <option value="{{ $region->id }}">
+                                                    <option value="{{ $region->id }}" @disabled(in_array((string) $region->id, ['9', '10', '24'], true))>
                                                         {{ $region->nombre }}
                                                     </option>
                                                     @endforeach

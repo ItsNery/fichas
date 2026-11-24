@@ -443,15 +443,18 @@ class IndicadorQueryServiceTest extends TestCase
             ->assertDontSee('id="estatal-btn"', false);
     }
 
-    public function test_indicator_bank_excludes_tehuacan_and_puebla_from_microregion_selector(): void
+    public function test_indicator_bank_shows_blocked_microregions_as_disabled(): void
     {
         $macro = new Macrorregion(); $macro->nombre = 'Región'; $macro->save();
-        foreach (['Tehuacán', 'Tehuacán', 'Puebla', 'Puebla', 'Atlixco'] as $nombre) {
-            $micro = new Microrregion(); $micro->nombre = $nombre; $micro->macrorregion_id = $macro->id; $micro->save();
+        foreach ([9 => 'Cuautlancingo', 10 => 'Puebla', 24 => 'Tehuacán', 25 => 'Atlixco'] as $id => $nombre) {
+            $micro = new Microrregion(); $micro->id = $id; $micro->nombre = $nombre; $micro->macrorregion_id = $macro->id; $micro->save();
         }
 
-        $this->get(route('banco-indicadores.index'))
-            ->assertOk()
-            ->assertViewHas('microrregiones', fn ($regiones) => $regiones->pluck('nombre')->all() === ['Atlixco']);
+        $response = $this->get(route('banco-indicadores.index'))->assertOk();
+
+        foreach ([9 => 'Cuautlancingo', 10 => 'Puebla', 24 => 'Tehuacán'] as $id => $nombre) {
+            $this->assertMatchesRegularExpression('/<option value="'.$id.'" disabled>\s*'.$nombre.'\s*<\/option>/u', $response->getContent());
+        }
+        $this->assertMatchesRegularExpression('/<option value="25"\s*>\s*Atlixco\s*<\/option>/u', $response->getContent());
     }
 }
