@@ -23,7 +23,7 @@ function limpiarCapasMapa() {
     }
 }
 // Lista negra de microrregiones
-const IDS_BLOQUEADOS = ["9", "10", "24"];
+const IDS_BLOQUEADOS = ["9", "10", "24", "25"];
 const MENSAJE_REGIONALIZACION =
     "Como algunas microrregiones abarcan más de un municipio, no es posible separar sus datos con exactitud. Para estas zonas, puedes consultar la información de cada municipio por separado.";
 
