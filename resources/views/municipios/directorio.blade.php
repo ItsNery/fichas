@@ -1,5 +1,6 @@
 @extends('layouts.plantilla')
 @section('title', 'Directorio de Municipios')
+@section('meta-description', 'Explora las fichas estadísticas de los 217 municipios del estado de Puebla.')
 @section('css')
 @endsection
 

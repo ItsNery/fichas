@@ -1,6 +1,7 @@
 @extends('layouts.plantilla')
 
 @section('title', 'Ficha del municipio de ' . $municipio->nombre)
+@section('meta-description', 'Consulta la ficha e indicadores del municipio de ' . $municipio->nombre . ', Puebla, en el Portal de Información Municipal y Regional.')
 
 @section('css')
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">

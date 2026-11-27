@@ -123,8 +123,9 @@ Route::get('/api/indicador-complejo/{indicador}/anios-disponibles', [FichaContro
 Route::get('/datos-abiertos/exportar-datos-complejos/{indicador}/{anio}', [FichaController::class, 'exportDatosComplejos'])
     ->name('datos-abiertos.export-complejos');
 
-Route::get('/api/docs', [App\Http\Controllers\ApiDocumentationController::class, 'index'])
+Route::get('/datos-abiertos/api/docs', [App\Http\Controllers\ApiDocumentationController::class, 'index'])
     ->name('api.docs');
+Route::redirect('/api/docs', '/datos-abiertos/api/docs', 301);
 
 /*
 |--------------------------------------------------------------------------

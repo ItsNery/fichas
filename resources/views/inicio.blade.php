@@ -1,6 +1,7 @@
 @extends('layouts.plantilla')
 
 @section('title', 'Inicio')
+@section('footer-margin', '')
 @section('meta-description', 'Página principal del Portal de Información Municipal y Regional del Estado de Puebla')
 @section('css')
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">

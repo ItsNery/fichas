@@ -95,7 +95,7 @@ La API pública permite integración con otros sistemas. Sus principales recurso
 | Indicadores | `/api/v1/indicadores` |
 | Metadatos | `/api/v1/metadata` |
 | Datos | `/api/v1/data` |
-| Documentación interactiva | `/api/docs` |
+| Documentación interactiva | `/datos-abiertos/api/docs` |
 | Especificación OpenAPI | `/api/openapi.json` |
 
 Use la documentación de la API para conocer parámetros, formatos y ejemplos de consulta. Los resultados deben interpretarse con los metadatos del indicador y no de manera aislada.

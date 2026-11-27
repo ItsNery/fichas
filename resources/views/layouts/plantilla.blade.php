@@ -11,7 +11,7 @@
         $defaults = [
             'title' => 'Portal de información municipal y Regional del Gobierno del Estado de Puebla',
             'description' =>
-                'Página informativa del Portal de información municipal y Regional del Gobierno del Estado de Puebla del Estado de Puebla',
+                'Consulta información e indicadores municipales y regionales del estado de Puebla.',
             'keywords' =>
                 'SEI, Información, Sistema Estatal de Información, Puebla, Estadística, Gobierno, Estado de Puebla',
             'image' => asset('img/mapa_puebla.png'),
@@ -42,8 +42,6 @@
 
     {{-- Robots y técnicos --}}
     <meta name="robots" content="@yield('robots', 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1')">
-    <meta name="googlebot" content="index, follow">
-    <meta name="bingbot" content="index, follow">
     <meta name="referrer" content="no-referrer-when-downgrade">
     <meta name="format-detection" content="telephone=no">
     <meta name="HandheldFriendly" content="True">

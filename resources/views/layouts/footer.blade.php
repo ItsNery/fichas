@@ -1,5 +1,5 @@
 {{-- @extends('publico.index') --}}
-<footer class="mt-3">
+<footer class="@yield('footer-margin', 'mt-3')">
     <div class="container-fluid bg-dark text-white-50 py-5 px-sm-3 px-lg-5 footer-1">
         <div class="row pt-5">
             <div class="col-lg-3 col-md-6 mb-5">
@@ -43,7 +43,6 @@
                             <span class="emoji-label">Poco útil</span>
                         </div>
                     </div>
-                    {{-- Formulario de retroalimentación (oculto por defecto) --}}
                     <div id="feedbackForm" class="feedback-form" style="display: none;">
                         <label for="feedbackComment" class="feedback-label">¿Qué podríamos mejorar?</label>
                         <textarea id="feedbackComment" class="feedback-textarea" rows="3" maxlength="1000"
@@ -208,23 +207,19 @@
 
         if (!evaluationDiv || emojiWrappers.length === 0) return;
 
-        // Revisa si ya votó
         if (localStorage.getItem('siteEvaluationVoted') === 'true') {
             evaluationDiv.style.display = 'none';
             return;
         }
 
-        // Función para enviar el voto al servidor con datos extra del cliente
         function submitEvaluation(score, comment = null) {
             const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-            // Datos del cliente recolectados con JS
             const currentUrl = window.location.href;
             const screenRes = window.screen.width + 'x' + window.screen.height;
             const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
             const lang = navigator.language;
 
-            // Feedback visual de espera
             if (comment !== null && feedbackForm) {
                 feedbackForm.innerHTML =
                     '<p class="text-white-50" style="margin:10px 0;">Procesando tu voto...</p>';
@@ -273,16 +268,13 @@
                 });
         }
 
-        // Lógica de clic en emojis
         emojiWrappers.forEach(wrapper => {
             wrapper.addEventListener('click', function() {
                 selectedScore = this.dataset.score;
 
                 if (selectedScore === "3") {
-                    // Score "Útil": envía inmediatamente sin pedir comentario
                     submitEvaluation(selectedScore);
                 } else {
-                    // Score "Regular" o "Poco útil": muestra el formulario de feedback
                     emojiWrappers.forEach(w => {
                         w.style.opacity = '0.4';
                         w.style.transform = 'scale(1)';
@@ -296,7 +288,6 @@
             });
         });
 
-        // Enviar con el botón (requiere comentario para scores 1-2)
         submitFeedbackBtn.addEventListener('click', function() {
             if (selectedScore) {
                 const comment = feedbackComment.value.trim();
@@ -310,14 +301,12 @@
             }
         });
 
-        // Quitar validación al escribir
         feedbackComment.addEventListener('input', function() {
             if (this.value.trim()) {
                 this.classList.remove('is-invalid');
             }
         });
 
-        // Enviar con Enter
         feedbackComment.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();

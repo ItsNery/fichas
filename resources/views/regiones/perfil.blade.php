@@ -2,6 +2,7 @@
 
 @section('title', $esEstatal ? 'Perfil Estatal de ' . $region->nombre : 'Perfil de ' . $tipoRegion . ' de ' .
     $region->nombre)
+@section('meta-description', 'Consulta el perfil y los indicadores de ' . $region->nombre . ', Puebla, en el Portal de Información Municipal y Regional.')
 
 @section('content')
     {{-- 1. HERO SECTION --}}

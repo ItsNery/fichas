@@ -148,6 +148,22 @@ class ApiDocumentationController extends Controller
                     ],
                 ],
                 '/api/v1/data' => [
+                    'get' => [
+                        'summary' => 'Consulta de datos mediante parámetros',
+                        'description' => 'Acepta los mismos parámetros que POST /api/v1/consulta en la cadena de consulta. Use la notación de arreglos de PHP, por ejemplo municipio_ids[]=114.',
+                        'parameters' => [
+                            ['name' => 'indicador_id', 'in' => 'query', 'required' => true, 'schema' => ['type' => 'integer']],
+                            ['name' => 'nivel_de_agregacion', 'in' => 'query', 'required' => true, 'schema' => ['type' => 'string', 'enum' => ['municipio', 'microrregion', 'macrorregion', 'estatal']]],
+                            ['name' => 'municipio_ids[]', 'in' => 'query', 'schema' => ['type' => 'array', 'items' => ['type' => 'string']], 'style' => 'form', 'explode' => true],
+                            ['name' => 'region_id', 'in' => 'query', 'schema' => ['type' => 'integer']],
+                            ['name' => 'anios[]', 'in' => 'query', 'schema' => ['type' => 'array', 'items' => ['type' => 'integer']], 'style' => 'form', 'explode' => true],
+                        ],
+                        'responses' => [
+                            '200' => ['description' => 'Datos procesados', 'content' => ['application/json' => ['schema' => ['$ref' => '#/components/schemas/DataResponse']]]],
+                            '422' => ['description' => 'Validación de parámetros fallida'],
+                            '500' => ['description' => 'Error al procesar la consulta'],
+                        ],
+                    ],
                     'post' => [
                         'summary' => 'Consulta de datos',
                         'description' => 'Obtiene datos estadísticos para un indicador y selección geográfica.',
@@ -171,6 +187,24 @@ class ApiDocumentationController extends Controller
                             '422' => [
                                 'description' => 'Validación de parámetros fallida',
                             ],
+                            '500' => [
+                                'description' => 'Error al procesar la consulta',
+                            ],
+                        ],
+                    ],
+                ],
+                '/api/v1/consulta' => [
+                    'post' => [
+                        'summary' => 'Consulta de datos estadísticos',
+                        'description' => 'Consulta un indicador con una selección geográfica y de años. La forma de los datos depende del indicador.',
+                        'requestBody' => [
+                            'required' => true,
+                            'content' => ['application/json' => ['schema' => ['$ref' => '#/components/schemas/DataRequest']]],
+                        ],
+                        'responses' => [
+                            '200' => ['description' => 'Datos procesados', 'content' => ['application/json' => ['schema' => ['$ref' => '#/components/schemas/DataResponse']]]],
+                            '422' => ['description' => 'Validación de parámetros fallida'],
+                            '500' => ['description' => 'Error al procesar la consulta'],
                         ],
                     ],
                 ],
@@ -259,11 +293,11 @@ class ApiDocumentationController extends Controller
                         'type' => 'object',
                         'required' => ['indicador_id', 'nivel_de_agregacion'],
                         'properties' => [
-                            'indicador_id' => ['type' => 'integer'],
+                            'indicador_id' => ['type' => 'integer', 'description' => 'Identificador existente; consulte el catálogo de indicadores.'],
                             'nivel_de_agregacion' => ['type' => 'string', 'enum' => ['municipio', 'microrregion', 'macrorregion', 'estatal']],
-                            'municipio_ids' => ['type' => 'array', 'items' => ['type' => 'string']],
-                            'region_id' => ['type' => 'integer'],
-                            'anios' => ['type' => 'array', 'items' => ['type' => 'integer']],
+                            'municipio_ids' => ['type' => 'array', 'nullable' => true, 'description' => 'Selección de municipios para el nivel municipal.', 'items' => ['type' => 'string']],
+                            'region_id' => ['type' => 'integer', 'nullable' => true, 'description' => 'Identificador de la micro o macrorregión seleccionada.'],
+                            'anios' => ['type' => 'array', 'nullable' => true, 'description' => 'Años que se desean consultar.', 'items' => ['type' => 'integer']],
                         ],
                     ],
                     'DataResponse' => [

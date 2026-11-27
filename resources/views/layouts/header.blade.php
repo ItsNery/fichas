@@ -1,18 +1,14 @@
-{{-- 1. HEADER (Solo Logos) --}}
 <header class="site-header">
     <div class="header-logos-container">
         <div class="container">
             <div class="logos-wrapper">
 
-                {{-- GRUPO IZQUIERDA: Tira de Logos Gobierno --}}
                 <div class="logos-group left">
                     <a href="https://puebla.gob.mx/" target="_blank" title="Gobierno del Estado de Puebla">
-                        {{-- Asegúrate de poner la ruta correcta de tu tira de logos --}}
                         <img src="{{ asset('img/Logos-SPFA_.png') }}" alt="Gobierno de Puebla">
                     </a>
                 </div>
 
-                {{-- GRUPO DERECHA: Logo SEI --}}
                 <div class="logos-group right">
                     <a href="https://sei.puebla.gob.mx/" target="_self" title="Sistema Estatal de Información">
                         <img src="{{ asset('img/logo-sei.png') }}" alt="Logo SEI Puebla">
@@ -21,7 +17,6 @@
 
             </div>
 
-            {{-- Botón Hamburguesa --}}
             <button id="hamburger-menu" class="hamburger-menu" aria-label="Abrir menú" aria-controls="main-nav"
                 aria-expanded="false">
                 <span class="hamburger-line"></span>
@@ -31,9 +26,7 @@
         </div>
     </div>
 </header>
-{{-- ¡IMPORTANTE: El header cierra aquí! --}}
 
-{{-- 2. NAVEGACIÓN (Hermano del header, para el Sticky) --}}
 <nav id="main-nav" class="main-nav">
     <button id="mobile-menu-close" class="mobile-menu-close" type="button" aria-label="Cerrar menú">
         <span aria-hidden="true">&times;</span>
@@ -41,14 +34,12 @@
     <div class="container nav-container">
         <ul class="nav-links">
 
-            {{-- ENLACE 1: Inicio --}}
             <li>
                 <a href="{{ route('inicio') }}" class="{{ request()->routeIs('inicio') ? 'active' : '' }}">
                     Inicio
                 </a>
             </li>
 
-            {{-- ENLACE 2: Banco de Indicadores --}}
             <li>
                 <a href="{{ route('banco-indicadores.index') }}"
                     class="{{ request()->routeIs('banco-indicadores.*') ? 'active' : '' }}">
@@ -61,20 +52,20 @@
                     Perfiles <span class="arrow">▾</span>
                 </a>
                 <ul class="dropdown-content">
-                    <li><a href="{{ route('municipios.index') }}" class="{{ request()->routeIs('municipios.*') ? 'active' : '' }}">Municipales</a></li>
-                    <li><a href="{{ route('regiones.index') }}" class="{{ request()->routeIs('regiones.*') ? 'active' : '' }}">Regionales</a></li>
+                    <li><a href="{{ route('municipios.index') }}"
+                            class="{{ request()->routeIs('municipios.*') ? 'active' : '' }}">Municipales</a></li>
+                    <li><a href="{{ route('regiones.index') }}"
+                            class="{{ request()->routeIs('regiones.*') ? 'active' : '' }}">Regionales</a></li>
                 </ul>
             </li>
 
-            {{-- ENLACE 3: Datos Abiertos --}}
             <li>
-                <a href="{{ route('datos-abiertos.index') }}" class="{{ request()->routeIs('datos-abiertos.*') ? 'active' : '' }}">
+                <a href="{{ route('datos-abiertos.index') }}"
+                    class="{{ request()->routeIs('datos-abiertos.*', 'api.docs') ? 'active' : '' }}">
                     Datos abiertos
                 </a>
             </li>
 
-            {{-- EJEMPLO DE DROPDOWN CON LÓGICA 'ACTIVE' --}}
-            {{-- Si estás dentro de cualquier sub-ruta de 'informacion', el padre se pinta activo --}}
             {{-- <li class="dropdown">
                 <a href="#" class="{{ request()->is('informacion*') ? 'active' : '' }}">
                     Información <span class="arrow">▾</span>

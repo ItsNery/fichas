@@ -1948,6 +1948,26 @@ footer {
     color: var(--color1);
 }
 
+.btn-color-1 {
+    --bs-btn-color: var(--colorBlanco);
+    --bs-btn-bg: var(--color1);
+    --bs-btn-border-color: var(--color1);
+    --bs-btn-hover-color: var(--colorBlanco);
+    --bs-btn-hover-bg: var(--color2);
+    --bs-btn-hover-border-color: var(--color2);
+    --bs-btn-active-color: var(--colorBlanco);
+    --bs-btn-active-bg: var(--color1);
+    --bs-btn-active-border-color: var(--color1);
+    --bs-btn-disabled-color: var(--colorBlanco);
+    --bs-btn-disabled-bg: var(--color1);
+    --bs-btn-disabled-border-color: var(--color1);
+}
+
+.btn-color-1:focus-visible {
+    outline: 3px solid var(--color6);
+    outline-offset: 3px;
+}
+
 .btn-outline-color-1 {
     color: var(--color1);
     border-color: var(--color1);

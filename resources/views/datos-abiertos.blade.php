@@ -266,115 +266,11 @@
             description="Utiliza nuestro endpoint público para realizar consultas personalizadas y obtener datos en formato JSON."
             eyebrow="Integración" center />
 
-        {{-- Tarjeta de Información General --}}
         <div class="card shadow-sm mb-4">
-            <div class="card-header bg-light">
-                <h5 class="mb-0">Información General</h5>
-            </div>
-            <div class="card-body">
-                <p><strong>Endpoint:</strong> <code>{{ route('api.public.consulta') }}</code></p>
-                <p><strong>Método HTTP:</strong> <span class="badge bg-primary">POST</span></p>
-                <p class="mb-0"><strong>Formato de Cuerpo:</strong> <code>application/json</code></p>
-            </div>
-        </div>
-
-        {{-- Tabla de Parámetros --}}
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-light">
-                <h5 class="mb-0">Parámetros de la Petición</h5>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-striped table-hover mb-0">
-                    <thead>
-                        <tr>
-                            <th>Parámetro</th>
-                            <th>Tipo</th>
-                            <th>Obligatorio</th>
-                            <th>Descripción y Ejemplo</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><code>indicador_id</code></td>
-                            <td>Entero</td>
-                            <td>Sí</td>
-                            <td>ID del indicador a consultar. <em>Ej: <code>26</code></em></td>
-                        </tr>
-                        <tr>
-                            <td><code>nivel_de_agregacion</code></td>
-                            <td>String</td>
-                            <td>Sí</td>
-                            <td>"municipio", "microrregion", "macrorregion" o "estatal". <em>Ej:
-                                    <code>"municipio"</code></em></td>
-                        </tr>
-                        <tr>
-                            <td><code>municipio_ids</code></td>
-                            <td>Array de Strings</td>
-                            <td>Condicional</td>
-                            <td>Requerido si el nivel es "municipio". Puede ser un ID o "estatal". <em>Ej: <code>["1",
-                                        "114"]</code> o <code>["estatal"]</code></em></td>
-                        </tr>
-                        <tr>
-                            <td><code>region_id</code></td>
-                            <td>Entero</td>
-                            <td>Condicional</td>
-                            <td>Requerido si el nivel es "microrregion" o "macrorregion". No se usa para "estatal". <em>Ej:
-                                    <code>3</code></em></td>
-                        </tr>
-                        <tr>
-                            <td><code>anios</code></td>
-                            <td>Array de Enteros</td>
-                            <td>No</td>
-                            <td>Filtra por años específicos. Si se omite, devuelve el histórico o el año más reciente.
-                                <em>Ej: <code>[2020, 2022]</code></em>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        {{-- Ejemplos --}}
-        <div class="card shadow-sm">
-            <div class="card-header bg-light">
-                <h5 class="mb-0">Ejemplo de Uso</h5>
-            </div>
-            <div class="card-body">
-                <h6>Ejemplo de Petición (Cuerpo JSON):</h6>
-                <p>Para obtener la "Población total" (suponiendo que es el indicador 26) para los municipios de Puebla y
-                    Atlixco en el año 2020:</p>
-                <pre>
-                    <code class="language-json bg-dark text-white p-3 rounded d-block">
-                    {
-                    "indicador_id": 26,
-                    "nivel_de_agregacion": "municipio",
-                    "municipio_ids": ["114", "14"],
-                    "anios": [2020]
-                    }
-                    </code>
-                </pre>
-                <h6 class="mt-4">Ejemplo de Respuesta Exitosa (JSON):</h6>
-                <pre>
-                    <code class="language-json bg-dark text-white p-3 rounded d-block">
-                        {
-                        "success": true,
-                        "data": {
-                            "titulo": "Población total - Comparación Año: 2020",
-                            "tipo_grafico": "bar",
-                            "series": [
-                            {
-                                "name": "Población total",
-                                "data": [1692181, 135246]
-                            }
-                            ],
-                            "eje_x": {
-                            "categorias": ["Puebla", "Atlixco"]
-                            },
-                            // ...resto de los metadatos...
-                        }
-                        }
-                    </code>
-                </pre>
+            <div class="card-body text-center">
+                <p>Explora los recursos disponibles, consulta sus parámetros y prueba las peticiones desde la documentación interactiva.</p>
+                <a class="btn btn-color-1 m-1" href="{{ route('api.docs') }}">Explorar documentación de la API</a>
+                <a class="btn btn-outline-color-1 m-1" href="{{ route('api.openapi') }}">Descargar especificación OpenAPI</a>
             </div>
         </div>
     </div>
@@ -498,3 +394,4 @@
         });
     </script>
 @endsection
+

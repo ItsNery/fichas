@@ -172,7 +172,7 @@ fichas_municipales/
 - `/api/v1/indicadores/{id}` - Detalle de un indicador
 - `/api/v1/metadata` - Metadatos de catálogo (dimensiones, indicadores y variables)
 - `/api/v1/data` - Consulta de datos estadísticos (POST o GET)
-- `/api/docs` - Documentación interactiva de la API
+- `/datos-abiertos/api/docs` - Documentación interactiva de la API (`/api/docs` redirige a esta ruta)
 - `/api/openapi.json` - Especificación OpenAPI pública
 
 ### Rutas Administrativas (requieren login)

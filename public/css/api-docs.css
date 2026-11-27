@@ -1,0 +1,36 @@
+/* Swagger UI adapts to the public portal without changing its controls. */
+.api-docs__intro { margin: 0 0 2.5rem; color: #484747; }
+.api-docs__intro p { margin: 0 0 .8rem; line-height: 1.6; }
+.api-docs__links { display: flex; flex-wrap: wrap; gap: .75rem 1.75rem; }
+.api-docs__links a { color: var(--color1, #5f1b2d); font-weight: 600; text-decoration: underline; text-underline-offset: .2em; }
+.api-docs__links a:hover { color: var(--color3, #af1731); }
+.api-docs__links i { font-size: .8em; }
+.api-docs__loading { padding: 1rem 0; color: #484747; }
+.api-docs a:focus-visible, .api-docs button:focus-visible, .api-docs select:focus-visible, .api-docs input:focus-visible, .api-docs textarea:focus-visible { outline: 3px solid #246257; outline-offset: 3px; }
+.api-docs .swagger-ui, .api-docs .swagger-ui button, .api-docs .swagger-ui input, .api-docs .swagger-ui select, .api-docs .swagger-ui textarea { font-family: inherit; }
+.api-docs .swagger-ui .wrapper { max-width: none; padding: 0; }
+.api-docs .swagger-ui .info { margin: 0 0 2rem; }
+.api-docs .swagger-ui .info .title { color: #262626; font-size: clamp(1.5rem, 2.5vw, 2rem); }
+.api-docs .swagger-ui .info p, .api-docs .swagger-ui .info li, .api-docs .swagger-ui .info a { font-family: inherit; }
+.api-docs .swagger-ui a { color: var(--color1, #5f1b2d); overflow-wrap: anywhere; }
+.api-docs .swagger-ui .scheme-container { margin: 0 0 2rem; padding: 1rem; background: #f7f7f7; box-shadow: none; }
+.api-docs .swagger-ui select { max-width: 100%; }
+.api-docs .swagger-ui .opblock-tag { color: #262626; font-family: inherit; }
+.api-docs .swagger-ui .opblock { border-radius: 4px; box-shadow: none; }
+.api-docs .swagger-ui .opblock .opblock-summary-description { color: #333; }
+.api-docs .swagger-ui .btn { font-family: inherit; }
+.api-docs .swagger-ui .btn.execute { background-color: var(--color1, #5f1b2d); border-color: var(--color1, #5f1b2d); }
+.api-docs .swagger-ui .btn.execute:hover { background-color: var(--color2, #861e34); border-color: var(--color2, #861e34); }
+.api-docs .swagger-ui .opblock-body { overflow-x: auto; }
+.api-docs .swagger-ui .opblock-summary-path { overflow-wrap: anywhere; }
+@media (max-width: 767.98px) {
+    .api-docs__intro { margin-bottom: 2rem; }
+    .api-docs__links { flex-direction: column; align-items: flex-start; }
+    .api-docs .swagger-ui .opblock .opblock-summary { flex-wrap: wrap; gap: .35rem; }
+    .api-docs .swagger-ui .opblock .opblock-summary-description { flex-basis: 100%; padding-left: 0; }
+    .api-docs .swagger-ui .scheme-container { padding: .75rem; }
+    .api-docs .swagger-ui .scheme-container .schemes > label { max-width: 100%; }
+}
+
+/* Swagger prints this label through a pseudo-element, outside its text nodes. */
+.api-docs .swagger-ui .parameter__name.required::after { content: "obligatorio"; }

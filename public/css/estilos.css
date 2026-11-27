@@ -206,11 +206,9 @@ p {
     width: 100%;
     z-index: 1000;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    /* Opcional: una pequeña animación */
     animation: slideDown 0.3s ease-out;
 }
 
-/* Animación para que aparezca suavemente */
 @keyframes slideDown {
     from {
         transform: translateY(-100%);
@@ -222,7 +220,6 @@ p {
 }
 
 /* Estilos de boton de volver a arriba */
-
 #scrollTopBtn {
     position: fixed;
     bottom: 30px;
@@ -419,7 +416,7 @@ p {
     margin: 0;
 }
 
-.nav-links > li > a {
+.nav-links>li>a {
     display: block;
     padding: 18px 20px;
     font-size: 1rem;
@@ -429,7 +426,7 @@ p {
     transition: color 0.3s ease;
 }
 
-.nav-links > li > a::after {
+.nav-links>li>a::after {
     content: "";
     position: absolute;
     bottom: 10px;
@@ -442,13 +439,13 @@ p {
     border-radius: 2px;
 }
 
-.nav-links > li > a:hover,
-.nav-links > li > a.active {
+.nav-links>li>a:hover,
+.nav-links>li>a.active {
     color: var(--color2);
 }
 
-.nav-links > li > a:hover::after,
-.nav-links > li > a.active::after {
+.nav-links>li>a:hover::after,
+.nav-links>li>a.active::after {
     width: 70%;
 }
 
@@ -598,13 +595,13 @@ p {
         gap: 0;
     }
 
-    .nav-links > li > a {
+    .nav-links>li>a {
         padding: 15px 25px;
         border-bottom: 1px solid #f0f0f0;
         font-size: 1.05rem;
     }
 
-    .nav-links > li > a::after {
+    .nav-links>li>a::after {
         content: none;
     }
 
@@ -645,16 +642,16 @@ p {
         transform: rotate(90deg);
     }
 
-    .dropdown:hover > .dropdown-content,
-    .dropdown-nested:hover > .dropdown-content-nested {
+    .dropdown:hover>.dropdown-content,
+    .dropdown-nested:hover>.dropdown-content-nested {
         display: none !important;
     }
 
-    .dropdown.active > .dropdown-content {
+    .dropdown.active>.dropdown-content {
         display: block !important;
     }
 
-    .dropdown-nested.active > .dropdown-content-nested {
+    .dropdown-nested.active>.dropdown-content-nested {
         display: block !important;
     }
 }
@@ -810,18 +807,14 @@ footer {
 
 .accordion-button-dimension {
     color: white;
-    /* Color del texto del botón */
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-    /* Sombra para legibilidad */
 }
 
 .accordion-button-dimension:not(.collapsed) {
     color: white;
-    /* Mantiene el color del texto cuando está abierto */
 }
 
 .accordion-button-dimension::after {
-    /* Pinta la flecha del acordeón de blanco */
     filter: brightness(0) invert(1);
 }
 
@@ -833,20 +826,16 @@ footer {
 
 /* Estilos de Fichas (pills y tabs) */
 #pills-tab-nivel {
-    /* Quitamos los bordes por defecto de los pills */
     border-bottom: 2px solid #eee;
 }
 
 /* --- Estilo para cada Pestaña (Botón) --- */
 #pills-tab-nivel .nav-link {
     background: none !important;
-    /* Quitamos el fondo de píldora */
     border: 0;
     border-bottom: 3px solid transparent;
-    /* Borde inferior invisible que ocupará espacio */
     border-radius: 0;
     color: var(--color8);
-    /* Texto en gris oscuro por defecto */
     font-weight: 500;
     padding-bottom: 0.8rem;
     transition: all 0.2s ease-in-out;
@@ -855,23 +844,18 @@ footer {
 /* --- Efecto al pasar el cursor (Hover) --- */
 #pills-tab-nivel .nav-link:hover {
     color: var(--color2);
-    /* El texto se vuelve rojo oscuro */
     border-bottom-color: var(--color4);
-    /* Aparece una línea dorada sutil */
 }
 
 /* --- Estilo para la Pestaña ACTIVA --- */
 #pills-tab-nivel .nav-link.active {
     color: var(--color1);
-    /* Texto en el rojo más oscuro y bold */
     font-weight: 700;
     border-bottom-color: var(--color3);
-    /* La línea inferior se vuelve roja brillante */
 }
 
 /* Estilos para metadata */
 .metadata-block {
-    /* Opcional: un fondo muy sutil para diferenciar el área */
     background-color: #f8f9fa;
     padding: 1.5rem;
     border-radius: 0.5rem;
@@ -880,7 +864,6 @@ footer {
 /* Estilo para los títulos (Detalles, Acciones) */
 .metadata-block h6 {
     color: var(--color5);
-    /* Verde oscuro */
     font-weight: 600;
     text-transform: uppercase;
     font-size: 0.8rem;
@@ -891,7 +874,6 @@ footer {
 /* Estilo para las etiquetas en negrita */
 .metadata-block p strong {
     color: var(--color8);
-    /* Gris oscuro */
 }
 
 /* --- Estilo Personalizado para el Botón de Exportar --- */
@@ -899,9 +881,7 @@ footer {
 #export-btn-regions {
     background-color: transparent;
     border-color: var(--color6);
-    /* Borde verde medio */
     color: var(--color6);
-    /* Texto verde medio */
     font-weight: 600;
     transition: all 0.2s ease-in-out;
 }
@@ -909,9 +889,7 @@ footer {
 #export-btn:hover,
 #export-btn-regions:hover {
     background-color: var(--color6);
-    /* Relleno verde al pasar el cursor */
     color: #fff;
-    /* Texto blanco */
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -973,8 +951,6 @@ footer {
         background-color: #e0e0e0;
     }
 }
-
-/* Botones personalizados */
 
 /* Botones personalizados */
 .custom-text-primary {
@@ -1052,7 +1028,9 @@ footer {
 
 .hero-ficha__extracto:hover {
     -webkit-line-clamp: 10;
+    line-clamp: 10;
     color: #fff;
+
 }
 
 .hero-ficha__fuente-wiki {
@@ -1126,7 +1104,6 @@ footer {
 }
 
 /* Footer */
-
 .evaluation-container {
     background-color: #f8f9fa;
     border: 1px solid #e9ecef;
@@ -1152,7 +1129,6 @@ footer {
     display: flex;
     justify-content: center;
     gap: 30px;
-    /* Espacio entre emojis */
 }
 
 .emoji-wrapper {
@@ -1161,25 +1137,20 @@ footer {
     flex-direction: column;
     align-items: center;
     transition: transform 0.2s ease;
-    /* Efecto al pasar el mouse */
 }
 
 .emoji-wrapper:hover {
     transform: scale(1.15);
-    /* Agrandamos el emoji al pasar el mouse */
 }
 
 .emoji {
     font-size: 3rem;
-    /* Emojis más grandes */
     filter: grayscale(50%);
-    /* Los empezamos un poco opacos */
     transition: filter 0.2s ease;
 }
 
 .emoji-wrapper:hover .emoji {
     filter: grayscale(0%);
-    /* Color completo al pasar el mouse */
 }
 
 .emoji-label {
@@ -1189,10 +1160,8 @@ footer {
     font-weight: 500;
 }
 
-/* --- Estado de "Gracias" --- */
 .evaluation-container.thank-you {
     background-color: #28a745;
-    /* Verde de éxito */
     border-color: #218838;
 }
 
@@ -1391,18 +1360,15 @@ footer {
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* Opcional: Podemos hacer que el texto de la pestaña activa sea un poco más opaco o audaz */
 #dimensionTab .nav-link.active {
     font-weight: 600;
     color: var(--arena);
-    /* semi-bold */
 }
 
 #dimensionTab .nav-link:not(.active) {
     border: solid var(--color6) 1px;
 }
 
-/* Opcional: Al pasar el mouse sobre una pestaña inactiva, que no se ponga azul */
 #dimensionTab .nav-link:not(.active):hover {
     color: rgba(84, 81, 81, 0.85);
 }
@@ -1461,7 +1427,6 @@ footer {
 .filter-bar {
     position: relative;
     z-index: 1050;
-    /* Por encima del gráfico */
     background: rgba(255, 255, 255, 0.8) !important;
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
@@ -1678,7 +1643,7 @@ footer {
 }
 
 @media print {
-    /* 1. OCULTAR LO QUE NO SIRVE EN PAPEL */
+
     .catalogo-col,
     .filter-bar,
     .level-switcher,
@@ -1698,7 +1663,6 @@ footer {
         display: none !important;
     }
 
-    /* 2. EXPANDIR LA FICHA A TODO EL ANCHO */
     .content-col {
         width: 100% !important;
         max-width: 100% !important;
@@ -1706,7 +1670,6 @@ footer {
         padding: 0 !important;
     }
 
-    /* 3. LIMPIAR BORDES Y SOMBRAS DE LAS TARJETAS */
     body {
         background-color: white !important;
     }
@@ -1721,17 +1684,14 @@ footer {
         padding-right: 0 !important;
     }
 
-    /* 4. OBLIGAR AL NAVEGADOR A IMPRIMIR LOS COLORES EXACTOS */
     * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
 
-    /* 5. EVITAR QUE LOS METADATOS SE CORTEN A LA MITAD DE LA PÁGINA */
     .metadata-block {
         page-break-inside: avoid;
         border-top: 2px solid #246257 !important;
-        /* Le damos un toque elegante al PDF */
     }
 
     .viz-wrapper {
@@ -1740,7 +1700,6 @@ footer {
         overflow: hidden !important;
     }
 
-    /* 6. ACOMODAR EL MAPA SI ESTÁ VISIBLE */
     .floating-map-overlay {
         position: relative !important;
         box-shadow: none !important;
@@ -1750,11 +1709,10 @@ footer {
         text-align: center;
     }
 
-    .floating-map-overlay > div {
+    .floating-map-overlay>div {
         margin: 0 auto !important;
     }
 
-    /* Ocultamos la crucecita y el título de "Vista Espacial" en el PDF */
     .map-overlay-header {
         display: none !important;
     }
@@ -1768,8 +1726,7 @@ footer {
     }
 
     .metadata-block::after {
-        content: "Ficha generada el " attr(data-fecha-impresion)
-            " | Banco de Indicadores - PIMREP";
+        content: "Ficha generada el " attr(data-fecha-impresion) " | Banco de Indicadores - PIMREP";
         display: block;
         text-align: center;
         font-size: 10px;
@@ -1780,15 +1737,12 @@ footer {
         page-break-inside: avoid;
     }
 
-    /* 9. ESTILO DE HOJA MEMBRETADA PARA EL HEADER */
     header.site-header {
         display: block !important;
         position: static !important;
-        /* Quita el sticky por si bajaste el scroll antes de imprimir */
         width: 100% !important;
         background: transparent !important;
         border-bottom: 2px solid #5f1b2d !important;
-        /* Línea color guinda institucional */
         margin-bottom: 20px !important;
         padding-bottom: 10px !important;
     }
@@ -1811,8 +1765,7 @@ footer {
     height: 350px;
     background:
         linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)),
-        url("https://images.unsplash.com/photo-1716818732769-55fec1b05f44?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D")
-            center/cover;
+        url("https://images.unsplash.com/photo-1716818732769-55fec1b05f44?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D") center/cover;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1881,12 +1834,10 @@ footer {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(
-        0deg,
-        rgba(0, 0, 0, 0.9) 0%,
-        rgba(0, 0, 0, 0.4) 50%,
-        rgba(0, 0, 0, 0) 100%
-    );
+    background: linear-gradient(0deg,
+            rgba(0, 0, 0, 0.9) 0%,
+            rgba(0, 0, 0, 0.4) 50%,
+            rgba(0, 0, 0, 0) 100%);
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
