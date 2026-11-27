@@ -17,7 +17,7 @@ class FichaProfilerService
     public static function getHeroStats(Municipio $municipio)
     {
         // 1. Obtener las variables necesarias en una sola consulta
-        $variables = Variable::whereIn('nombre_amigable', [
+        $variables = Variable::visiblePublicamente()->whereIn('nombre_amigable', [
             'Población total',
             'Grado de Marginación',
             'FORTAMUN APROBADO',

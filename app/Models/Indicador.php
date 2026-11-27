@@ -23,6 +23,8 @@ class Indicador extends Model
     public function scopeVisiblePublicamente($query)
     {
         return $query->where('visible_en_ficha', true)
+            ->where('clasificacion', 'publica')
+            ->where('estado_publicacion', 'publicado')
             ->whereHas('tematica', fn ($tematica) => $tematica->where('visible_en_ficha', true)
                 ->whereHas('dimension', fn ($dimension) => $dimension->where('visible_en_ficha', true)));
     }

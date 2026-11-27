@@ -59,7 +59,7 @@ class FichaController extends Controller
                 $q->where('visible_en_ficha', true)->orderBy('orden')->orderBy('nombre');
             },
             'tematicas.indicadores' => function ($query) {
-                $query->where('visible_en_ficha', true)
+                $query->visiblePublicamente()
                     ->where('solo_resumen', false)
                     ->orderBy('orden')->orderBy('nombre_amigable');
             },
@@ -473,6 +473,7 @@ class FichaController extends Controller
         $anioPresupuesto = $hero['ultimoAnioPres'] ?? 'N/D';
 
         $variablesKPI = Variable::with('indicador.tematica.dimension')
+            ->visiblePublicamente()
             ->where('es_kpi', true)
             ->get();
 
@@ -964,7 +965,7 @@ class FichaController extends Controller
             $tematica = $indicador->tematica;
 
             $datos = app(FichaComposerService::class)->obtenerDatosParaConfig($config, $municipio);
-            $variablePrincipal = $indicador->variables->first();
+            $variablePrincipal = $indicador->variables->where('visible_en_ficha', true)->first();
             $unidad = strtolower($variablePrincipal->unidad_medida ?? '');
 
             $tipoVisual = 'absoluto';
@@ -1032,6 +1033,7 @@ class FichaController extends Controller
     private function buildKpisFromVariables(Municipio $municipio): array
     {
         $variablesKPI = Variable::with('indicador.tematica.dimension')
+            ->visiblePublicamente()
             ->where('es_kpi', true)
             ->get();
 

@@ -694,8 +694,8 @@ class CatalogoController extends Controller
         switch ($tipo) {
             case 'dimensiones': return $this->exportDimensiones();
             case 'tematicas': return $this->exportTematicas();
-            case 'indicadores': return $this->exportIndicadores();
-            case 'variables': return $this->exportVariables();
+            case 'indicadores': return Excel::download(new IndicadoresExport(true), 'catalogo-indicadores.xlsx');
+            case 'variables': return Excel::download(new VariablesExport(true), 'catalogo-variables.xlsx');
             case 'municipios': return Excel::download(new MunicipiosExport, 'catalogo-municipios.xlsx');
             case 'microrregiones': return Excel::download(new MicrorregionesExport, 'catalogo-microrregiones.xlsx');
             case 'macrorregiones': return Excel::download(new MacrorregionesExport, 'catalogo-macrorregiones.xlsx');

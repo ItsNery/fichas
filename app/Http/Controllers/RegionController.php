@@ -178,9 +178,14 @@ class RegionController extends Controller
 
         $municipiosIds = collect($municipiosIds)->map(fn ($id) => (int) $id)->unique()->sort()->values()->all();
         $version = implode('|', [
+            'public-visibility-v2',
+            app(\App\Services\PublicVisibilityVersion::class)->fingerprint(),
             DatoHistorico::max('updated_at') ?? 'none',
             ConfiguracionFicha::max('updated_at') ?? 'none',
             \App\Models\Variable::max('updated_at') ?? 'none',
+            \App\Models\Indicador::max('updated_at') ?? 'none',
+            \App\Models\Tematica::max('updated_at') ?? 'none',
+            Dimension::max('updated_at') ?? 'none',
             Municipio::max('updated_at') ?? 'none',
         ]);
         $regionId = $region->id ?? 'estatal';
@@ -216,7 +221,7 @@ class RegionController extends Controller
         $municipiosIds = collect($municipiosIds)->map(fn ($id) => (int) $id)->unique()->values()->all();
         $esEstatal = $tipoRegion === 'Estatal';
 
-        $varPobId = Variable::where('nombre_amigable', 'Población total')
+        $varPobId = Variable::visiblePublicamente()->where('nombre_amigable', 'Población total')
             ->whereHas('indicador', fn ($query) => $query->where('nombre_amigable', 'Población total según sexo'))
             ->value('id');
         $poblacionRows = $varPobId
@@ -230,7 +235,7 @@ class RegionController extends Controller
             'total' => count($municipiosIds),
         ];
 
-        $marginacionVariableId = Variable::where('nombre_amigable', 'Grado de Marginación')->value('id');
+        $marginacionVariableId = Variable::visiblePublicamente()->where('nombre_amigable', 'Grado de Marginación')->value('id');
         $gradoMarginacion = $marginacionVariableId
             ? DatoHistorico::with('motivoSinDato')->whereIn('municipio_id', $municipiosIds)
                 ->where('variable_id', $marginacionVariableId)->get()->sortByDesc('anio')
@@ -407,7 +412,7 @@ class RegionController extends Controller
             }
         }
         $variablesNecesarias = array_unique($variablesNecesarias);
-        $sexoVariables = \App\Models\Variable::whereHas('indicador', fn ($query) => $query->where('nombre_amigable', 'Población total según sexo'))
+        $sexoVariables = \App\Models\Variable::visiblePublicamente()->whereHas('indicador', fn ($query) => $query->where('nombre_amigable', 'Población total según sexo'))
             ->whereIn('nombre_amigable', ['Población hombres', 'Población mujeres'])
             ->pluck('id', 'nombre_amigable');
         $hombresId = (int) ($sexoVariables['Población hombres'] ?? 0);
@@ -416,7 +421,7 @@ class RegionController extends Controller
 
         // 2. Obtener todos los datos históricos más recientes de los municipios en la región
         // Buscamos explícitamente la variable de población.
-        $varPobId = \App\Models\Variable::where('nombre_amigable', 'Población total')
+        $varPobId = \App\Models\Variable::visiblePublicamente()->where('nombre_amigable', 'Población total')
             ->whereHas('indicador', fn($q) => $q->where('nombre_amigable', 'Población total según sexo'))
             ->value('id');
         if ($varPobId) $variablesNecesarias[] = $varPobId;
@@ -424,6 +429,7 @@ class RegionController extends Controller
 
         $datosBrutos = DatoHistorico::select(['municipio_id', 'variable_id', 'anio', 'valor'])
             ->with('variable:id,mapeo_valores,nombre_amigable,unidad_medida,tipo_valor')
+            ->whereHas('variable', fn ($variable) => $variable->visiblePublicamente())
             ->whereIn('municipio_id', $municipiosIds)
             ->whereIn('variable_id', $variablesNecesarias)
             ->get();
@@ -462,7 +468,7 @@ class RegionController extends Controller
         $superficieKm2 = $municipios->sum(fn($municipio) => (float) ($municipio->superficie ?? 0));
 
         // Marginación is categorical, so the most frequent municipal value is meaningful.
-        $heroVariables = Variable::where('nombre_amigable', 'Grado de Marginación')
+        $heroVariables = Variable::visiblePublicamente()->where('nombre_amigable', 'Grado de Marginación')
             ->get()
             ->keyBy('nombre_amigable');
         $heroRows = DatoHistorico::with('motivoSinDato')

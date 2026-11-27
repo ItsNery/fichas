@@ -43,7 +43,7 @@ class PublicApiController extends Controller
             // 2. Validación
             // Log::info('API DEBUG: Iniciando validación');
             $validated = $request->validate([
-                'indicador_id'        => 'required|integer|exists:indicadors,id',
+                'indicador_id'        => 'required|integer',
                 'nivel_de_agregacion' => 'required|string|in:municipio,microrregion,macrorregion,estatal',
                 'municipio_ids'       => 'nullable|array',
                 'municipio_ids.*'     => 'string',
@@ -51,6 +51,9 @@ class PublicApiController extends Controller
                 'anios'               => 'nullable|array',
                 'anios.*'             => 'integer',
             ]);
+            if (! Indicador::visiblePublicamente()->whereKey($validated['indicador_id'])->exists()) {
+                return response()->json(['success' => false, 'message' => 'Indicador no encontrado.'], 404);
+            }
             Log::info('API DEBUG: Validación exitosa', $validated);
 
             // 3. Llamada a lógica central

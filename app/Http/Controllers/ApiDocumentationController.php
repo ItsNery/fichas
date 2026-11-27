@@ -160,6 +160,7 @@ class ApiDocumentationController extends Controller
                         ],
                         'responses' => [
                             '200' => ['description' => 'Datos procesados', 'content' => ['application/json' => ['schema' => ['$ref' => '#/components/schemas/DataResponse']]]],
+                            '404' => ['description' => 'Indicador no encontrado'],
                             '422' => ['description' => 'Validación de parámetros fallida'],
                             '500' => ['description' => 'Error al procesar la consulta'],
                         ],
@@ -184,6 +185,9 @@ class ApiDocumentationController extends Controller
                                     ],
                                 ],
                             ],
+                            '404' => [
+                                'description' => 'Indicador no encontrado',
+                            ],
                             '422' => [
                                 'description' => 'Validación de parámetros fallida',
                             ],
@@ -203,6 +207,7 @@ class ApiDocumentationController extends Controller
                         ],
                         'responses' => [
                             '200' => ['description' => 'Datos procesados', 'content' => ['application/json' => ['schema' => ['$ref' => '#/components/schemas/DataResponse']]]],
+                            '404' => ['description' => 'Indicador no encontrado'],
                             '422' => ['description' => 'Validación de parámetros fallida'],
                             '500' => ['description' => 'Error al procesar la consulta'],
                         ],

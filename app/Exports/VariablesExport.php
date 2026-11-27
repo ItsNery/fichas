@@ -8,9 +8,14 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class VariablesExport implements FromQuery, WithHeadings, WithMapping
 {
+    public function __construct(private bool $soloPublicos = false) {}
+
     public function query()
     {
-        return Variable::query()->with('indicador.tematica.dimension');
+        return Variable::query()
+            ->when($this->soloPublicos, fn ($query) => $query->where('visible_en_ficha', true)
+                ->whereHas('indicador', fn ($indicador) => $indicador->visiblePublicamente()))
+            ->with('indicador.tematica.dimension');
     }
     public function headings(): array
     {

@@ -27,6 +27,7 @@ class ExportService
     public function exportResumenPDF(Municipio $municipio)
     {
         $variablesKPI = Variable::with('indicador.tematica.dimension')
+            ->visiblePublicamente()
             ->whereNotIn('id', [200])
             ->where('es_kpi', true)
             ->get();

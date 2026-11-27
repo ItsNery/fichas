@@ -61,10 +61,7 @@ class OmnisearchController extends Controller
         $results = $results->merge($municipios);
 
         // 2. Indicadores (límite 5)
-        $indicadores = Indicador::where('visible_en_ficha', true)
-            ->whereHas('tematica', fn($tematica) => $tematica
-                ->where('visible_en_ficha', true)
-                ->whereHas('dimension', fn($dimension) => $dimension->where('visible_en_ficha', true)))
+        $indicadores = Indicador::visiblePublicamente()
             ->where('nombre_amigable', 'LIKE', "%{$q}%")
             ->select('id', 'nombre_amigable')
             ->orderBy('nombre_amigable')

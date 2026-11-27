@@ -150,7 +150,7 @@ class RankingService
                 ->visibleEnPerfilPublico()
                 ->find($configKeyOrId);
             if ($config) {
-                $variable = $config->variables->first() ?? $config->indicador->variables->first();
+                $variable = $config->variables->where('visible_en_ficha', true)->first() ?? $config->indicador->variables->where('visible_en_ficha', true)->first();
             }
         } else {
             $result = $this->resolveHeroKey($configKeyOrId, $municipio);
@@ -275,7 +275,7 @@ class RankingService
 
     public function getSimilaresPorPoblacion(Municipio $municipio, float $poblacionTotal)
     {
-        $varPob = Variable::where('nombre_amigable', 'Poblacion total')
+        $varPob = Variable::visiblePublicamente()->where('nombre_amigable', 'Poblacion total')
             ->whereHas('indicador', fn($q) => $q->where('nombre_amigable', 'Población total segun sexo'))
             ->first();
 
@@ -320,12 +320,12 @@ class RankingService
     private function resolveHeroKey(string $key, Municipio $municipio): array
     {
         return match (strtolower($key)) {
-            'poblacion' => ['variable' => Variable::where('nombre_amigable', 'Población total')
+            'poblacion' => ['variable' => Variable::visiblePublicamente()->where('nombre_amigable', 'Población total')
                 ->whereHas('indicador', fn($q) => $q->where('nombre_amigable', 'Población total según sexo'))
                 ->first()],
-            'pea' => ['variable' => Variable::where('nombre_amigable', 'Población Económicamente Activa (PEA)')->first()],
-            'pobreza' => ['variable' => Variable::where('nombre_amigable', 'Porcentaje de población en situación de pobreza')->first()],
-            'marginacion' => ['variable' => Variable::where('nombre_amigable', 'Grado de Marginación')->first()],
+            'pea' => ['variable' => Variable::visiblePublicamente()->where('nombre_amigable', 'Población Económicamente Activa (PEA)')->first()],
+            'pobreza' => ['variable' => Variable::visiblePublicamente()->where('nombre_amigable', 'Porcentaje de población en situación de pobreza')->first()],
+            'marginacion' => ['variable' => Variable::visiblePublicamente()->where('nombre_amigable', 'Grado de Marginación')->first()],
             'presupuesto' => ['presupuesto' => true],
             default => ['variable' => null],
         };
@@ -333,7 +333,7 @@ class RankingService
 
     private function calcularSimilitudPresupuesto(Municipio $municipio): array
     {
-        $varsPresupuestoIds = Variable::whereIn('nombre_amigable', ['FORTAMUN APROBADO', 'FAISMUN APROBADO'])->pluck('id');
+        $varsPresupuestoIds = Variable::visiblePublicamente()->whereIn('nombre_amigable', ['FORTAMUN APROBADO', 'FAISMUN APROBADO'])->pluck('id');
         $anio = DatoHistorico::whereIn('variable_id', $varsPresupuestoIds)
             ->where('municipio_id', $municipio->id)
             ->max('anio');

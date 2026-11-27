@@ -46,6 +46,12 @@ class Variable extends Model
         'formula_config' => 'array',
     ];
 
+    public function scopeVisiblePublicamente($query)
+    {
+        return $query->where('visible_en_ficha', true)
+            ->whereHas('indicador', fn ($indicador) => $indicador->visiblePublicamente());
+    }
+
     public function indicador()
     {
         return $this->belongsTo(Indicador::class);

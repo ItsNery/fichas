@@ -10,7 +10,7 @@ class ComparisonPageCacheService
 {
     // Cambiar este prefijo invalida HTML construido con otra estrategia de
     // renderizado sin tener que vaciar la cache completa de la aplicacion.
-    private const CACHE_FORMAT = 'v2';
+    private const CACHE_FORMAT = 'v3';
     private const CACHE_SECONDS = 86400;
     private const LOCK_SECONDS = 90;
     private const LOCK_WAIT_SECONDS = 0;
@@ -37,6 +37,8 @@ class ComparisonPageCacheService
         foreach (self::VERSION_TABLES as $table) {
             $timestamps[$table] = DB::table($table)->max('updated_at');
         }
+
+        $timestamps['public_visibility'] = app(PublicVisibilityVersion::class)->fingerprint();
 
         return hash('sha256', json_encode($timestamps));
     }

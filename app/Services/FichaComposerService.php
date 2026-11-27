@@ -90,7 +90,7 @@ class FichaComposerService
                     $datosY = DatoHistorico::where('variable_id', $varYId)->where('anio', $anioY)->get()->keyBy('municipio_id');
                 }
 
-                $varPob = Variable::where('nombre_amigable', 'Población total')->first();
+                $varPob = Variable::visiblePublicamente()->where('nombre_amigable', 'Población total')->first();
                 $poblaciones = collect();
                 $anioPoblacion = null;
                 if ($varPob) {
@@ -629,7 +629,7 @@ class FichaComposerService
 
         $datosX = DatoHistorico::where('variable_id', $varX->id)->where('anio', $anioX)->get()->keyBy('municipio_id');
         $datosY = DatoHistorico::where('variable_id', $varY->id)->where('anio', $anioY)->get()->keyBy('municipio_id');
-        $varPoblacion = Variable::where('nombre_amigable', 'Población total')->first();
+        $varPoblacion = Variable::visiblePublicamente()->where('nombre_amigable', 'Población total')->first();
         $poblaciones = collect();
         $anioPoblacion = null;
         if ($varPoblacion) {

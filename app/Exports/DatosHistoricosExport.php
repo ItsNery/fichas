@@ -28,6 +28,8 @@ class DatosHistoricosExport implements FromQuery, WithHeadings, WithMapping
 
         // CASO 1: Si se pasaron los filtros de "Datos Abiertos"...
         if ($this->dimension) {
+            $query->whereHas('variable', fn ($variable) => $variable->where('visible_en_ficha', true)
+                ->whereHas('indicador', fn ($indicador) => $indicador->visiblePublicamente()));
             $dimensionId = $this->dimension->id;
             $anio = $this->anio;
 

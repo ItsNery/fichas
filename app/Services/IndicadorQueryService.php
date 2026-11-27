@@ -206,7 +206,7 @@ class IndicadorQueryService
             return collect();
         }
 
-        $variableIndicators = Variable::where('visible_en_ficha', true)->pluck('indicador_id', 'id');
+        $variableIndicators = Variable::visiblePublicamente()->pluck('indicador_id', 'id');
         $expectedCounts = $variableIndicators->groupBy(fn ($indicadorId) => $indicadorId)->map->count();
         $rows = DatoGeograficoHistorico::where('unidad_geografica_id', $unidadId)
             ->whereNotNull('valor')
@@ -427,7 +427,7 @@ class IndicadorQueryService
         ];
 
         $nombresTecnicos = collect($mapaPiramide)->flatten()->unique()->all();
-        $variables       = Variable::whereIn('nombre_tecnico', $nombresTecnicos)
+        $variables       = Variable::visiblePublicamente()->whereIn('nombre_tecnico', $nombresTecnicos)
             ->where('visible_en_ficha', true)
             ->get()
             ->keyBy('nombre_tecnico');
@@ -751,7 +751,7 @@ class IndicadorQueryService
             } else {
                 $esRelacionSexo = str_contains(mb_strtolower((string) $variable->unidad_medida, 'UTF-8'), 'hombres por cada cien mujeres');
                 if ($esRelacionSexo) {
-                    $sexoIds = Variable::whereHas('indicador', fn ($q) => $q->where('nombre_amigable', 'Población total según sexo'))
+                    $sexoIds = Variable::visiblePublicamente()->whereHas('indicador', fn ($q) => $q->where('nombre_amigable', 'Población total según sexo'))
                         ->whereIn('nombre_amigable', ['Población hombres', 'Población mujeres'])
                         ->pluck('id', 'nombre_amigable');
                     $ratioQuery = DatoHistorico::whereIn('variable_id', $sexoIds->values());

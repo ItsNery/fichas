@@ -48,7 +48,9 @@ class ConfiguracionFicha extends Model
     {
         return $query
             ->where('activo', true)
-            ->where('tipo_visualizacion', '!=', 'scatter');
+            ->where('tipo_visualizacion', '!=', 'scatter')
+            ->whereHas('indicador', fn ($indicador) => $indicador->visiblePublicamente())
+            ->whereDoesntHave('variables', fn ($variable) => $variable->whereDoesntHave('indicador', fn ($indicador) => $indicador->visiblePublicamente()));
     }
 
     public function indicador()
