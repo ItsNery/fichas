@@ -143,7 +143,7 @@ class FichaController extends Controller
     /**
      * Exports processed chart data (obtained via getChartData) into a downloadable Excel/CSV file.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return \Symfony\Component\HttpFoundation\BinaryFileResponse
      */
     public function exportData(Request $request)
@@ -172,7 +172,7 @@ class FichaController extends Controller
      * Generates and exports a PDF summary of key performance indicators (KPIs)
      * for the specified municipality, grouping the data by Dimension and Tematica.
      *
-     * @param  \App\Models\Municipio  $municipio // Asume que el modelo se llama 'Municipio'
+     * @param  Municipio  $municipio // Asume que el modelo se llama 'Municipio'
      * @return \Illuminate\Http\Response // Retorna una respuesta de descarga de archivo (PDF)
      */
     public function exportarResumenPDF(Municipio $municipio)
@@ -384,7 +384,7 @@ class FichaController extends Controller
      * Retrieves and aggregates historical data by 'cvegeo' (municipio code) for a specific year,
      * prioritizing the 'Total' variable of the Indicator if available, to generate data for a thematic map.
      *
-     * @param  \App\Models\Indicador  $indicador // The Indicador model instance.
+     * @param  Indicador  $indicador // The Indicador model instance.
      * @param  int|string  $anio // The year for which the data is required.
      * @return \Illuminate\Http\JsonResponse
      */
@@ -400,7 +400,7 @@ class FichaController extends Controller
     /**
      * Retrieves a distinct list of all available historical years for the specified Indicator.
      *
-     * @param  \App\Models\Indicador  $indicador // The Indicador model instance.
+     * @param  Indicador  $indicador // The Indicador model instance.
      * @return \Illuminate\Http\JsonResponse
      */
     public function getIndicatorYears(Indicador $indicador)
@@ -416,7 +416,7 @@ class FichaController extends Controller
      * Retrieves Key Performance Indicators (KPIs) for the specified municipality,
      * grouping the latest historical data by Dimension and Tematica, and displays the summary view.
      *
-     * @param  \App\Models\Municipio  $municipio // Asume que el modelo se llama 'Municipio'
+     * @param  Municipio  $municipio // Asume que el modelo se llama 'Municipio'
      * @return \Illuminate\View\View
      */
     public function resumenMunicipal(Municipio $municipio)
@@ -435,7 +435,7 @@ class FichaController extends Controller
      * Incluye datos básicos del Hero (población, marginación, presupuesto, pobreza, PEA)
      * e indicadores agrupados por su dimensión y temática para la ficha general.
      *
-     * @param  \App\Models\Municipio  $municipio El municipio a visualizar.
+     * @param  Municipio  $municipio El municipio a visualizar.
      * @return \Illuminate\View\View Vista del resumen municipal V3.
      */
     public function resumenMunicipalV3(Municipio $municipio)
@@ -459,7 +459,7 @@ class FichaController extends Controller
      * Permite probar la optimización de consultas del Hero y la estructuración
      * de los KPIs del municipio.
      *
-     * @param  \App\Models\Municipio  $municipio El municipio a probar.
+     * @param  Municipio  $municipio El municipio a probar.
      * @return \Illuminate\View\View Vista resumen_test.
      */
     public function resumenMunicipalTest(Municipio $municipio)
@@ -602,7 +602,7 @@ class FichaController extends Controller
      * Obtiene todos los años históricos con registros para una Dimensión específica.
      * Es útil para actualizar selectores de año basados en dimensiones.
      *
-     * @param  \App\Models\Dimension  $dimension El modelo de Dimensión a consultar.
+     * @param  Dimension  $dimension El modelo de Dimensión a consultar.
      * @return \Illuminate\Http\JsonResponse Lista ordenada descendentemente de años únicos.
      */
     public function getAniosPorDimension(Dimension $dimension)
@@ -644,7 +644,7 @@ class FichaController extends Controller
      * dinámico con base en la configuración activa de la ficha, e identifica
      * los municipios similares por macrorregión y población.
      *
-     * @param  \App\Models\Municipio  $municipio El municipio a perfilar.
+     * @param  Municipio  $municipio El municipio a perfilar.
      * @return \Illuminate\View\View Vista del perfil interactivo.
      */
     public function perfilMunicipal(Municipio $municipio)
@@ -941,7 +941,7 @@ class FichaController extends Controller
      * Recupera y calcula los estadísticos esenciales (KPIs) del Hero para un municipio.
      * Delega el procesamiento al servicio FichaProfilerService.
      *
-     * @param  \App\Models\Municipio  $municipio El municipio a evaluar.
+     * @param  Municipio  $municipio El municipio a evaluar.
      * @return array Conjunto de estadísticos clave estructurados.
      */
     private function getHeroStats(Municipio $municipio)
@@ -1382,7 +1382,7 @@ class FichaController extends Controller
      * Endpoint API para consultar y devolver dinámicamente los datos de un indicador y su narrativa
      * filtrados por un año específico para un municipio.
      *
-     * @param  \App\Models\Municipio  $municipio El municipio a consultar.
+     * @param  Municipio  $municipio El municipio a consultar.
      * @param  int  $configId ID de la configuración de ficha.
      * @param  int  $anio Año forzado de consulta.
      * @return \Illuminate\Http\JsonResponse Datos del indicador y narrativa estructurada.

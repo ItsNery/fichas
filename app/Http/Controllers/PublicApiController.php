@@ -11,6 +11,7 @@ use App\Models\Municipio;
 use App\Models\Tematica;
 use App\Models\Variable;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\QueryException;
@@ -26,22 +27,22 @@ class PublicApiController extends Controller
      * other exceptions) so that consuming clients always receive a JSON
      * response and we keep a record in the logs for diagnosis.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
     public function consultarDatos(Request $request)
     {
-        // Log::info('API DEBUG: Inicia consultarDatos');
-        // Log::info('API DEBUG: Headers', $request->headers->all());
-        // Log::info('API DEBUG: Body', $request->all());
+        Log::info('API DEBUG: Inicia consultarDatos');
+        Log::info('API DEBUG: Headers', $request->headers->all());
+        Log::info('API DEBUG: Body', $request->all());
 
         try {
             // 1. Instanciamos FichaController
-            // Log::info('API DEBUG: Instanciando FichaController');
+            Log::info('API DEBUG: Instanciando FichaController');
             $fichaController = new FichaController();
 
             // 2. Validación
-            // Log::info('API DEBUG: Iniciando validación');
+            Log::info('API DEBUG: Iniciando validación');
             $validated = $request->validate([
                 'indicador_id'        => 'required|integer',
                 'nivel_de_agregacion' => 'required|string|in:municipio,microrregion,macrorregion,estatal',
@@ -66,19 +67,19 @@ class PublicApiController extends Controller
                 'success' => true,
                 'data'    => $chartData,
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            // Log::warning('API DEBUG: Error de validación', $e->errors());
+        } catch (ValidationException $e) {
+            Log::warning('API DEBUG: Error de validación', $e->errors());
             return response()->json([
                 'success' => false,
                 'message' => 'Los datos proporcionados no son válidos.',
                 'errors'  => $e->errors(),
             ], 422);
         } catch (QueryException $e) {
-            // Log::error('API DEBUG: Error de BD', [
-            //     'message'  => $e->getMessage(),
-            //     'sql'      => $e->getSql(),
-            //     'bindings' => $e->getBindings(),
-            // ]);
+            Log::error('API DEBUG: Error de BD', [
+                'message'  => $e->getMessage(),
+                'sql'      => $e->getSql(),
+                'bindings' => $e->getBindings(),
+            ]);
 
             return response()->json([
                 'success' => false,
@@ -86,12 +87,12 @@ class PublicApiController extends Controller
                 'error'   => config('app.debug') ? $e->getMessage() : 'Error interno.',
             ], 500);
         } catch (Throwable $e) {
-            // Log::error('API DEBUG: Excepción no manejada', [
-            //     'message' => $e->getMessage(),
-            //     'file'    => $e->getFile(),
-            //     'line'    => $e->getLine(),
-            //     'trace'   => $e->getTraceAsString(),
-            // ]);
+            Log::error('API DEBUG: Excepción no manejada', [
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
+                'trace'   => $e->getTraceAsString(),
+            ]);
 
             return response()->json([
                 'success' => false,
@@ -202,5 +203,4 @@ class PublicApiController extends Controller
     {
         return $this->consultarDatos($request);
     }
-
 }

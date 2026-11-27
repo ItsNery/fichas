@@ -8,6 +8,8 @@ use App\Models\Municipio;
 use App\Models\ConfiguracionFicha;
 use App\Models\DatoHistorico;
 use App\Models\Variable;
+use App\Models\Indicador;
+use App\Models\Tematica;
 use App\Models\DatoIndicadorComplejo;
 use App\Models\Dimension;
 use App\Services\IndicadorQueryService;
@@ -15,7 +17,11 @@ use App\Services\MunicipalityMapImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
-
+use App\Services\ExportV3Service;
+use App\Exports\RegionExport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Services\GeographicAggregationService;
+use App\Services\PublicVisibilityVersion;
 class RegionController extends Controller
 {
     /**
@@ -107,8 +113,8 @@ class RegionController extends Controller
     }
 
     /**
-     * Detecta microrregiones homÃ³nimas que representan partes territoriales
-     * de un municipio y no cuentan con informaciÃ³n desagregable propia.
+     * Detecta microrregiones homónimas que representan partes territoriales
+     * de un municipio y no cuentan con información desagregable propia.
      */
     private function municipioDeMicrorregionPartida(Microrregion $microrregion): ?Municipio
     {
@@ -179,12 +185,12 @@ class RegionController extends Controller
         $municipiosIds = collect($municipiosIds)->map(fn ($id) => (int) $id)->unique()->sort()->values()->all();
         $version = implode('|', [
             'public-visibility-v2',
-            app(\App\Services\PublicVisibilityVersion::class)->fingerprint(),
+            app(PublicVisibilityVersion::class)->fingerprint(),
             DatoHistorico::max('updated_at') ?? 'none',
             ConfiguracionFicha::max('updated_at') ?? 'none',
-            \App\Models\Variable::max('updated_at') ?? 'none',
-            \App\Models\Indicador::max('updated_at') ?? 'none',
-            \App\Models\Tematica::max('updated_at') ?? 'none',
+            Variable::max('updated_at') ?? 'none',
+            Indicador::max('updated_at') ?? 'none',
+            Tematica::max('updated_at') ?? 'none',
             Dimension::max('updated_at') ?? 'none',
             Municipio::max('updated_at') ?? 'none',
         ]);
@@ -347,7 +353,7 @@ class RegionController extends Controller
     {
         $municipios = $municipios->unique('id')->values();
         $municipiosIds = collect($municipiosIds)->unique()->values()->all();
-        $aggregation = app(\App\Services\GeographicAggregationService::class);
+        $aggregation = app(GeographicAggregationService::class);
         $esEstatal = $tipoRegion === 'Estatal';
         // 1. Obtener configuraciones activas (igual que en perfil municipal)
         $configuraciones = ConfiguracionFicha::with(['indicador.tematica.dimension', 'variables', 'indicador.variables'])
@@ -412,7 +418,7 @@ class RegionController extends Controller
             }
         }
         $variablesNecesarias = array_unique($variablesNecesarias);
-        $sexoVariables = \App\Models\Variable::visiblePublicamente()->whereHas('indicador', fn ($query) => $query->where('nombre_amigable', 'Población total según sexo'))
+        $sexoVariables = Variable::visiblePublicamente()->whereHas('indicador', fn ($query) => $query->where('nombre_amigable', 'Población total según sexo'))
             ->whereIn('nombre_amigable', ['Población hombres', 'Población mujeres'])
             ->pluck('id', 'nombre_amigable');
         $hombresId = (int) ($sexoVariables['Población hombres'] ?? 0);
@@ -421,7 +427,7 @@ class RegionController extends Controller
 
         // 2. Obtener todos los datos históricos más recientes de los municipios en la región
         // Buscamos explícitamente la variable de población.
-        $varPobId = \App\Models\Variable::visiblePublicamente()->where('nombre_amigable', 'Población total')
+        $varPobId = Variable::visiblePublicamente()->where('nombre_amigable', 'Población total')
             ->whereHas('indicador', fn($q) => $q->where('nombre_amigable', 'Población total según sexo'))
             ->value('id');
         if ($varPobId) $variablesNecesarias[] = $varPobId;
@@ -1077,7 +1083,7 @@ class RegionController extends Controller
 
         $html = view('regiones.perfil_pdf', $datos)->render();
 
-        return app(\App\Services\ExportV3Service::class)->exportPanoramaPDF($html, $fileName);
+        return app(ExportV3Service::class)->exportPanoramaPDF($html, $fileName);
     }
 
     public function exportarMacrorregionExcel(Macrorregion $macrorregion)
@@ -1096,7 +1102,7 @@ class RegionController extends Controller
 
         $datos = $this->obtenerDatosPerfil('Macrorregión', $macrorregion, $municipios, $municipiosIds);
         
-        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\RegionExport($datos), 'Resumen_Macrorregional_' . str_replace(' ', '_', $macrorregion->nombre) . '.xlsx');
+        return Excel::download(new RegionExport($datos), 'Resumen_Macrorregional_' . str_replace(' ', '_', $macrorregion->nombre) . '.xlsx');
     }
 
     public function exportarMicrorregionExcel(Microrregion $microrregion)
@@ -1116,13 +1122,13 @@ class RegionController extends Controller
 
         $datos = $this->obtenerDatosPerfil('Microrregión', $microrregion, $municipios, $municipiosIds);
         
-        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\RegionExport($datos), 'Resumen_Microrregional_' . str_replace(' ', '_', $microrregion->nombre) . '.xlsx');
+        return Excel::download(new RegionExport($datos), 'Resumen_Microrregional_' . str_replace(' ', '_', $microrregion->nombre) . '.xlsx');
     }
 
     public function exportarEstatalExcel()
     {
-        return \Maatwebsite\Excel\Facades\Excel::download(
-            new \App\Exports\RegionExport($this->datosEstatales()),
+        return Excel::download(
+            new RegionExport($this->datosEstatales()),
             'Resumen_Estatal_Puebla.xlsx'
         );
     }

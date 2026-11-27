@@ -60,10 +60,6 @@ class TurnstileController extends Controller
                 ->view('turnstile.download', ['downloadUrl' => $redirect])
                 ->withCookie($cookie);
         }
-
-        // $redirect puede incluir el prefijo público de la aplicación (por
-        // ejemplo, /fichas). `to()` lo volvería a anteponer desde APP_URL.
-        // La ruta ya fue validada como interna en safeRedirectValue().
         return redirect()->away($redirect)->withCookie($cookie);
     }
 
@@ -74,7 +70,6 @@ class TurnstileController extends Controller
 
     private function safeRedirectValue(?string $url): string
     {
-        // Sólo rutas internas: evita redirigir a un dominio externo.
         if (! is_string($url) || $url === '') {
             return '/';
         }
@@ -101,7 +96,7 @@ class TurnstileController extends Controller
     {
         return array_values(array_filter(
             (array) ($response['error-codes'] ?? ['verification_failed']),
-            static fn (mixed $code): bool => is_string($code) && $code !== '',
+            static fn(mixed $code): bool => is_string($code) && $code !== '',
         ));
     }
 
